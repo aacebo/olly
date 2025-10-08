@@ -6,8 +6,6 @@ using Octokit.Webhooks.Events;
 using Octokit.Webhooks.Events.Installation;
 using Octokit.Webhooks.Models;
 
-using OS.Agent.Events;
-
 namespace OS.Agent.Webhooks;
 
 public class InstallProcessor : WebhookEventProcessor
@@ -28,7 +26,7 @@ public class InstallProcessor : WebhookEventProcessor
         CancellationToken cancellationToken = default
     )
     {
-        var ev = new Event<Installation>(action == InstallationAction.Created ? "github.install.create" : "github.install.delete")
+        var ev = new Models.Event<Installation>(action == InstallationAction.Created ? "github.install.create" : "github.install.delete")
         {
             Body = @event.Installation,
         };

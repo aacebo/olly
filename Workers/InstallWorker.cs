@@ -5,8 +5,6 @@ using NetMQ.Sockets;
 
 using Octokit.Webhooks.Models;
 
-using OS.Agent.Events;
-
 namespace OS.Agent.Workers;
 
 public class InstallWorker : IHostedService
@@ -45,8 +43,7 @@ public class InstallWorker : IHostedService
         {
             var _ = _socket.ReceiveFrameString();
             var bytes = _socket.ReceiveFrameBytes();
-            var @event = JsonSerializer.Deserialize<Event<Installation>>(bytes) ?? throw new Exception("invalid event payload");
-            // var body = @event.Deserialize<InstallationEvent>();
+            var @event = JsonSerializer.Deserialize<Models.Event<Installation>>(bytes) ?? throw new Exception("invalid event payload");
             Console.WriteLine(@event);
         }
 
