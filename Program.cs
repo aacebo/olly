@@ -13,6 +13,7 @@ using OS.Agent;
 using OS.Agent.Extensions;
 using OS.Agent.Settings;
 using OS.Agent.Webhooks;
+using OS.Agent.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
 var pgUrl = builder.Configuration.GetConnectionString("Postgres") ??
@@ -26,6 +27,7 @@ builder.Services.AddTransient<MainController>();
 builder.Services.AddSingleton<WebhookEventProcessor, InstallProcessor>();
 builder.Services.AddGithubClient();
 builder.Services.AddPostgres(pgUrl);
+builder.Services.AddHostedService<InstallWorker>();
 
 var app = builder.Build();
 

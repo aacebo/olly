@@ -17,6 +17,7 @@
     <PackageReference Include="FluentMigrator.Runner" Version="7.*" />
     <PackageReference Include="FluentMigrator.Runner.Postgres" Version="7.*" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.*" />
+    <PackageReference Include="NetMQ" Version="4.*" />
     <PackageReference Include="Npgsql" Version="9.*" />
     <PackageReference Include="Octokit" Version="14.*" />
     <PackageReference Include="Octokit.Webhooks" Version="3.*" />
