@@ -4,8 +4,15 @@ using System.Text.Json.Serialization;
 
 namespace OS.Agent.Models;
 
+public interface IEvent
+{
+    Guid Id { get; init; }
+    string Name { get; init; }
+    DateTimeOffset CreatedAt { get; init; }
+}
+
 [Table("events")]
-public class Event<T>(string name)
+public class Event<T>(string name, T body) : IEvent
 {
     [Column("id")]
     [JsonPropertyName("id")]
@@ -17,7 +24,7 @@ public class Event<T>(string name)
 
     [Column("body")]
     [JsonPropertyName("body")]
-    public T? Body { get; set; }
+    public T Body { get; set; } = body;
 
     [Column("created_at")]
     [JsonPropertyName("created_at")]

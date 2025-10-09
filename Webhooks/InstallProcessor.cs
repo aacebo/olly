@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Options;
+
 using NetMQ;
 using NetMQ.Sockets;
 
@@ -6,18 +8,12 @@ using Octokit.Webhooks.Events;
 using Octokit.Webhooks.Events.Installation;
 using Octokit.Webhooks.Models;
 
+using OS.Agent.Settings;
+
 namespace OS.Agent.Webhooks;
 
-public class InstallProcessor : WebhookEventProcessor
+public class InstallProcessor(IOptions<ZeroMQSettings> settings) : WebhookEventProcessor
 {
-    private readonly PublisherSocket _socket;
-
-    public InstallProcessor(IConfiguration configuration)
-    {
-        var url = configuration.GetConnectionString("ZeroMQ") ?? throw new Exception("ConnectionStrings.ZeroMQ not found");
-        _socket = new(url);
-    }
-
     protected override ValueTask ProcessInstallationWebhookAsync
     (
         WebhookHeaders headers,
@@ -26,12 +22,24 @@ public class InstallProcessor : WebhookEventProcessor
         CancellationToken cancellationToken = default
     )
     {
-        var ev = new Models.Event<Installation>(action == InstallationAction.Created ? "github.install.create" : "github.install.delete")
+        try
         {
-            Body = @event.Installation,
-        };
+            var url = @$"tcp://*:{settings.Value.Port}";
+            var socket = new PublisherSocket();
+            socket.Bind(url);
 
-        _socket.SendMoreFrame(ev.Name).SendFrame(ev.ToString());
+            var ev = new Models.Event<Installation>(
+                action == InstallationAction.Created ? "github.install.create" : "github.install.delete",
+                @event.Installation
+            );
+
+            socket.SendMoreFrame(ev.Name).SendFrame(ev.ToString());
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
+
         return ValueTask.CompletedTask;
     }
 }

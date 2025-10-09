@@ -34,7 +34,7 @@ public static class IServiceCollectionExtensions
             var handler = new JwtSecurityTokenHandler();
             var token = handler.CreateJwtSecurityToken(
                 subject: new ClaimsIdentity([]),
-                expires: DateTime.UtcNow.AddMinutes(10),
+                expires: DateTime.UtcNow.AddMinutes(10).AddSeconds(-10),
                 issuedAt: DateTime.UtcNow.AddSeconds(-60),
                 signingCredentials: new SigningCredentials(
                     new RsaSecurityKey(rsa),
@@ -56,11 +56,19 @@ public static class IServiceCollectionExtensions
     public static IServiceCollection AddPostgres(this IServiceCollection services, string url)
     {
         services.AddFluentMigratorCore()
-            .ConfigureRunner(rb => rb.AddPostgres().WithMigrationsIn(Assembly.GetExecutingAssembly()));
+            .ConfigureRunner(rb => rb
+                .AddPostgres()
+                .WithMigrationsIn(Assembly.GetExecutingAssembly())
+                .WithGlobalConnectionString("Postgres")
+            );
 
         return services.AddSingleton(provider =>
         {
-            var connection = new NpgsqlConnection(url);
+            var connection = new NpgsqlDataSourceBuilder(url)
+                .EnableDynamicJson()
+                .Build()
+                .OpenConnection();
+
             return new QueryFactory(connection, new PostgresCompiler());
         });
     }
