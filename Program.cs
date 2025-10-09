@@ -28,6 +28,11 @@ var pgUrl = builder.Configuration.GetConnectionString("Postgres") ??
     throw new Exception("ConnectionStrings.Postgres not found");
 
 builder.Services.Configure<GithubSettings>(builder.Configuration.GetSection("Github"));
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+});
+
 builder.Services.AddOpenApi();
 builder.AddTeams();
 builder.AddTeamsDevTools();
@@ -39,10 +44,6 @@ builder.Services.AddHostedService<InstallWorker>();
 builder.Services.AddSingleton<WebhookEventProcessor, InstallProcessor>();
 builder.Services.AddScoped<IUserStorage, UserStorage>();
 builder.Services.AddScoped<IAccountStorage, AccountStorage>();
-builder.Services.ConfigureHttpJsonOptions(options =>
-{
-    options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-});
 
 Dapper.SqlMapper.AddTypeHandler(new JsonDocumentTypeHandler());
 Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<AccountType>());
