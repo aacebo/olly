@@ -1,9 +1,9 @@
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+
+using SqlKata;
 
 namespace OS.Agent.Models;
 
-[Table("users")]
 public class User
 {
     [Column("id")]

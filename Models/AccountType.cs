@@ -2,25 +2,12 @@ using System.Text.Json.Serialization;
 
 namespace OS.Agent.Models;
 
-[JsonConverter(typeof(JsonStringEnumConverter))]
-public enum AccountType
+[JsonConverter(typeof(Converter<AccountType>))]
+public class AccountType(string value) : StringEnum(value)
 {
-    [JsonStringEnumMemberName("teams")]
-    Teams,
+    public static readonly AccountType Github = new("github");
+    public bool IsGithub => Github.Equals(Value);
 
-    [JsonStringEnumMemberName("github")]
-    Github
-}
-
-public static class AccountTypeExtensions
-{
-    public static string ToString(this AccountType accountType)
-    {
-        return accountType switch
-        {
-            AccountType.Teams => "teams",
-            AccountType.Github => "github",
-            _ => throw new InvalidDataException("invalid AccountType")
-        };
-    }
+    public static readonly AccountType Teams = new("teams");
+    public bool IsTeams => Teams.Equals(Value);
 }

@@ -9,10 +9,13 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Azure.Identity" Version="1.*" />
+    <PackageReference Include="Dapper" Version="2.*" />
+    <PackageReference Include="Dapper.AOT" Version="1.*" />
     <PackageReference Include="FluentMigrator" Version="7.*" />
     <PackageReference Include="FluentMigrator.Runner" Version="7.*" />
     <PackageReference Include="FluentMigrator.Runner.Postgres" Version="7.*" />

@@ -1,18 +1,15 @@
-using Microsoft.Extensions.Options;
-
 using NetMQ;
-using NetMQ.Sockets;
 
 using Octokit.Webhooks;
 using Octokit.Webhooks.Events;
 using Octokit.Webhooks.Events.Installation;
 using Octokit.Webhooks.Models;
 
-using OS.Agent.Settings;
+using OS.Agent.Models;
 
 namespace OS.Agent.Webhooks;
 
-public class InstallProcessor(IOptions<ZeroMQSettings> settings) : WebhookEventProcessor
+public class InstallProcessor(ILogger<InstallProcessor> logger, NetMQQueue<Event<Installation>> events) : WebhookEventProcessor
 {
     protected override ValueTask ProcessInstallationWebhookAsync
     (
@@ -24,20 +21,21 @@ public class InstallProcessor(IOptions<ZeroMQSettings> settings) : WebhookEventP
     {
         try
         {
-            var url = @$"tcp://*:{settings.Value.Port}";
-            var socket = new PublisherSocket();
-            socket.Bind(url);
-
-            var ev = new Models.Event<Installation>(
+            var ev = new Event<Installation>(
                 action == InstallationAction.Created ? "github.install.create" : "github.install.delete",
                 @event.Installation
             );
 
-            socket.SendMoreFrame(ev.Name).SendFrame(ev.ToString());
+            Task.Run(() =>
+            {
+                events.Enqueue(ev);
+                logger.LogDebug("[{}] => queued", ev.Name);
+            }, cancellationToken);
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex);
+            logger.LogError("{}", ex);
+            throw new Exception("github.webhooks.install", ex);
         }
 
         return ValueTask.CompletedTask;

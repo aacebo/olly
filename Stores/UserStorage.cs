@@ -23,7 +23,7 @@ public class UserStorage(ILogger<IAccountStorage> logger, QueryFactory db) : IUs
             .Select("*")
             .From("users")
             .Where("id", "=", id)
-            .FirstAsync<User>();
+            .FirstOrDefaultAsync<User?>();
     }
 
     public async Task<User> Create(User value, IDbTransaction? tx = null)

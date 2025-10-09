@@ -4,8 +4,16 @@ root = true
 [*]
 indent_style = space
 
+[Makefile]
+# Use tabs for indentation (Makefiles require tabs)
+indent_style = tab
+
 # Xml files
 [*.xml]
+indent_size = 2
+
+[*.json]
+indent_style = space
 indent_size = 2
 
 # C# files
@@ -136,6 +144,7 @@ csharp_style_unused_value_assignment_preference = discard_variable:suggestion
 csharp_style_unused_value_expression_statement_preference = discard_variable:silent
 
 # 'using' directive preferences
+dotnet_diagnostic.IDE0005.severity = error # error when unused using statement
 csharp_using_directive_placement = outside_namespace:silent
 
 #### C# Formatting Rules ####
@@ -375,4 +384,3 @@ dotnet_naming_style.s_camelcase.required_prefix = s_
 dotnet_naming_style.s_camelcase.required_suffix = 
 dotnet_naming_style.s_camelcase.word_separator = 
 dotnet_naming_style.s_camelcase.capitalization = camel_case
-

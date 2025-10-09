@@ -1,3 +1,4 @@
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Security.Claims;
@@ -62,14 +63,31 @@ public static class IServiceCollectionExtensions
                 .WithGlobalConnectionString("Postgres")
             );
 
-        return services.AddSingleton(provider =>
+        services.AddTransient(provider =>
         {
-            var connection = new NpgsqlDataSourceBuilder(url)
-                .EnableDynamicJson()
-                .Build()
-                .OpenConnection();
+            var logger = provider.GetRequiredService<ILogger<NpgsqlDataSource>>();
+            return new NpgsqlDataSourceBuilder(url)
+                    .UseLoggerFactory(provider.GetRequiredService<ILoggerFactory>())
+                    .EnableDynamicJson()
+                    .Build()
+                    .CreateConnection();
+        });
 
-            return new QueryFactory(connection, new PostgresCompiler());
+        return services.AddTransient(provider =>
+        {
+            var logger = provider.GetRequiredService<ILogger<QueryFactory>>();
+            var connection = provider.GetRequiredService<NpgsqlConnection>();
+
+            if (connection.State != ConnectionState.Open)
+            {
+                logger.LogInformation("opening connection...");
+                connection.Open();
+                logger.LogInformation("opened successfully!");
+            }
+
+            var factory = new QueryFactory(connection, new PostgresCompiler());
+            factory.Logger = q => logger.LogDebug("{}", q);
+            return factory;
         });
     }
 }

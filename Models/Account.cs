@@ -1,9 +1,10 @@
-using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json;
 using System.Text.Json.Serialization;
+
+using SqlKata;
 
 namespace OS.Agent.Models;
 
-[Table("accounts")]
 public class Account
 {
     [Column("id")]
@@ -28,7 +29,7 @@ public class Account
 
     [Column("data")]
     [JsonPropertyName("data")]
-    public IDictionary<string, object?> Data { get; set; } = new Dictionary<string, object?>();
+    public JsonDocument? Data { get; set; }
 
     [Column("created_at")]
     [JsonPropertyName("created_at")]

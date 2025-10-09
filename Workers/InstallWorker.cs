@@ -1,71 +1,81 @@
 using System.Text.Json;
 
-using Microsoft.Extensions.Options;
-using Microsoft.Teams.Plugins.AspNetCore.DevTools;
-
 using NetMQ;
-using NetMQ.Sockets;
 
 using Octokit.Webhooks.Models;
 
-using OS.Agent.Extensions;
-using OS.Agent.Settings;
+using OS.Agent.Models;
 using OS.Agent.Stores;
 
 namespace OS.Agent.Workers;
 
-public class InstallWorker : BackgroundService
+public class InstallWorker(ILogger<InstallWorker> logger, NetMQQueue<Event<Installation>> events, IServiceScopeFactory scopeFactory) : IHostedService
 {
-    private readonly string _url;
-    private readonly ILogger<InstallWorker> _logger;
-    private readonly IUserStorage _userStorage;
-    private readonly IAccountStorage _accountStorage;
+    private readonly NetMQPoller _poller = [events];
 
-    public InstallWorker(ILogger<InstallWorker> logger, NetMQQueue<IEvent> events, IUserStorage userStorage, IAccountStorage accountStorage) : base()
+    public Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger = logger;
-        _userStorage = userStorage;
-        _accountStorage = accountStorage;
-    }
-
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
-    {
-        var socket = new SubscriberSocket();
-        socket.Connect(_url);
-        socket.Subscribe("github.install.create");
-        socket.Subscribe("github.install.delete");
-        _logger.LogInformation("connected to '{}'", _url);
-
-        while (!cancellationToken.IsCancellationRequested)
+        logger.LogInformation("starting...");
+        events.ReceiveReady += async (_, args) =>
         {
-            if (!socket.TryReceiveFrameString(out var key))
-            {
-                await Task.Delay(250, cancellationToken);
-                continue;
-            }
+            var scope = scopeFactory.CreateScope();
+            var lifetime = scope.ServiceProvider.GetRequiredService<IHostApplicationLifetime>();
+            var userStorage = scope.ServiceProvider.GetRequiredService<IUserStorage>();
+            var accountStorage = scope.ServiceProvider.GetRequiredService<IAccountStorage>();
 
-            var bytes = socket.ReceiveFrameBytes();
-            var @event = JsonSerializer.Deserialize<Models.Event<Installation>>(bytes) ?? throw new Exception("invalid event payload");
-            _logger.LogDebug("[{}] => {}", key, @event);
-
-            if (@event.Name == "github.install.create")
+            while (args.Queue.TryDequeue(out var @event, TimeSpan.FromMilliseconds(200)))
             {
-                await OnCreateEvent(@event);
-            }
-            else
-            {
-                await OnDeleteEvent(@event);
-            }
-        }
+                try
+                {
+                    var ok = await OnEvent(@event, userStorage, accountStorage, lifetime.ApplicationStopping);
 
-        socket.Disconnect(_url);
-        _logger.LogInformation("disconnected from '{}'", _url);
+                    if (!ok)
+                    {
+                        logger.LogWarning("invalid event");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError("{}", ex);
+                    throw new Exception("InstallWorker", ex);
+                }
+            }
+        };
+
+        _poller.RunAsync();
+        logger.LogInformation("listening...");
+        return Task.CompletedTask;
     }
 
-    private async Task OnCreateEvent(Models.Event<Installation> @event)
+    public Task StopAsync(CancellationToken cancellationToken)
     {
-        var account = await _accountStorage.GetByExternalId(Models.AccountType.Github, @event.Body.Account.Id.ToString());
-        _logger.LogDebug("{}", account);
+        logger.LogInformation("stopping...");
+        _poller.StopAsync();
+        logger.LogInformation("stopped");
+        return Task.CompletedTask;
+    }
+
+    private async Task<bool> OnEvent(Event<Installation> @event, IUserStorage userStorage, IAccountStorage accountStorage, CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("{}", @event);
+
+        return @event.Name switch
+        {
+            "github.install.create" => await OnCreateEvent(@event, userStorage, accountStorage, cancellationToken),
+            "github.install.delete" => await OnDeleteEvent(@event, accountStorage, cancellationToken),
+            _ => throw new Exception($"invalid event type '{@event.Name}'")
+        };
+    }
+
+    private async Task<bool> OnCreateEvent(Event<Installation> @event, IUserStorage userStorage, IAccountStorage accountStorage, CancellationToken cancellationToken = default)
+    {
+        var account = await accountStorage.GetByExternalId
+        (
+            AccountType.Github, @event.Body.Account.Id.ToString(),
+            cancellationToken
+        );
+
+        logger.LogDebug("account => {}", account);
 
         if (account is null)
         {
@@ -78,29 +88,34 @@ public class InstallWorker : BackgroundService
             {
                 UserId = user.Id,
                 ExternalId = @event.Body.Account.Id.ToString(),
-                Type = Models.AccountType.Github,
+                Type = AccountType.Github,
                 Name = @event.Body.Account.Login,
+                Data = JsonSerializer.SerializeToDocument(@event.Body)
             };
 
-            await _userStorage.Create(user);
-            await _accountStorage.Create(account);
-            return;
+            await userStorage.Create(user);
+            await accountStorage.Create(account, cancellationToken: cancellationToken);
+            return true;
         }
 
-        account.Data = @event.Body.ToDictionary();
-        await _accountStorage.Update(account);
+        account.Data = JsonSerializer.SerializeToDocument(@event.Body);
+        await accountStorage.Update(account, cancellationToken: cancellationToken);
+        return true;
     }
 
-    private async Task OnDeleteEvent(Models.Event<Installation> @event)
+    private async Task<bool> OnDeleteEvent(Event<Installation> @event, IAccountStorage accountStorage, CancellationToken cancellationToken = default)
     {
-        var account = await _accountStorage.GetByExternalId(Models.AccountType.Github, @event.Body.Account.Id.ToString());
-        _logger.LogDebug("{}", account);
+        var account = await accountStorage.GetByExternalId
+        (
+            AccountType.Github, @event.Body.Account.Id.ToString(),
+            cancellationToken
+        );
 
-        if (account is null)
-        {
-            return;
-        }
+        logger.LogDebug("account => {}", account);
 
-        await _accountStorage.Delete(account.Id);
+        if (account is null) return false;
+
+        await accountStorage.Delete(account.Id, cancellationToken: cancellationToken);
+        return true;
     }
 }

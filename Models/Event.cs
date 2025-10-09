@@ -1,6 +1,7 @@
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+
+using SqlKata;
 
 namespace OS.Agent.Models;
 
@@ -11,7 +12,6 @@ public interface IEvent
     DateTimeOffset CreatedAt { get; init; }
 }
 
-[Table("events")]
 public class Event<T>(string name, T body) : IEvent
 {
     [Column("id")]
