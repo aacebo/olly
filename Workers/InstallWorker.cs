@@ -69,7 +69,7 @@ public class InstallWorker(ILogger<InstallWorker> logger, NetMQQueue<Event<Insta
 
     private async Task<bool> OnCreateEvent(Event<Installation> @event, IUserStorage userStorage, IAccountStorage accountStorage, CancellationToken cancellationToken = default)
     {
-        var account = await accountStorage.GetByExternalId
+        var account = await accountStorage.GetBySourceId
         (
             SourceType.Github, @event.Body.Account.Id.ToString(),
             cancellationToken
@@ -105,7 +105,7 @@ public class InstallWorker(ILogger<InstallWorker> logger, NetMQQueue<Event<Insta
 
     private async Task<bool> OnDeleteEvent(Event<Installation> @event, IAccountStorage accountStorage, CancellationToken cancellationToken = default)
     {
-        var account = await accountStorage.GetByExternalId
+        var account = await accountStorage.GetBySourceId
         (
             SourceType.Github, @event.Body.Account.Id.ToString(),
             cancellationToken

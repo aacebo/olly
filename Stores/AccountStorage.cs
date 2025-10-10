@@ -9,7 +9,7 @@ namespace OS.Agent.Stores;
 public interface IAccountStorage
 {
     Task<Account?> GetById(Guid id, CancellationToken cancellationToken = default);
-    Task<Account?> GetByExternalId(SourceType type, string externalId, CancellationToken cancellationToken = default);
+    Task<Account?> GetBySourceId(SourceType type, string sourceId, CancellationToken cancellationToken = default);
     Task<IEnumerable<Account>> GetByUserId(Guid userId, CancellationToken cancellationToken = default);
     Task<Account> Create(Account value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
     Task<Account> Update(Account value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
@@ -28,14 +28,14 @@ public class AccountStorage(ILogger<IAccountStorage> logger, QueryFactory db) : 
             .FirstOrDefaultAsync<Account?>(cancellationToken: cancellationToken);
     }
 
-    public async Task<Account?> GetByExternalId(SourceType type, string externalId, CancellationToken cancellationToken = default)
+    public async Task<Account?> GetBySourceId(SourceType type, string sourceId, CancellationToken cancellationToken = default)
     {
-        logger.LogDebug("GetByExternalId");
+        logger.LogDebug("GetBySourceId");
         return await db
             .Query("accounts")
             .Select("*")
-            .Where("type", "=", type.ToString())
-            .Where("external_id", "=", externalId)
+            .Where("source_type", "=", type.ToString())
+            .Where("source_id", "=", sourceId)
             .FirstOrDefaultAsync<Account?>(cancellationToken: cancellationToken);
     }
 
