@@ -12,10 +12,11 @@ using NetMQ;
 
 using Octokit.Webhooks;
 using Octokit.Webhooks.AspNetCore;
-using Octokit.Webhooks.Events;
 
 using OS.Agent.Controllers.Teams;
+using OS.Agent.Events;
 using OS.Agent.Extensions;
+using OS.Agent.Middleware;
 using OS.Agent.Models;
 using OS.Agent.Postgres;
 using OS.Agent.Settings;
@@ -34,13 +35,15 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 builder.Services.AddOpenApi();
+builder.Services.AddHttpLogging();
 builder.AddTeams();
 builder.AddTeamsDevTools();
 builder.Services.AddGithubClient();
 builder.Services.AddPostgres(pgUrl);
+builder.Services.AddTransient<ErrorMiddleware>();
 builder.Services.AddTransient<InstallController>();
 builder.Services.AddTransient<MessageController>();
-builder.Services.AddSingleton<NetMQQueue<Event<InstallationEvent>>>();
+builder.Services.AddSingleton<NetMQQueue<Event<GithubInstallEvent>>>();
 builder.Services.AddHostedService<GithubInstallWorker>();
 builder.Services.AddSingleton<WebhookEventProcessor, GithubInstallProcessor>();
 
@@ -63,6 +66,7 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Local"))
 }
 
 app.Services.GetRequiredService<IMigrationRunner>().MigrateUp();
+app.UseMiddleware<ErrorMiddleware>();
 app.MapGitHubWebhooks();
 app.UseTeams();
 app.Run();

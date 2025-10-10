@@ -13,8 +13,10 @@ using Npgsql;
 
 using Octokit;
 
+using OS.Agent.Models;
 using OS.Agent.Settings;
 
+using SqlKata;
 using SqlKata.Compilers;
 using SqlKata.Execution;
 
@@ -56,6 +58,20 @@ public static class IServiceCollectionExtensions
 
     public static IServiceCollection AddPostgres(this IServiceCollection services, string url)
     {
+        foreach (var type in Assembly.GetExecutingAssembly().GetTypes().Where(type => type.GetCustomAttribute<ModelAttribute>() != null))
+        {
+            Dapper.SqlMapper.SetTypeMap(type, new Dapper.CustomPropertyTypeMap
+            (
+                type,
+                (type, columnName) =>
+                    type.GetProperties().FirstOrDefault(prop =>
+                        prop.GetCustomAttributes(false)
+                            .OfType<ColumnAttribute>()
+                            .Any(attr => attr.Name == columnName)
+                    ) ?? throw new Exception($"property '{columnName}' not found on type '{type.FullName}'")
+            ));
+        }
+
         services.AddFluentMigratorCore()
             .ConfigureRunner(rb => rb
                 .AddPostgres()

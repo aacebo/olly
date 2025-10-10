@@ -1,15 +1,16 @@
+using System.Text.Json;
+
 using Json.More;
 
 using NetMQ;
 
-using Octokit.Webhooks.Events;
-
+using OS.Agent.Events;
 using OS.Agent.Models;
 using OS.Agent.Stores;
 
 namespace OS.Agent.Workers;
 
-public class GithubInstallWorker(ILogger<GithubInstallWorker> logger, NetMQQueue<Event<InstallationEvent>> events, IServiceScopeFactory scopeFactory) : IHostedService
+public class GithubInstallWorker(ILogger<GithubInstallWorker> logger, NetMQQueue<Event<GithubInstallEvent>> events, IServiceScopeFactory scopeFactory) : IHostedService
 {
     private readonly NetMQPoller _poller = [events];
 
@@ -54,7 +55,7 @@ public class GithubInstallWorker(ILogger<GithubInstallWorker> logger, NetMQQueue
         return Task.CompletedTask;
     }
 
-    private async Task<bool> OnEvent(Event<InstallationEvent> @event, IStorage storage, CancellationToken cancellationToken = default)
+    private async Task<bool> OnEvent(Event<GithubInstallEvent> @event, IStorage storage, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("{}", @event);
 
@@ -66,43 +67,14 @@ public class GithubInstallWorker(ILogger<GithubInstallWorker> logger, NetMQQueue
         };
     }
 
-    private async Task<bool> OnCreateEvent(Event<InstallationEvent> @event, IStorage storage, CancellationToken cancellationToken = default)
+    private async Task<bool> OnCreateEvent(Event<GithubInstallEvent> @event, IStorage storage, CancellationToken cancellationToken = default)
     {
-        var org = @event.Body.Organization;
-
-        if (org is null)
-        {
-            return false;
-        }
-
-        var tenant = await storage.Tenants.GetBySourceId
-        (
-            SourceType.Github,
-            org.NodeId.ToString() ?? string.Empty,
-            cancellationToken
-        );
-
-        if (tenant is null)
-        {
-            tenant = await storage.Tenants.Create(new()
-            {
-                Name = org.Login,
-                SourceId = org.NodeId,
-                SourceType = SourceType.Github,
-                Data = org.ToJsonDocument()
-            }, cancellationToken: cancellationToken);
-        }
-        else
-        {
-            tenant.Data = org.ToJsonDocument();
-            tenant = await storage.Tenants.Update(tenant, cancellationToken: cancellationToken);
-        }
-
+        var tenant = await GetEventTenant(@event, storage, cancellationToken);
         var account = await storage.Accounts.GetBySourceId
         (
             tenant.Id,
             SourceType.Github,
-            @event.Body.Installation.Account.NodeId.ToString(),
+            @event.Body.Install.Account.NodeId,
             cancellationToken
         );
 
@@ -110,17 +82,17 @@ public class GithubInstallWorker(ILogger<GithubInstallWorker> logger, NetMQQueue
         {
             var user = new User()
             {
-                Name = @event.Body.Installation.Account.Name ?? @event.Body.Installation.Account.Login
+                Name = @event.Body.Install.Account.Name ?? @event.Body.Install.Account.Login
             };
 
             account = new()
             {
                 TenantId = tenant.Id,
                 UserId = user.Id,
-                SourceId = @event.Body.Installation.Account.NodeId.ToString(),
+                SourceId = @event.Body.Install.Account.NodeId,
                 SourceType = SourceType.Github,
-                Name = @event.Body.Installation.Account.Login,
-                Data = @event.Body.Installation.ToJsonDocument()
+                Name = @event.Body.Install.Account.Login,
+                Data = @event.Body.Install.Account.ToJsonDocument()
             };
 
             await storage.Users.Create(user);
@@ -128,37 +100,19 @@ public class GithubInstallWorker(ILogger<GithubInstallWorker> logger, NetMQQueue
             return true;
         }
 
-        account.Data = @event.Body.Installation.ToJsonDocument();
+        account.Data = @event.Body.Install.Account.ToJsonDocument();
         await storage.Accounts.Update(account, cancellationToken: cancellationToken);
         return true;
     }
 
-    private async Task<bool> OnDeleteEvent(Event<InstallationEvent> @event, IStorage storage, CancellationToken cancellationToken = default)
+    private async Task<bool> OnDeleteEvent(Event<GithubInstallEvent> @event, IStorage storage, CancellationToken cancellationToken = default)
     {
-        var org = @event.Body.Organization;
-
-        if (org is null)
-        {
-            return false;
-        }
-
-        var tenant = await storage.Tenants.GetBySourceId
-        (
-            SourceType.Github,
-            org.NodeId.ToString() ?? string.Empty,
-            cancellationToken
-        );
-
-        if (tenant is null)
-        {
-            return false;
-        }
-
+        var tenant = await GetEventTenant(@event, storage, cancellationToken);
         var account = await storage.Accounts.GetBySourceId
         (
             tenant.Id,
             SourceType.Github,
-            @event.Body.Installation.Account.NodeId.ToString(),
+            @event.Body.Install.Account.NodeId,
             cancellationToken
         );
 
@@ -166,5 +120,60 @@ public class GithubInstallWorker(ILogger<GithubInstallWorker> logger, NetMQQueue
 
         await storage.Accounts.Delete(account.Id, cancellationToken: cancellationToken);
         return true;
+    }
+
+    private async Task<Tenant> GetEventTenant(Event<GithubInstallEvent> @event, IStorage storage, CancellationToken cancellationToken = default)
+    {
+        Tenant? tenant;
+
+        if (@event.Body.Org is not null)
+        {
+            tenant = await storage.Tenants.GetBySourceId
+            (
+                SourceType.Github,
+                @event.Body.Org.NodeId,
+                cancellationToken
+            );
+
+            if (tenant is null)
+            {
+                return await storage.Tenants.Create(new()
+                {
+                    Name = @event.Body.Org.Login,
+                    SourceId = @event.Body.Org.NodeId,
+                    SourceType = SourceType.Github,
+                    Data = @event.Body.Org.ToJsonDocument()
+                }, cancellationToken: cancellationToken);
+            }
+
+            tenant.Data = @event.Body.Org.ToJsonDocument();
+            return await storage.Tenants.Update(tenant, cancellationToken: cancellationToken);
+        }
+
+        tenant = await storage.Tenants.GetBySourceId
+        (
+            SourceType.Github,
+            @event.Body.Install.Account.NodeId,
+            cancellationToken
+        );
+
+        if (tenant is null)
+        {
+            tenant = await storage.Tenants.Create(new()
+            {
+                Name = @event.Body.Install.Account.Login,
+                SourceId = @event.Body.Install.Account.NodeId,
+                SourceType = SourceType.Github,
+                Data = @event.Body.Install.Account.ToJsonDocument()
+            }, cancellationToken: cancellationToken);
+        }
+        else
+        {
+            logger.LogDebug("{}", JsonSerializer.Serialize(tenant));
+            tenant.Data = @event.Body.Install.Account.ToJsonDocument();
+            tenant = await storage.Tenants.Update(tenant, cancellationToken: cancellationToken);
+        }
+
+        return tenant;
     }
 }

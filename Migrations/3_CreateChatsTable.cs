@@ -10,10 +10,10 @@ public class CreateChatsTable : Migration
         Create.Table("chats")
             .WithColumn("id").AsGuid().PrimaryKey()
             .WithColumn("tenant_id").AsGuid().ForeignKey("tenants", "id").NotNullable()
-            .WithColumn("parent_id").AsGuid().ForeignKey("chats", "id")
+            .WithColumn("parent_id").AsGuid().ForeignKey("chats", "id").Nullable()
             .WithColumn("source_id").AsString().NotNullable()
             .WithColumn("source_type").AsString().NotNullable()
-            .WithColumn("name").AsString()
+            .WithColumn("name").AsString().Nullable()
             .WithColumn("data").AsCustom("JSONB").NotNullable()
             .WithColumn("created_at").AsDateTimeOffset().NotNullable()
             .WithColumn("updated_at").AsDateTimeOffset().NotNullable();

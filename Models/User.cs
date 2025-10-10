@@ -4,6 +4,7 @@ using SqlKata;
 
 namespace OS.Agent.Models;
 
+[Model]
 public class User
 {
     [Column("id")]

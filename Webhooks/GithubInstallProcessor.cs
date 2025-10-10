@@ -4,11 +4,12 @@ using Octokit.Webhooks;
 using Octokit.Webhooks.Events;
 using Octokit.Webhooks.Events.Installation;
 
+using OS.Agent.Events;
 using OS.Agent.Models;
 
 namespace OS.Agent.Webhooks;
 
-public class GithubInstallProcessor(ILogger<GithubInstallProcessor> logger, NetMQQueue<Event<InstallationEvent>> events) : WebhookEventProcessor
+public class GithubInstallProcessor(ILogger<GithubInstallProcessor> logger, NetMQQueue<Event<GithubInstallEvent>> events) : WebhookEventProcessor
 {
     protected override ValueTask ProcessInstallationWebhookAsync
     (
@@ -20,9 +21,13 @@ public class GithubInstallProcessor(ILogger<GithubInstallProcessor> logger, NetM
     {
         try
         {
-            var ev = new Event<InstallationEvent>(
+            var ev = new Event<GithubInstallEvent>(
                 action == InstallationAction.Created ? "github.install.create" : "github.install.delete",
-                @event
+                new()
+                {
+                    Install = @event.Installation,
+                    Org = @event.Organization
+                }
             );
 
             Task.Run(() =>

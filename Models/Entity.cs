@@ -9,6 +9,7 @@ namespace OS.Agent.Models;
 /// any generic unit of data
 /// or collection of data
 /// </summary>
+[Model]
 public class Entity
 {
     [Column("id")]
