@@ -60,6 +60,23 @@ public static class IServiceCollectionExtensions
 
     public static IServiceCollection AddPostgres(this IServiceCollection services)
     {
+        // load model type mappings
+        var modelTypes = Assembly.GetExecutingAssembly().GetTypes().Where(type => type.GetCustomAttribute<ModelAttribute>() != null);
+
+        foreach (var type in modelTypes)
+        {
+            Dapper.SqlMapper.SetTypeMap(type, new Dapper.CustomPropertyTypeMap
+            (
+                type,
+                (type, columnName) =>
+                    type.GetProperties().FirstOrDefault(prop =>
+                        prop.GetCustomAttributes(false)
+                            .OfType<ColumnAttribute>()
+                            .Any(attr => attr.Name == columnName)
+                    ) ?? throw new Exception($"property '{columnName}' not found on type '{type.FullName}'")
+            ));
+        }
+
         // add migrations
         services.AddFluentMigratorCore()
             .ConfigureRunner(rb => rb
@@ -75,23 +92,15 @@ public static class IServiceCollectionExtensions
             var config = provider.GetRequiredService<IConfiguration>();
             var jsonOptions = provider.GetService<JsonSerializerOptions>();
 
-            // map type handlers for Dapper
-            Dapper.SqlMapper.AddTypeHandler(new JsonDocumentTypeHandler(jsonOptions));
-            Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<SourceType>());
-
-            foreach (var type in Assembly.GetExecutingAssembly().GetTypes().Where(type => type.GetCustomAttribute<ModelAttribute>() != null))
+            // load type handlers
+            if (!Dapper.SqlMapper.HasTypeHandler(typeof(JsonDocument)))
             {
-                logger.LogDebug("mapping model type '{}'", type.FullName);
-                Dapper.SqlMapper.SetTypeMap(type, new Dapper.CustomPropertyTypeMap
-                (
-                    type,
-                    (type, columnName) =>
-                        type.GetProperties().FirstOrDefault(prop =>
-                            prop.GetCustomAttributes(false)
-                                .OfType<ColumnAttribute>()
-                                .Any(attr => attr.Name == columnName)
-                        ) ?? throw new Exception($"property '{columnName}' not found on type '{type.FullName}'")
-                ));
+                Dapper.SqlMapper.AddTypeHandler(new JsonDocumentTypeHandler(jsonOptions));
+            }
+
+            if (!Dapper.SqlMapper.HasTypeHandler(typeof(StringEnum)))
+            {
+                Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<SourceType>());
             }
 
             return new NpgsqlDataSourceBuilder(config.GetConnectionString("Postgres"))
@@ -101,7 +110,7 @@ public static class IServiceCollectionExtensions
         });
 
         // add query factory
-        return services.AddTransient(provider =>
+        return services.AddScoped(provider =>
         {
             var logger = provider.GetRequiredService<ILogger<QueryFactory>>();
             var connection = provider.GetRequiredService<NpgsqlConnection>();

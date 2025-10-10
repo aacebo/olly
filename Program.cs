@@ -32,14 +32,15 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 });
 
-builder.Services.AddOpenApi();
-builder.Services.AddHttpLogging();
-builder.Services.AddGithubClient();
-builder.Services.AddPostgres();
 builder.Services.AddSingleton(new JsonSerializerOptions()
 {
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
 });
+
+builder.Services.AddOpenApi();
+builder.Services.AddHttpLogging();
+builder.Services.AddGithubClient();
+builder.Services.AddPostgres();
 
 // Teams
 builder.AddTeams();
