@@ -9,13 +9,13 @@ using NpgsqlTypes;
 
 namespace OS.Agent.Postgres;
 
-public sealed class JsonDocumentTypeHandler : SqlMapper.TypeHandler<JsonDocument?>
+public sealed class JsonDocumentTypeHandler(JsonSerializerOptions? options = null) : SqlMapper.TypeHandler<JsonDocument?>
 {
     public override void SetValue(IDbDataParameter parameter, JsonDocument? value)
     {
         var p = (NpgsqlParameter)parameter;
         p.NpgsqlDbType = NpgsqlDbType.Jsonb;
-        p.Value = value is null ? DBNull.Value : value.RootElement.ToString();
+        p.Value = value is null ? DBNull.Value : JsonSerializer.Serialize(value.RootElement, options);
     }
 
     public override JsonDocument? Parse(object value) => value switch

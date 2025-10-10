@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Text.Json;
 
 using FluentMigrator.Runner;
 
@@ -14,6 +15,7 @@ using Npgsql;
 using Octokit;
 
 using OS.Agent.Models;
+using OS.Agent.Postgres;
 using OS.Agent.Settings;
 
 using SqlKata;
@@ -56,22 +58,9 @@ public static class IServiceCollectionExtensions
         });
     }
 
-    public static IServiceCollection AddPostgres(this IServiceCollection services, string url)
+    public static IServiceCollection AddPostgres(this IServiceCollection services)
     {
-        foreach (var type in Assembly.GetExecutingAssembly().GetTypes().Where(type => type.GetCustomAttribute<ModelAttribute>() != null))
-        {
-            Dapper.SqlMapper.SetTypeMap(type, new Dapper.CustomPropertyTypeMap
-            (
-                type,
-                (type, columnName) =>
-                    type.GetProperties().FirstOrDefault(prop =>
-                        prop.GetCustomAttributes(false)
-                            .OfType<ColumnAttribute>()
-                            .Any(attr => attr.Name == columnName)
-                    ) ?? throw new Exception($"property '{columnName}' not found on type '{type.FullName}'")
-            ));
-        }
-
+        // add migrations
         services.AddFluentMigratorCore()
             .ConfigureRunner(rb => rb
                 .AddPostgres()
@@ -79,16 +68,39 @@ public static class IServiceCollectionExtensions
                 .WithGlobalConnectionString("Postgres")
             );
 
+        // add database connection
         services.AddTransient(provider =>
         {
             var logger = provider.GetRequiredService<ILogger<NpgsqlDataSource>>();
-            return new NpgsqlDataSourceBuilder(url)
-                    .UseLoggerFactory(provider.GetRequiredService<ILoggerFactory>())
+            var config = provider.GetRequiredService<IConfiguration>();
+            var jsonOptions = provider.GetService<JsonSerializerOptions>();
+
+            // map type handlers for Dapper
+            Dapper.SqlMapper.AddTypeHandler(new JsonDocumentTypeHandler(jsonOptions));
+            Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<SourceType>());
+
+            foreach (var type in Assembly.GetExecutingAssembly().GetTypes().Where(type => type.GetCustomAttribute<ModelAttribute>() != null))
+            {
+                logger.LogDebug("mapping model type '{}'", type.FullName);
+                Dapper.SqlMapper.SetTypeMap(type, new Dapper.CustomPropertyTypeMap
+                (
+                    type,
+                    (type, columnName) =>
+                        type.GetProperties().FirstOrDefault(prop =>
+                            prop.GetCustomAttributes(false)
+                                .OfType<ColumnAttribute>()
+                                .Any(attr => attr.Name == columnName)
+                        ) ?? throw new Exception($"property '{columnName}' not found on type '{type.FullName}'")
+                ));
+            }
+
+            return new NpgsqlDataSourceBuilder(config.GetConnectionString("Postgres"))
                     .EnableDynamicJson()
                     .Build()
                     .CreateConnection();
         });
 
+        // add query factory
         return services.AddTransient(provider =>
         {
             var logger = provider.GetRequiredService<ILogger<QueryFactory>>();

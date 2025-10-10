@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using FluentMigrator.Runner;
@@ -18,15 +19,12 @@ using OS.Agent.Events;
 using OS.Agent.Extensions;
 using OS.Agent.Middleware;
 using OS.Agent.Models;
-using OS.Agent.Postgres;
 using OS.Agent.Settings;
 using OS.Agent.Stores;
 using OS.Agent.Webhooks;
 using OS.Agent.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
-var pgUrl = builder.Configuration.GetConnectionString("Postgres") ??
-    throw new Exception("ConnectionStrings.Postgres not found");
 
 builder.Services.Configure<GithubSettings>(builder.Configuration.GetSection("Github"));
 builder.Services.ConfigureHttpJsonOptions(options =>
@@ -36,17 +34,29 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 
 builder.Services.AddOpenApi();
 builder.Services.AddHttpLogging();
+builder.Services.AddGithubClient();
+builder.Services.AddPostgres();
+builder.Services.AddSingleton(new JsonSerializerOptions()
+{
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+});
+
+// Teams
 builder.AddTeams();
 builder.AddTeamsDevTools();
-builder.Services.AddGithubClient();
-builder.Services.AddPostgres(pgUrl);
+
+// Controllers
 builder.Services.AddTransient<ErrorMiddleware>();
+builder.Services.AddTransient<ChatController>();
 builder.Services.AddTransient<InstallController>();
 builder.Services.AddTransient<MessageController>();
-builder.Services.AddSingleton<NetMQQueue<Event<GithubInstallEvent>>>();
-builder.Services.AddHostedService<GithubInstallWorker>();
-builder.Services.AddSingleton<WebhookEventProcessor, GithubInstallProcessor>();
 
+// Queues
+builder.Services.AddSingleton<NetMQQueue<Event<GithubInstallEvent>>>();
+builder.Services.AddSingleton<WebhookEventProcessor, GithubInstallProcessor>();
+builder.Services.AddHostedService<GithubInstallWorker>();
+
+// Storage
 builder.Services.AddScoped<IStorage, Storage>();
 builder.Services.AddScoped<IUserStorage, UserStorage>();
 builder.Services.AddScoped<ITenantStorage, TenantStorage>();
@@ -54,9 +64,6 @@ builder.Services.AddScoped<IAccountStorage, AccountStorage>();
 builder.Services.AddScoped<IChatStorage, ChatStorage>();
 builder.Services.AddScoped<IMessageStorage, MessageStorage>();
 builder.Services.AddScoped<IEntityStorage, EntityStorage>();
-
-Dapper.SqlMapper.AddTypeHandler(new JsonDocumentTypeHandler());
-Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<SourceType>());
 
 var app = builder.Build();
 
