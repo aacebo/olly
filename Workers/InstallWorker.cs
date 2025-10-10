@@ -71,7 +71,8 @@ public class InstallWorker(ILogger<InstallWorker> logger, NetMQQueue<Event<Insta
     {
         var account = await accountStorage.GetBySourceId
         (
-            SourceType.Github, @event.Body.Account.Id.ToString(),
+            SourceType.Github,
+            @event.Body.Account.Id.ToString(),
             cancellationToken
         );
 
@@ -107,7 +108,8 @@ public class InstallWorker(ILogger<InstallWorker> logger, NetMQQueue<Event<Insta
     {
         var account = await accountStorage.GetBySourceId
         (
-            SourceType.Github, @event.Body.Account.Id.ToString(),
+            SourceType.Github,
+            @event.Body.Account.Id.ToString(),
             cancellationToken
         );
 
