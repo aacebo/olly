@@ -10,6 +10,7 @@ public class CreateChatsTable : Migration
         Create.Table("chats")
             .WithColumn("id").AsGuid().PrimaryKey()
             .WithColumn("tenant_id").AsGuid().ForeignKey("tenants", "id").NotNullable()
+            .WithColumn("parent_id").AsGuid().ForeignKey("chats", "id")
             .WithColumn("source_id").AsString().NotNullable()
             .WithColumn("source_type").AsString().NotNullable()
             .WithColumn("name").AsString()

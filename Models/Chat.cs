@@ -15,6 +15,10 @@ public class Chat
     [JsonPropertyName("tenant_id")]
     public required Guid TenantId { get; init; }
 
+    [Column("parent_id")]
+    [JsonPropertyName("parent_id")]
+    public Guid? ParentId { get; set; }
+
     [Column("source_id")]
     [JsonPropertyName("source_id")]
     public required string SourceId { get; set; }

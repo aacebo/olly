@@ -42,8 +42,13 @@ builder.Services.AddTransient<MainController>();
 builder.Services.AddSingleton<NetMQQueue<Event<Installation>>>();
 builder.Services.AddHostedService<InstallWorker>();
 builder.Services.AddSingleton<WebhookEventProcessor, InstallProcessor>();
+
 builder.Services.AddScoped<IUserStorage, UserStorage>();
+builder.Services.AddScoped<ITenantStorage, TenantStorage>();
 builder.Services.AddScoped<IAccountStorage, AccountStorage>();
+builder.Services.AddScoped<IChatStorage, ChatStorage>();
+builder.Services.AddScoped<IMessageStorage, MessageStorage>();
+builder.Services.AddScoped<IEntityStorage, EntityStorage>();
 
 Dapper.SqlMapper.AddTypeHandler(new JsonDocumentTypeHandler());
 Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<SourceType>());
