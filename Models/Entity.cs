@@ -45,7 +45,7 @@ public class Entity
 
     [Column("data")]
     [JsonPropertyName("data")]
-    public required JsonDocument Data { get; set; }
+    public JsonDocument Data { get; set; } = JsonDocument.Parse("{}");
 
     [Column("created_at")]
     [JsonPropertyName("created_at")]

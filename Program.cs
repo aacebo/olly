@@ -12,9 +12,9 @@ using NetMQ;
 
 using Octokit.Webhooks;
 using Octokit.Webhooks.AspNetCore;
-using Octokit.Webhooks.Models;
+using Octokit.Webhooks.Events;
 
-using OS.Agent;
+using OS.Agent.Controllers.Teams;
 using OS.Agent.Extensions;
 using OS.Agent.Models;
 using OS.Agent.Postgres;
@@ -38,11 +38,13 @@ builder.AddTeams();
 builder.AddTeamsDevTools();
 builder.Services.AddGithubClient();
 builder.Services.AddPostgres(pgUrl);
-builder.Services.AddTransient<MainController>();
-builder.Services.AddSingleton<NetMQQueue<Event<Installation>>>();
-builder.Services.AddHostedService<InstallWorker>();
-builder.Services.AddSingleton<WebhookEventProcessor, InstallProcessor>();
+builder.Services.AddTransient<InstallController>();
+builder.Services.AddTransient<MessageController>();
+builder.Services.AddSingleton<NetMQQueue<Event<InstallationEvent>>>();
+builder.Services.AddHostedService<GithubInstallWorker>();
+builder.Services.AddSingleton<WebhookEventProcessor, GithubInstallProcessor>();
 
+builder.Services.AddScoped<IStorage, Storage>();
 builder.Services.AddScoped<IUserStorage, UserStorage>();
 builder.Services.AddScoped<ITenantStorage, TenantStorage>();
 builder.Services.AddScoped<IAccountStorage, AccountStorage>();
