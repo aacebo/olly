@@ -71,7 +71,7 @@ public class InstallWorker(ILogger<InstallWorker> logger, NetMQQueue<Event<Insta
     {
         var account = await accountStorage.GetByExternalId
         (
-            AccountType.Github, @event.Body.Account.Id.ToString(),
+            SourceType.Github, @event.Body.Account.Id.ToString(),
             cancellationToken
         );
 
@@ -87,8 +87,8 @@ public class InstallWorker(ILogger<InstallWorker> logger, NetMQQueue<Event<Insta
             account = new()
             {
                 UserId = user.Id,
-                ExternalId = @event.Body.Account.Id.ToString(),
-                Type = AccountType.Github,
+                SourceId = @event.Body.Account.Id.ToString(),
+                SourceType = SourceType.Github,
                 Name = @event.Body.Account.Login,
                 Data = JsonSerializer.SerializeToDocument(@event.Body)
             };
@@ -107,7 +107,7 @@ public class InstallWorker(ILogger<InstallWorker> logger, NetMQQueue<Event<Insta
     {
         var account = await accountStorage.GetByExternalId
         (
-            AccountType.Github, @event.Body.Account.Id.ToString(),
+            SourceType.Github, @event.Body.Account.Id.ToString(),
             cancellationToken
         );
 

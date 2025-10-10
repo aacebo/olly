@@ -5,19 +5,27 @@ using SqlKata;
 
 namespace OS.Agent.Models;
 
-public class Account
+/// <summary>
+/// any generic unit of data
+/// or collection of data
+/// </summary>
+public class Entity
 {
     [Column("id")]
     [JsonPropertyName("id")]
     public Guid Id { get; init; } = Guid.NewGuid();
 
-    [Column("user_id")]
-    [JsonPropertyName("user_id")]
-    public required Guid UserId { get; init; }
-
     [Column("tenant_id")]
     [JsonPropertyName("tenant_id")]
     public required Guid TenantId { get; init; }
+
+    [Column("account_id")]
+    [JsonPropertyName("account_id")]
+    public Guid? AccountId { get; init; }
+
+    [Column("parent_id")]
+    [JsonPropertyName("parent_id")]
+    public Guid? ParentId { get; set; }
 
     [Column("source_id")]
     [JsonPropertyName("source_id")]
@@ -27,9 +35,13 @@ public class Account
     [JsonPropertyName("source_type")]
     public required SourceType SourceType { get; init; }
 
+    [Column("type")]
+    [JsonPropertyName("type")]
+    public required string Type { get; init; }
+
     [Column("name")]
     [JsonPropertyName("name")]
-    public required string Name { get; set; }
+    public string? Name { get; set; }
 
     [Column("data")]
     [JsonPropertyName("data")]

@@ -2,7 +2,7 @@ using FluentMigrator;
 
 namespace OS.Agent.Migrations;
 
-[Migration(1)]
+[Migration(2)]
 public class CreateAccountsTable : Migration
 {
     public override void Up()
@@ -10,8 +10,9 @@ public class CreateAccountsTable : Migration
         Create.Table("accounts")
             .WithColumn("id").AsGuid().PrimaryKey()
             .WithColumn("user_id").AsGuid().ForeignKey("users", "id").NotNullable()
-            .WithColumn("external_id").AsString().NotNullable()
-            .WithColumn("type").AsString().NotNullable()
+            .WithColumn("tenant_id").AsGuid().ForeignKey("tenants", "id").NotNullable()
+            .WithColumn("source_id").AsString().NotNullable()
+            .WithColumn("source_type").AsString().NotNullable()
             .WithColumn("name").AsString().NotNullable()
             .WithColumn("data").AsCustom("JSONB").NotNullable()
             .WithColumn("created_at").AsDateTimeOffset().NotNullable()
@@ -19,7 +20,7 @@ public class CreateAccountsTable : Migration
 
         Create.UniqueConstraint()
             .OnTable("accounts")
-            .Columns("external_id", "type");
+            .Columns("tenant_id", "source_id", "source_type");
     }
 
     public override void Down()

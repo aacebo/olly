@@ -5,14 +5,7 @@ using SqlKata;
 
 namespace OS.Agent.Models;
 
-public interface IEvent
-{
-    Guid Id { get; init; }
-    string Name { get; init; }
-    DateTimeOffset CreatedAt { get; init; }
-}
-
-public class Event<T>(string name, T body) : IEvent
+public class Event<T>(string name, T body)
 {
     [Column("id")]
     [JsonPropertyName("id")]

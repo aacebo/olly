@@ -1,0 +1,30 @@
+using FluentMigrator;
+
+namespace OS.Agent.Migrations;
+
+[Migration(4)]
+public class CreateMessagesTable : Migration
+{
+    public override void Up()
+    {
+        Create.Table("messages")
+            .WithColumn("id").AsGuid().PrimaryKey()
+            .WithColumn("chat_id").AsGuid().ForeignKey("chats", "id").NotNullable()
+            .WithColumn("account_id").AsGuid().ForeignKey("accounts", "id").NotNullable()
+            .WithColumn("source_id").AsString().NotNullable()
+            .WithColumn("source_type").AsString().NotNullable()
+            .WithColumn("text").AsString().NotNullable()
+            .WithColumn("data").AsCustom("JSONB").NotNullable()
+            .WithColumn("created_at").AsDateTimeOffset().NotNullable()
+            .WithColumn("updated_at").AsDateTimeOffset().NotNullable();
+
+        Create.UniqueConstraint()
+            .OnTable("messages")
+            .Columns("chat_id", "source_id", "source_type");
+    }
+
+    public override void Down()
+    {
+        Delete.Table("messages");
+    }
+}

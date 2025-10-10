@@ -46,7 +46,7 @@ builder.Services.AddScoped<IUserStorage, UserStorage>();
 builder.Services.AddScoped<IAccountStorage, AccountStorage>();
 
 Dapper.SqlMapper.AddTypeHandler(new JsonDocumentTypeHandler());
-Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<AccountType>());
+Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<SourceType>());
 
 var app = builder.Build();
 

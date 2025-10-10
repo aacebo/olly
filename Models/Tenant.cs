@@ -5,19 +5,11 @@ using SqlKata;
 
 namespace OS.Agent.Models;
 
-public class Account
+public class Tenant
 {
     [Column("id")]
     [JsonPropertyName("id")]
     public Guid Id { get; init; } = Guid.NewGuid();
-
-    [Column("user_id")]
-    [JsonPropertyName("user_id")]
-    public required Guid UserId { get; init; }
-
-    [Column("tenant_id")]
-    [JsonPropertyName("tenant_id")]
-    public required Guid TenantId { get; init; }
 
     [Column("source_id")]
     [JsonPropertyName("source_id")]
@@ -29,7 +21,7 @@ public class Account
 
     [Column("name")]
     [JsonPropertyName("name")]
-    public required string Name { get; set; }
+    public string? Name { get; set; }
 
     [Column("data")]
     [JsonPropertyName("data")]
