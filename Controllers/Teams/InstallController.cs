@@ -75,6 +75,26 @@ public class InstallController(JsonSerializerOptions options, IStorage storage)
             await storage.Chats.Update(chat, cancellationToken: cancellationToken);
         }
 
-        await client.Send("Hola!👋");
+        // await client.Send(
+        //     new MessageActivity()
+        //     {
+        //         InputHint = InputHint.AcceptingInput,
+        //         Conversation = activity.Conversation
+        //     }.AddAttachment(
+        //         new AdaptiveCard(
+        //             new Image("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4ExGUTEwAQn95uM4KUU-OZ7Zz1n2lDrnXfw&s")
+        //                 .WithHorizontalAlignment(HorizontalAlignment.Center)
+        //                 .WithStyle(ImageStyle.RoundedCorners)
+        //                 .WithSize(Size.Large),
+        //             new ActionSet(
+        //                 new SignInAction("<url>")
+        //                     .WithTitle("Login")
+        //                     .WithStyle(ActionStyle.Positive)
+        //                     .WithIconUrl("icon:ShieldLock")
+        //             ).WithHorizontalAlignment(HorizontalAlignment.Center)
+        //         )
+        //     )
+        // );
+        await client.Send("Hello! Is there anything I can help you with?");
     }
 }

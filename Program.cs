@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 
 using FluentMigrator.Runner;
 
+using Microsoft.Teams.AI.Models.OpenAI.Extensions;
 using Microsoft.Teams.Apps.Extensions;
 using Microsoft.Teams.Extensions.Logging;
 
@@ -19,6 +20,7 @@ using OS.Agent.Events;
 using OS.Agent.Extensions;
 using OS.Agent.Middleware;
 using OS.Agent.Models;
+using OS.Agent.Prompts;
 using OS.Agent.Settings;
 using OS.Agent.Stores;
 using OS.Agent.Webhooks;
@@ -45,6 +47,10 @@ builder.Services.AddPostgres();
 // Teams
 builder.AddTeams();
 builder.AddTeamsDevTools();
+builder.AddOpenAI<MainPrompt>();
+
+// Prompts
+builder.Services.AddTransient<MainPrompt>();
 
 // Controllers
 builder.Services.AddTransient<ErrorMiddleware>();
