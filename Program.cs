@@ -79,6 +79,7 @@ builder.Services.AddScoped<IAccountStorage, AccountStorage>();
 builder.Services.AddScoped<IChatStorage, ChatStorage>();
 builder.Services.AddScoped<IMessageStorage, MessageStorage>();
 builder.Services.AddScoped<IEntityStorage, EntityStorage>();
+builder.Services.AddScoped<ITokenStorage, TokenStorage>();
 
 var app = builder.Build();
 

@@ -28,29 +28,9 @@ public class GithubPrompt(IPromptContext context)
     [Function.Description("get a list of connected data source accounts for the user")]
     public async Task<IEnumerable<Account>> GetAccounts()
     {
-        var tenant = await context.Storage.Tenants.GetBySourceId(
-            SourceType.Teams,
-            context.Activity.Conversation.TenantId!,
+        return await context.Storage.Accounts.GetByTenantId(
+            context.Tenant.Id,
             context.CancellationToken
         );
-
-        if (tenant is null)
-        {
-            throw new Exception("UnAuthorized: Tenant not found");
-        }
-
-        var user = await context.Storage.Accounts.GetBySourceId(
-            tenant.Id,
-            SourceType.Teams,
-            context.Activity.From.Id,
-            context.CancellationToken
-        );
-
-        if (user is null)
-        {
-            throw new Exception("UnAuthorized: User not found");
-        }
-
-        return await context.Storage.Accounts.GetByTenantId(tenant.Id, context.CancellationToken);
     }
 }

@@ -2,6 +2,7 @@ using Microsoft.Teams.AI.Models.OpenAI;
 using Microsoft.Teams.Api.Activities;
 using Microsoft.Teams.Apps;
 using Microsoft.Teams.Cards;
+using Microsoft.Teams.Common;
 
 using NetMQ;
 
@@ -126,12 +127,15 @@ public class MessageActivityWorker(ILogger<MessageActivityWorker> logger, IWebHo
                             .WithFontType(FontType.Monospace)
                             .WithIsSubtle(true)
                             .WithWrap(false)
-                    ).WithHorizontalAlignment(HorizontalAlignment.Left),
+                    ).WithWidth(new Union<string, float>("auto")),
                     new Column(
                         new TextBlock($"{elapse.Milliseconds}ms")
                             .WithIsSubtle(true)
                             .WithWrap(false)
-                    ).WithHorizontalAlignment(HorizontalAlignment.Left)
+                            .WithHorizontalAlignment(HorizontalAlignment.Left)
+                    )
+                    .WithHorizontalAlignment(HorizontalAlignment.Left)
+                    .WithWidth(new Union<string, float>("stretch"))
                 )
             ));
         }

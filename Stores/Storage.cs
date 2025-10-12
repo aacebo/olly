@@ -8,6 +8,7 @@ public interface IStorage
     IMessageStorage Messages { get; }
     ITenantStorage Tenants { get; }
     IUserStorage Users { get; }
+    ITokenStorage Tokens { get; }
 }
 
 public class Storage : IStorage
@@ -18,6 +19,7 @@ public class Storage : IStorage
     public IMessageStorage Messages => _messages;
     public ITenantStorage Tenants => _tenants;
     public IUserStorage Users => _users;
+    public ITokenStorage Tokens => _tokens;
 
     private readonly IAccountStorage _accounts;
     private readonly IChatStorage _chats;
@@ -25,6 +27,7 @@ public class Storage : IStorage
     private readonly IMessageStorage _messages;
     private readonly ITenantStorage _tenants;
     private readonly IUserStorage _users;
+    private readonly ITokenStorage _tokens;
 
     public Storage(IServiceScopeFactory factory) : this(factory.CreateScope())
     {
@@ -39,5 +42,6 @@ public class Storage : IStorage
         _messages = scope.ServiceProvider.GetRequiredService<IMessageStorage>();
         _tenants = scope.ServiceProvider.GetRequiredService<ITenantStorage>();
         _users = scope.ServiceProvider.GetRequiredService<IUserStorage>();
+        _tokens = scope.ServiceProvider.GetRequiredService<ITokenStorage>();
     }
 }

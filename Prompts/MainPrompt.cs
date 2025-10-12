@@ -1,8 +1,13 @@
+using Microsoft.Extensions.Options;
 using Microsoft.Teams.AI.Annotations;
 using Microsoft.Teams.AI.Models.OpenAI;
 using Microsoft.Teams.Api.Activities;
+using Microsoft.Teams.Cards;
 
 using OS.Agent.Models;
+using OS.Agent.Settings;
+
+using Api = Microsoft.Teams.Api;
 
 namespace OS.Agent.Prompts;
 
@@ -16,6 +21,7 @@ namespace OS.Agent.Prompts;
 )]
 public class MainPrompt(IPromptContext context)
 {
+    public readonly IOptions<GithubSettings> GithubSettings = context.Scope.ServiceProvider.GetRequiredService<IOptions<GithubSettings>>();
     public readonly OpenAIChatPrompt GithubPrompt = OpenAIChatPrompt.From(context.Model, new GithubPrompt(context), new()
     {
         Logger = context.App.Logger
@@ -50,6 +56,43 @@ public class MainPrompt(IPromptContext context)
     )]
     public async Task<string> Github([Param] string message)
     {
+        var accounts = await context.Storage.Accounts.GetByUserId(
+            context.Account.UserId,
+            context.CancellationToken
+        );
+
+        if (accounts.FirstOrDefault(a => a.SourceType == SourceType.Github) is null)
+        {
+            var state = new Token.State()
+            {
+                TenantId = context.Tenant.Id,
+                UserId = context.Account.UserId
+            };
+
+            await context.Send(
+                new MessageActivity()
+                {
+                    InputHint = Api.InputHint.AcceptingInput,
+                    Conversation = context.Activity.Conversation
+                }.AddAttachment(
+                    new AdaptiveCard(
+                        new Image("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4ExGUTEwAQn95uM4KUU-OZ7Zz1n2lDrnXfw&s")
+                            .WithHorizontalAlignment(HorizontalAlignment.Center)
+                            .WithStyle(ImageStyle.RoundedCorners)
+                            .WithSize(Size.Large),
+                        new ActionSet(
+                            new OpenUrlAction($"{GithubSettings.Value.OAuthUrl}&state={state.Encode()}")
+                                .WithTitle("Login")
+                                .WithStyle(ActionStyle.Positive)
+                                .WithIconUrl("icon:ShieldLock")
+                        ).WithHorizontalAlignment(HorizontalAlignment.Center)
+                    )
+                )
+            );
+
+            return "<user was prompted to login to Github>";
+        }
+
         var res = await GithubPrompt.Send(message, null, context.CancellationToken);
         return res.Content;
     }

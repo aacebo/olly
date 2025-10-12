@@ -17,6 +17,7 @@ public interface IPromptContext
     Account Account { get; }
     Chat Chat { get; }
     CancellationToken CancellationToken { get; }
+    IServiceScope Scope { get; }
 
     Task<MessageActivity> Send(string message);
     Task<TActivity> Send<TActivity>(TActivity activity) where TActivity : IActivity;
@@ -32,8 +33,7 @@ public class PromptContext : IPromptContext
     public required Account Account { get; set; }
     public required Chat Chat { get; set; }
     public CancellationToken CancellationToken { get; }
-
-    private readonly IServiceScope _scope;
+    public IServiceScope Scope { get; }
 
     public PromptContext(MessageActivity activity, IServiceScope scope, CancellationToken cancellationToken = default)
     {
@@ -42,7 +42,7 @@ public class PromptContext : IPromptContext
         Storage = scope.ServiceProvider.GetRequiredService<IStorage>();
         Model = scope.ServiceProvider.GetRequiredService<OpenAIChatModel>();
         CancellationToken = cancellationToken;
-        _scope = scope;
+        Scope = scope;
     }
 
     public Task<MessageActivity> Send(string message)
