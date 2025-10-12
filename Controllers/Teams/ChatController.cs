@@ -65,14 +65,46 @@ public class ChatController(JsonSerializerOptions options, IStorage storage)
                 SourceId = chatId,
                 SourceType = SourceType.Teams,
                 Name = activity.Conversation.Name,
-                Data = activity.ChannelData!.Settings!.SelectedChannel.ToJsonDocument(options)
             }, cancellationToken: cancellationToken);
         }
         else
         {
             chat.Name = activity.Conversation.Name;
-            chat.Data = activity.ChannelData!.Settings!.SelectedChannel.ToJsonDocument(options);
             await storage.Chats.Update(chat, cancellationToken: cancellationToken);
+        }
+
+        foreach (var member in activity.MembersAdded)
+        {
+            var account = await storage.Accounts.GetBySourceId(
+                tenant.Id,
+                SourceType.Teams,
+                member.Id,
+                cancellationToken
+            );
+
+            if (account is null)
+            {
+                var user = await storage.Users.Create(new()
+                {
+                    Name = member.Name ?? "<anonymous>"
+                });
+
+                await storage.Accounts.Create(new()
+                {
+                    UserId = user.Id,
+                    TenantId = tenant.Id,
+                    SourceId = member.Id,
+                    SourceType = SourceType.Teams,
+                    Name = member.Name ?? "<anonymous>",
+                    Data = member.ToJsonDocument(options)
+                }, cancellationToken: cancellationToken);
+            }
+            else
+            {
+                account.Name = member.Name ?? account.Name;
+                account.Data = member.ToJsonDocument(options);
+                await storage.Accounts.Update(account, cancellationToken: cancellationToken);
+            }
         }
     }
 }

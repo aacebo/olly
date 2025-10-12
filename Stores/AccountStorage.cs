@@ -11,6 +11,7 @@ public interface IAccountStorage
     Task<Account?> GetById(Guid id, CancellationToken cancellationToken = default);
     Task<Account?> GetBySourceId(Guid tenantId, SourceType type, string sourceId, CancellationToken cancellationToken = default);
     Task<IEnumerable<Account>> GetByUserId(Guid userId, CancellationToken cancellationToken = default);
+    Task<IEnumerable<Account>> GetByTenantId(Guid tenantId, CancellationToken cancellationToken = default);
     Task<Account> Create(Account value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
     Task<Account> Update(Account value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
     Task Delete(Guid id, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
@@ -48,6 +49,17 @@ public class AccountStorage(ILogger<IAccountStorage> logger, QueryFactory db) : 
             .Select("*")
             .From("accounts")
             .Where("user_id", "=", userId)
+            .GetAsync<Account>(cancellationToken: cancellationToken);
+    }
+
+    public async Task<IEnumerable<Account>> GetByTenantId(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("GetByTenantId");
+        return await db
+            .Query()
+            .Select("*")
+            .From("accounts")
+            .Where("tenant_id", "=", tenantId)
             .GetAsync<Account>(cancellationToken: cancellationToken);
     }
 

@@ -3,7 +3,9 @@ using System.Text.Json.Serialization;
 
 using FluentMigrator.Runner;
 
+using Microsoft.Teams.AI.Models.OpenAI;
 using Microsoft.Teams.AI.Models.OpenAI.Extensions;
+using Microsoft.Teams.Api.Activities;
 using Microsoft.Teams.Apps.Extensions;
 using Microsoft.Teams.Extensions.Logging;
 
@@ -20,13 +22,14 @@ using OS.Agent.Events;
 using OS.Agent.Extensions;
 using OS.Agent.Middleware;
 using OS.Agent.Models;
-using OS.Agent.Prompts;
 using OS.Agent.Settings;
 using OS.Agent.Stores;
 using OS.Agent.Webhooks;
 using OS.Agent.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
+var openAiSettings = builder.Configuration.GetOpenAI();
+var openAiModel = new OpenAIChatModel(openAiSettings.Model, openAiSettings.ApiKey);
 
 builder.Services.Configure<GithubSettings>(builder.Configuration.GetSection("Github"));
 builder.Services.ConfigureHttpJsonOptions(options =>
@@ -47,10 +50,9 @@ builder.Services.AddPostgres();
 // Teams
 builder.AddTeams();
 builder.AddTeamsDevTools();
-builder.AddOpenAI<MainPrompt>();
 
-// Prompts
-builder.Services.AddTransient<MainPrompt>();
+// AI
+builder.Services.AddSingleton(openAiModel);
 
 // Controllers
 builder.Services.AddTransient<ErrorMiddleware>();
@@ -60,8 +62,14 @@ builder.Services.AddTransient<MessageController>();
 
 // Queues
 builder.Services.AddSingleton<NetMQQueue<Event<GithubInstallEvent>>>();
+builder.Services.AddSingleton<NetMQQueue<Event<MessageActivity>>>();
+
+// Webhooks
 builder.Services.AddSingleton<WebhookEventProcessor, GithubInstallProcessor>();
+
+// Workers
 builder.Services.AddHostedService<GithubInstallWorker>();
+builder.Services.AddHostedService<MessageActivityWorker>();
 
 // Storage
 builder.Services.AddScoped<IStorage, Storage>();

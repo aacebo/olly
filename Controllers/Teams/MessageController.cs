@@ -1,16 +1,22 @@
 using Microsoft.Teams.Api.Activities;
-using Microsoft.Teams.Apps;
 using Microsoft.Teams.Apps.Activities;
 using Microsoft.Teams.Apps.Annotations;
+
+using NetMQ;
+
+using OS.Agent.Models;
 
 namespace OS.Agent.Controllers.Teams;
 
 [TeamsController]
-public class MessageController
+public class MessageController(NetMQQueue<Event<MessageActivity>> events)
 {
     [Message]
-    public async Task OnMessage([Context] MessageActivity activity, [Context] IContext.Client client)
+    public void OnMessage([Context] MessageActivity activity)
     {
-        await client.Send($"you said \"{activity.Text}\"");
+        events.Enqueue(new Event<MessageActivity>(
+            "activity.message",
+            activity
+        ));
     }
 }
