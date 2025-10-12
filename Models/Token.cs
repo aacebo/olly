@@ -7,7 +7,7 @@ using SqlKata;
 namespace OS.Agent.Models;
 
 [Model]
-public class Token
+public class Token : Model
 {
     [Column("id")]
     [JsonPropertyName("id")]
@@ -45,9 +45,11 @@ public class Token
     [JsonPropertyName("updated_at")]
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 
+    [Ignore]
     [JsonIgnore]
     public bool IsExpired => ExpiresAt is not null && ExpiresAt.Value > DateTimeOffset.UtcNow;
 
+    [Ignore]
     [JsonIgnore]
     public bool IsRefreshExpired => RefreshExpiresAt is not null && RefreshExpiresAt.Value > DateTimeOffset.UtcNow;
 

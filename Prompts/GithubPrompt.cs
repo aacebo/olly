@@ -20,7 +20,7 @@ public class GithubPrompt(IPromptContext context)
     [Function.Description("say something to the user")]
     public async Task Say([Param] string message)
     {
-        await context.Send(message);
+        await context.Send(new MessageActivity(message));
         await context.Send(new TypingActivity());
     }
 
@@ -28,7 +28,7 @@ public class GithubPrompt(IPromptContext context)
     [Function.Description("get a list of connected data source accounts for the user")]
     public async Task<IEnumerable<Account>> GetAccounts()
     {
-        return await context.Storage.Accounts.GetByTenantId(
+        return await context.Accounts.GetByTenantId(
             context.Tenant.Id,
             context.CancellationToken
         );

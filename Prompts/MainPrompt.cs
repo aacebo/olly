@@ -23,14 +23,14 @@ public class MainPrompt(IPromptContext context)
     public readonly IOptions<GithubSettings> GithubSettings = context.Scope.ServiceProvider.GetRequiredService<IOptions<GithubSettings>>();
     public readonly OpenAIChatPrompt GithubPrompt = OpenAIChatPrompt.From(context.Model, new GithubPrompt(context), new()
     {
-        Logger = context.App.Logger
+        Logger = context.Scope.ServiceProvider.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>()
     });
 
     [Function]
     [Function.Description("say something to the user")]
     public async Task Say([Param] string message)
     {
-        await context.Send(message);
+        await context.Send(new MessageActivity(message));
         await context.Send(new TypingActivity());
     }
 
@@ -55,47 +55,36 @@ public class MainPrompt(IPromptContext context)
     )]
     public async Task<string> Github([Param] string message)
     {
-        var account = (await context.Storage.Accounts.GetByUserId(
-            context.Account.UserId,
+        var account = (await context.Accounts.GetByUserId(
+            context.UserId,
             context.CancellationToken
         )).FirstOrDefault(a => a.SourceType == SourceType.Github);
 
-        if (account is null)
+        var token = account is not null
+            ? await context.Tokens.GetByAccountId(account.Id, context.CancellationToken)
+            : null;
+
+        if (account is null || token is null)
         {
             var state = new Token.State()
             {
                 TenantId = context.Tenant.Id,
-                UserId = context.Account.UserId
+                UserId = context.UserId,
+                AccountId = account?.Id
             };
 
             await context.Send(
                 new MessageActivity()
                 {
                     InputHint = Api.InputHint.AcceptingInput,
-                    Conversation = context.Activity.Conversation
-                }.AddAttachment(Cards.SignIn($"{GithubSettings.Value.OAuthUrl}&state={state.Encode()}"))
-            );
-
-            return "<user was prompted to login to Github>";
-        }
-
-        var token = await context.Storage.Tokens.GetByAccountId(account.Id, context.CancellationToken);
-
-        if (token is null)
-        {
-            var state = new Token.State()
-            {
-                TenantId = context.Tenant.Id,
-                AccountId = account.Id,
-                UserId = account.UserId
-            };
-
-            await context.Send(
-                new MessageActivity()
-                {
-                    InputHint = Api.InputHint.AcceptingInput,
-                    Conversation = context.Activity.Conversation
-                }.AddAttachment(Cards.SignIn($"{GithubSettings.Value.OAuthUrl}&state={state.Encode()}"))
+                    Conversation = new()
+                    {
+                        Id = context.Chat.SourceId,
+                        Type = Api.ConversationType.Personal
+                    }
+                }.AddAttachment(
+                    Cards.SignIn($"{GithubSettings.Value.OAuthUrl}&state={state.Encode()}")
+                )
             );
 
             return "<user was prompted to login to Github>";

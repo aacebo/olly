@@ -10,7 +10,7 @@ namespace OS.Agent.Models;
 /// or collection of data
 /// </summary>
 [Model]
-public class Entity
+public class Entity : Model
 {
     [Column("id")]
     [JsonPropertyName("id")]

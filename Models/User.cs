@@ -5,7 +5,7 @@ using SqlKata;
 namespace OS.Agent.Models;
 
 [Model]
-public class User
+public class User : Model
 {
     [Column("id")]
     [JsonPropertyName("id")]

@@ -13,6 +13,7 @@ public class CreateChatsTable : Migration
             .WithColumn("parent_id").AsGuid().ForeignKey("chats", "id").Nullable()
             .WithColumn("source_id").AsString().NotNullable()
             .WithColumn("source_type").AsString().NotNullable()
+            .WithColumn("type").AsString().Nullable()
             .WithColumn("name").AsString().Nullable()
             .WithColumn("data").AsCustom("JSONB").NotNullable()
             .WithColumn("created_at").AsDateTimeOffset().NotNullable()

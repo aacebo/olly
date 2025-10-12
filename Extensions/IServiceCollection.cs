@@ -122,9 +122,7 @@ public static class IServiceCollectionExtensions
                 logger.LogInformation("opened successfully!");
             }
 
-            var factory = new QueryFactory(connection, new PostgresCompiler());
-            factory.Logger = q => logger.LogDebug("{}", q);
-            return factory;
+            return new QueryFactory(connection, new PostgresCompiler());
         });
     }
 }

@@ -13,8 +13,8 @@ public class CreateTokensTable : Migration
             .WithColumn("type").AsString().Nullable()
             .WithColumn("access_token").AsString().Nullable()
             .WithColumn("refresh_token").AsString().Nullable()
-            .WithColumn("expires_at").AsInt32().Nullable()
-            .WithColumn("refresh_expires_at").AsInt32().Nullable()
+            .WithColumn("expires_at").AsDateTimeOffset().Nullable()
+            .WithColumn("refresh_expires_at").AsDateTimeOffset().Nullable()
             .WithColumn("created_at").AsDateTimeOffset().NotNullable()
             .WithColumn("updated_at").AsDateTimeOffset().NotNullable();
     }

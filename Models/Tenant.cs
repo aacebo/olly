@@ -6,7 +6,7 @@ using SqlKata;
 namespace OS.Agent.Models;
 
 [Model]
-public class Tenant
+public class Tenant : Model
 {
     [Column("id")]
     [JsonPropertyName("id")]

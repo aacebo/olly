@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 using Json.More;
 
 using Microsoft.Teams.Api.Activities;
@@ -8,93 +6,94 @@ using Microsoft.Teams.Apps.Activities;
 using Microsoft.Teams.Apps.Annotations;
 
 using OS.Agent.Models;
-using OS.Agent.Stores;
+using OS.Agent.Services;
 
 namespace OS.Agent.Controllers.Teams;
 
 [TeamsController]
-public class InstallController(JsonSerializerOptions options, IStorage storage)
+public class InstallController(IServiceScopeFactory scopeFactory)
 {
     [Install]
-    public async Task OnInstall([Context] InstallUpdateActivity activity, [Context] IContext.Client client, [Context] CancellationToken cancellationToken)
+    public async Task OnInstall(IContext<InstallUpdateActivity> context)
     {
-        var tenantId = activity.Conversation.TenantId;
-        var chatId = activity.Conversation.Id;
-
-        if (tenantId is null)
-        {
-            await client.Send("⚠️Install failed due to missing data⚠️");
-            return;
-        }
-
-        var tenant = await storage.Tenants.GetBySourceId
-        (
+        var scope = scopeFactory.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var tenants = scope.ServiceProvider.GetRequiredService<ITenantService>();
+        var accounts = scope.ServiceProvider.GetRequiredService<IAccountService>();
+        var chats = scope.ServiceProvider.GetRequiredService<IChatService>();
+        var tenantId = context.Activity.Conversation.TenantId ?? context.TenantId;
+        var tenant = await tenants.GetBySourceId(
             SourceType.Teams,
             tenantId,
-            cancellationToken
+            context.CancellationToken
         );
 
         if (tenant is null)
         {
-            tenant = await storage.Tenants.Create(new()
+            tenant = await tenants.Create(new()
             {
                 SourceId = tenantId,
                 SourceType = SourceType.Teams,
-                Data = activity.ChannelData!.Tenant.ToJsonDocument(options)
-            }, cancellationToken: cancellationToken);
-        }
-        else
-        {
-            tenant.Data = activity.ChannelData!.Tenant.ToJsonDocument(options);
-            tenant = await storage.Tenants.Update(tenant, cancellationToken: cancellationToken);
+                Data = context.Activity.ToJsonDocument()
+            }, context.CancellationToken);
         }
 
-        var chat = await storage.Chats.GetBySourceId
-        (
+        var chat = await chats.GetBySourceId(
             tenant.Id,
             SourceType.Teams,
-            chatId,
-            cancellationToken
+            context.Activity.Conversation.Id,
+            context.CancellationToken
         );
 
         if (chat is null)
         {
-            await storage.Chats.Create(new()
+            await chats.Create(new()
             {
                 TenantId = tenant.Id,
-                SourceId = chatId,
+                SourceId = context.Activity.Conversation.Id,
                 SourceType = SourceType.Teams,
-                Name = activity.Conversation.Name,
-                Data = activity.ChannelData!.Settings!.SelectedChannel.ToJsonDocument(options)
-            }, cancellationToken: cancellationToken);
+                Type = context.Activity.Conversation.Type,
+                Name = context.Activity.Conversation.Name,
+                Data = context.Activity.Conversation.ToJsonDocument()
+            }, context.CancellationToken);
         }
         else
         {
-            chat.Name = activity.Conversation.Name;
-            chat.Data = activity.ChannelData!.Settings!.SelectedChannel.ToJsonDocument(options);
-            await storage.Chats.Update(chat, cancellationToken: cancellationToken);
+            chat.Name = context.Activity.Conversation.Name;
+            chat.Data = context.Activity.Conversation.ToJsonDocument();
+            await chats.Update(chat, context.CancellationToken);
         }
 
-        // await client.Send(
-        //     new MessageActivity()
-        //     {
-        //         InputHint = InputHint.AcceptingInput,
-        //         Conversation = activity.Conversation
-        //     }.AddAttachment(
-        //         new AdaptiveCard(
-        //             new Image("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4ExGUTEwAQn95uM4KUU-OZ7Zz1n2lDrnXfw&s")
-        //                 .WithHorizontalAlignment(HorizontalAlignment.Center)
-        //                 .WithStyle(ImageStyle.RoundedCorners)
-        //                 .WithSize(Size.Large),
-        //             new ActionSet(
-        //                 new SignInAction("<url>")
-        //                     .WithTitle("Login")
-        //                     .WithStyle(ActionStyle.Positive)
-        //                     .WithIconUrl("icon:ShieldLock")
-        //             ).WithHorizontalAlignment(HorizontalAlignment.Center)
-        //         )
-        //     )
-        // );
-        await client.Send("Hello! Is there anything I can help you with?");
+        var account = await accounts.GetBySourceId(tenant.Id, SourceType.Teams, context.Activity.From.Id, context.CancellationToken);
+
+        if (account is null)
+        {
+            account = await accounts.Create(new()
+            {
+                TenantId = tenant.Id,
+                Name = context.Activity.From.Name ?? "<anonymous>",
+                SourceId = context.Activity.From.Id,
+                SourceType = SourceType.Teams,
+                Data = context.Activity.From.ToJsonDocument()
+            }, context.CancellationToken);
+        }
+        else
+        {
+            account.Data = context.Activity.From.ToJsonDocument();
+            account = await accounts.Update(account, context.CancellationToken);
+        }
+
+        if (account.UserId is null)
+        {
+            var user = await users.Create(new()
+            {
+                Name = context.Activity.From.Name ?? "<anonymous>"
+            }, context.CancellationToken);
+
+            account.UserId = user.Id;
+            await accounts.Update(account, context.CancellationToken);
+        }
+
+        await context.Send("Hello! Is there anything I can help you with?");
     }
 }

@@ -6,7 +6,7 @@ using SqlKata;
 namespace OS.Agent.Models;
 
 [Model]
-public class Account
+public class Account : Model
 {
     [Column("id")]
     [JsonPropertyName("id")]
@@ -14,7 +14,7 @@ public class Account
 
     [Column("user_id")]
     [JsonPropertyName("user_id")]
-    public required Guid UserId { get; init; }
+    public Guid? UserId { get; set; }
 
     [Column("tenant_id")]
     [JsonPropertyName("tenant_id")]

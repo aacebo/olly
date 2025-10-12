@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 using Json.More;
 
 using Microsoft.Teams.Api.Activities;
@@ -8,102 +6,83 @@ using Microsoft.Teams.Apps.Activities;
 using Microsoft.Teams.Apps.Annotations;
 
 using OS.Agent.Models;
-using OS.Agent.Stores;
+using OS.Agent.Services;
 
 namespace OS.Agent.Controllers.Teams;
 
 [TeamsController]
-public class ChatController(JsonSerializerOptions options, IStorage storage)
+public class ChatController(IServiceScopeFactory scopeFactory)
 {
     [Conversation.Update]
-    public async Task OnUpdate([Context] ConversationUpdateActivity activity, [Context] IContext.Client client, [Context] CancellationToken cancellationToken)
+    public async Task OnUpdate(IContext<ConversationUpdateActivity> context)
     {
-        var tenantId = activity.Conversation.TenantId;
-        var chatId = activity.Conversation.Id;
-
-        if (tenantId is null)
-        {
-            await client.Send("⚠️Conversation Update failed due to missing data⚠️");
-            return;
-        }
-
-        var tenant = await storage.Tenants.GetBySourceId
-        (
+        var scope = scopeFactory.CreateScope();
+        var tenants = scope.ServiceProvider.GetRequiredService<ITenantService>();
+        var accounts = scope.ServiceProvider.GetRequiredService<IAccountService>();
+        var chats = scope.ServiceProvider.GetRequiredService<IChatService>();
+        var tenantId = context.Activity.Conversation.TenantId ?? context.TenantId;
+        var tenant = await tenants.GetBySourceId(
             SourceType.Teams,
             tenantId,
-            cancellationToken
+            context.CancellationToken
         );
 
         if (tenant is null)
         {
-            tenant = await storage.Tenants.Create(new()
-            {
-                SourceId = tenantId,
-                SourceType = SourceType.Teams,
-                Data = activity.ChannelData!.Tenant.ToJsonDocument(options)
-            }, cancellationToken: cancellationToken);
-        }
-        else
-        {
-            tenant.Data = activity.ChannelData!.Tenant.ToJsonDocument(options);
-            tenant = await storage.Tenants.Update(tenant, cancellationToken: cancellationToken);
+            return;
         }
 
-        var chat = await storage.Chats.GetBySourceId
-        (
+        var chat = await chats.GetBySourceId(
             tenant.Id,
             SourceType.Teams,
-            chatId,
-            cancellationToken
+            context.Activity.Conversation.Id,
+            context.CancellationToken
         );
 
         if (chat is null)
         {
-            await storage.Chats.Create(new()
+            await chats.Create(new()
             {
                 TenantId = tenant.Id,
-                SourceId = chatId,
+                SourceId = context.Activity.Conversation.Id,
                 SourceType = SourceType.Teams,
-                Name = activity.Conversation.Name,
-            }, cancellationToken: cancellationToken);
+                Type = context.Activity.Conversation.Type,
+                Name = context.Activity.Conversation.Name,
+                Data = context.Activity.Conversation.ToJsonDocument()
+            }, context.CancellationToken);
         }
         else
         {
-            chat.Name = activity.Conversation.Name;
-            await storage.Chats.Update(chat, cancellationToken: cancellationToken);
+            chat.Name = context.Activity.Conversation.Name;
+            chat.Data = context.Activity.Conversation.ToJsonDocument();
+            await chats.Update(chat, context.CancellationToken);
         }
 
-        foreach (var member in activity.MembersAdded)
+        foreach (var member in context.Activity.MembersAdded)
         {
-            var account = await storage.Accounts.GetBySourceId(
+            var account = await accounts.GetBySourceId(
                 tenant.Id,
                 SourceType.Teams,
                 member.Id,
-                cancellationToken
+                context.CancellationToken
             );
 
             if (account is null)
             {
-                var user = await storage.Users.Create(new()
+                await accounts.Create(new()
                 {
-                    Name = member.Name ?? "<anonymous>"
-                });
-
-                await storage.Accounts.Create(new()
-                {
-                    UserId = user.Id,
                     TenantId = tenant.Id,
                     SourceId = member.Id,
                     SourceType = SourceType.Teams,
                     Name = member.Name ?? "<anonymous>",
-                    Data = member.ToJsonDocument(options)
-                }, cancellationToken: cancellationToken);
+                    Data = member.ToJsonDocument()
+                }, context.CancellationToken);
             }
             else
             {
                 account.Name = member.Name ?? account.Name;
-                account.Data = member.ToJsonDocument(options);
-                await storage.Accounts.Update(account, cancellationToken: cancellationToken);
+                account.Data = member.ToJsonDocument();
+                await accounts.Update(account, context.CancellationToken);
             }
         }
     }

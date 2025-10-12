@@ -6,34 +6,39 @@ using Microsoft.Extensions.Options;
 using Octokit;
 
 using OS.Agent.Models;
+using OS.Agent.Services;
 using OS.Agent.Settings;
-using OS.Agent.Stores;
 
 namespace OS.Agent.Controllers;
 
 [Route("/api/github")]
 [ApiController]
-public class GithubController(GitHubClient github, IOptions<GithubSettings> settings, IStorage storage) : ControllerBase
+public class GithubController(IHttpContextAccessor accessor) : ControllerBase
 {
+    private GitHubClient AppClient => accessor.HttpContext!.RequestServices.GetRequiredService<GitHubClient>();
+    private GithubSettings Settings => accessor.HttpContext!.RequestServices.GetRequiredService<IOptions<GithubSettings>>().Value;
+    private ITenantService Tenants => accessor.HttpContext!.RequestServices.GetRequiredService<ITenantService>();
+    private IAccountService Accounts => accessor.HttpContext!.RequestServices.GetRequiredService<IAccountService>();
+    private ITokenService Tokens => accessor.HttpContext!.RequestServices.GetRequiredService<ITokenService>();
+
     [HttpGet("redirect")]
     public async Task<IResult> OnRedirect([FromQuery] string code, [FromQuery] string state, CancellationToken cancellationToken)
     {
         var tokenState = Token.State.Decode(state);
-        var tenant = await storage.Tenants.GetById(tokenState.TenantId, cancellationToken);
-
-        if (tenant is null)
-        {
-            throw new UnauthorizedAccessException();
-        }
-
+        var tenant = await Tenants.GetById(tokenState.TenantId, cancellationToken) ?? throw new UnauthorizedAccessException("tenant not found");
         var account = tokenState.AccountId is not null
-            ? await storage.Accounts.GetById(tokenState.AccountId.Value, cancellationToken)
+            ? await Accounts.GetById(tokenState.AccountId.Value, cancellationToken)
             : null;
 
-        var res = await github.Oauth.CreateAccessToken(new(settings.Value.ClientId, settings.Value.ClientSecret, code)
+        var res = await AppClient.Oauth.CreateAccessToken(new(Settings.ClientId, Settings.ClientSecret, code)
         {
-            RedirectUri = new Uri(settings.Value.RedirectUrl)
+            RedirectUri = new Uri(Settings.RedirectUrl)
         }, cancellationToken);
+
+        if (res.Error is not null)
+        {
+            throw new UnauthorizedAccessException(res.Error);
+        }
 
         var client = new GitHubClient(new ProductHeaderValue("TOS-Agent"))
         {
@@ -47,22 +52,22 @@ public class GithubController(GitHubClient github, IOptions<GithubSettings> sett
 
         if (account is null)
         {
-            account = await storage.Accounts.Create(new()
+            account = await Accounts.Create(new()
             {
                 UserId = tokenState.UserId,
-                TenantId = tokenState.TenantId,
+                TenantId = tenant.Id,
                 SourceType = SourceType.Github,
                 SourceId = user.NodeId,
                 Name = user.Login,
                 Data = user.ToJsonDocument()
-            }, cancellationToken: cancellationToken);
+            }, cancellationToken);
         }
 
-        var token = await storage.Tokens.GetByAccountId(account.Id, cancellationToken);
+        var token = await Tokens.GetByAccountId(account.Id, cancellationToken);
 
         if (token is null)
         {
-            await storage.Tokens.Create(new()
+            await Tokens.Create(new()
             {
                 AccountId = account.Id,
                 Type = res.TokenType,
@@ -70,7 +75,7 @@ public class GithubController(GitHubClient github, IOptions<GithubSettings> sett
                 RefreshToken = res.RefreshToken,
                 ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(res.ExpiresIn),
                 RefreshExpiresAt = DateTimeOffset.UtcNow.AddSeconds(res.RefreshTokenExpiresIn)
-            }, cancellationToken: cancellationToken);
+            }, cancellationToken);
         }
         else
         {
@@ -79,7 +84,7 @@ public class GithubController(GitHubClient github, IOptions<GithubSettings> sett
             token.RefreshToken = res.RefreshToken;
             token.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(res.ExpiresIn);
             token.RefreshExpiresAt = DateTimeOffset.UtcNow.AddSeconds(res.RefreshTokenExpiresIn);
-            await storage.Tokens.Update(token, cancellationToken: cancellationToken);
+            await Tokens.Update(token, cancellationToken);
         }
 
         return Results.Ok();

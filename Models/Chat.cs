@@ -6,7 +6,7 @@ using SqlKata;
 namespace OS.Agent.Models;
 
 [Model]
-public class Chat
+public class Chat : Model
 {
     [Column("id")]
     [JsonPropertyName("id")]
@@ -27,6 +27,10 @@ public class Chat
     [Column("source_type")]
     [JsonPropertyName("source_type")]
     public required SourceType SourceType { get; init; }
+
+    [Column("type")]
+    [JsonPropertyName("type")]
+    public string? Type { get; set; }
 
     [Column("name")]
     [JsonPropertyName("name")]
