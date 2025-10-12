@@ -29,9 +29,13 @@ public class Token
     [JsonPropertyName("refresh_token")]
     public string? RefreshToken { get; set; }
 
-    [Column("expires_in")]
-    [JsonPropertyName("expires_in")]
-    public int? ExpiresIn { get; set; }
+    [Column("expires_at")]
+    [JsonPropertyName("expires_at")]
+    public DateTimeOffset? ExpiresAt { get; set; }
+
+    [Column("refresh_expires_at")]
+    [JsonPropertyName("refresh_expires_at")]
+    public DateTimeOffset? RefreshExpiresAt { get; set; }
 
     [Column("created_at")]
     [JsonPropertyName("created_at")]
@@ -40,6 +44,12 @@ public class Token
     [Column("updated_at")]
     [JsonPropertyName("updated_at")]
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
+
+    [JsonIgnore]
+    public bool IsExpired => ExpiresAt is not null && ExpiresAt.Value > DateTimeOffset.UtcNow;
+
+    [JsonIgnore]
+    public bool IsRefreshExpired => RefreshExpiresAt is not null && RefreshExpiresAt.Value > DateTimeOffset.UtcNow;
 
     public class State
     {

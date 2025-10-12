@@ -2,7 +2,6 @@ using Microsoft.Extensions.Options;
 using Microsoft.Teams.AI.Annotations;
 using Microsoft.Teams.AI.Models.OpenAI;
 using Microsoft.Teams.Api.Activities;
-using Microsoft.Teams.Cards;
 
 using OS.Agent.Models;
 using OS.Agent.Settings;
@@ -56,12 +55,12 @@ public class MainPrompt(IPromptContext context)
     )]
     public async Task<string> Github([Param] string message)
     {
-        var accounts = await context.Storage.Accounts.GetByUserId(
+        var account = (await context.Storage.Accounts.GetByUserId(
             context.Account.UserId,
             context.CancellationToken
-        );
+        )).FirstOrDefault(a => a.SourceType == SourceType.Github);
 
-        if (accounts.FirstOrDefault(a => a.SourceType == SourceType.Github) is null)
+        if (account is null)
         {
             var state = new Token.State()
             {
@@ -74,20 +73,29 @@ public class MainPrompt(IPromptContext context)
                 {
                     InputHint = Api.InputHint.AcceptingInput,
                     Conversation = context.Activity.Conversation
-                }.AddAttachment(
-                    new AdaptiveCard(
-                        new Image("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4ExGUTEwAQn95uM4KUU-OZ7Zz1n2lDrnXfw&s")
-                            .WithHorizontalAlignment(HorizontalAlignment.Center)
-                            .WithStyle(ImageStyle.RoundedCorners)
-                            .WithSize(Size.Large),
-                        new ActionSet(
-                            new OpenUrlAction($"{GithubSettings.Value.OAuthUrl}&state={state.Encode()}")
-                                .WithTitle("Login")
-                                .WithStyle(ActionStyle.Positive)
-                                .WithIconUrl("icon:ShieldLock")
-                        ).WithHorizontalAlignment(HorizontalAlignment.Center)
-                    )
-                )
+                }.AddAttachment(Cards.SignIn($"{GithubSettings.Value.OAuthUrl}&state={state.Encode()}"))
+            );
+
+            return "<user was prompted to login to Github>";
+        }
+
+        var token = await context.Storage.Tokens.GetByAccountId(account.Id, context.CancellationToken);
+
+        if (token is null)
+        {
+            var state = new Token.State()
+            {
+                TenantId = context.Tenant.Id,
+                AccountId = account.Id,
+                UserId = account.UserId
+            };
+
+            await context.Send(
+                new MessageActivity()
+                {
+                    InputHint = Api.InputHint.AcceptingInput,
+                    Conversation = context.Activity.Conversation
+                }.AddAttachment(Cards.SignIn($"{GithubSettings.Value.OAuthUrl}&state={state.Encode()}"))
             );
 
             return "<user was prompted to login to Github>";

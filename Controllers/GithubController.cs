@@ -68,7 +68,8 @@ public class GithubController(GitHubClient github, IOptions<GithubSettings> sett
                 Type = res.TokenType,
                 AccessToken = res.AccessToken,
                 RefreshToken = res.RefreshToken,
-                ExpiresIn = res.ExpiresIn
+                ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(res.ExpiresIn),
+                RefreshExpiresAt = DateTimeOffset.UtcNow.AddSeconds(res.RefreshTokenExpiresIn)
             }, cancellationToken: cancellationToken);
         }
         else
@@ -76,7 +77,8 @@ public class GithubController(GitHubClient github, IOptions<GithubSettings> sett
             token.Type = res.TokenType;
             token.AccessToken = res.AccessToken;
             token.RefreshToken = res.RefreshToken;
-            token.ExpiresIn = res.ExpiresIn;
+            token.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(res.ExpiresIn);
+            token.RefreshExpiresAt = DateTimeOffset.UtcNow.AddSeconds(res.RefreshTokenExpiresIn);
             await storage.Tokens.Update(token, cancellationToken: cancellationToken);
         }
 
