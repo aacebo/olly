@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
 using SqlKata;
@@ -15,9 +16,10 @@ public class Message : Model<Data.Message>
     [JsonPropertyName("chat_id")]
     public required Guid ChatId { get; init; }
 
+    [AllowNull]
     [Column("account_id")]
     [JsonPropertyName("account_id")]
-    public required Guid AccountId { get; init; }
+    public Guid? AccountId { get; init; }
 
     [Column("source_id")]
     [JsonPropertyName("source_id")]

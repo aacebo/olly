@@ -10,7 +10,7 @@ public class CreateMessagesTable : Migration
         Create.Table("messages")
             .WithColumn("id").AsGuid().PrimaryKey()
             .WithColumn("chat_id").AsGuid().ForeignKey("chats", "id").NotNullable()
-            .WithColumn("account_id").AsGuid().ForeignKey("accounts", "id").NotNullable()
+            .WithColumn("account_id").AsGuid().ForeignKey("accounts", "id").Nullable()
             .WithColumn("source_id").AsString().NotNullable()
             .WithColumn("source_type").AsString().NotNullable()
             .WithColumn("text").AsString().NotNullable()

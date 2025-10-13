@@ -5,6 +5,7 @@ using OS.Agent.Drivers;
 using OS.Agent.Events;
 using OS.Agent.Models;
 using OS.Agent.Services;
+using OS.Agent.Stores;
 
 namespace OS.Agent.Prompts;
 
@@ -42,6 +43,7 @@ public class PromptContext : IPromptContext
     public IMessageService Messages { get; }
     public ITokenService Tokens { get; }
     public IChatDriver Driver { get; }
+    public IStorage Storage { get; }
     public CancellationToken CancellationToken { get; }
     public IServiceScope Scope { get; }
 
@@ -54,6 +56,7 @@ public class PromptContext : IPromptContext
         Tokens = scope.ServiceProvider.GetRequiredService<ITokenService>();
         Model = scope.ServiceProvider.GetRequiredService<OpenAIChatModel>();
         Driver = scope.ServiceProvider.GetServices<IChatDriver>().First(driver => driver.Type == @event.Message.SourceType);
+        Storage = scope.ServiceProvider.GetRequiredService<IStorage>();
         Tenant = @event.Tenant;
         Account = @event.Account;
         Chat = @event.Chat;
@@ -71,6 +74,23 @@ public class PromptContext : IPromptContext
             Name = Chat.Name
         };
 
-        await Driver.Send(activity, cancellationToken);
+        var res = await Driver.Send(activity, cancellationToken);
+
+        if (res is MessageActivity message)
+        {
+            if (message.Id is null) return;
+
+            await Storage.Messages.Create(new()
+            {
+                ChatId = Chat.Id,
+                SourceType = Message.SourceType,
+                SourceId = message.Id,
+                Text = message.Text,
+                Data = new Data.Message.Teams()
+                {
+                    Activity = message
+                }
+            }, cancellationToken: cancellationToken);
+        }
     }
 }

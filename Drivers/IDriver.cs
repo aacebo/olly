@@ -11,5 +11,5 @@ public interface IDriver
 
 public interface IChatDriver : IDriver
 {
-    Task Send(IActivity activity, CancellationToken cancellationToken = default);
+    Task<IActivity> Send(IActivity activity, CancellationToken cancellationToken = default);
 }

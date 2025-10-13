@@ -11,9 +11,9 @@ public class TeamsDriver(IServiceProvider provider) : IChatDriver
 
     private App Teams { get; init; } = provider.GetRequiredService<App>();
 
-    public async Task Send(IActivity activity, CancellationToken cancellationToken = default)
+    public async Task<IActivity> Send(IActivity activity, CancellationToken cancellationToken = default)
     {
-        await Teams.Send(
+        return await Teams.Send(
             activity.Conversation.Id,
             activity,
             activity.Conversation.Type,

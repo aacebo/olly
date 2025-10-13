@@ -65,7 +65,9 @@ public class MessageService(IServiceProvider provider) : IMessageService
 
     public async Task<Message> Create(Message value, CancellationToken cancellationToken = default)
     {
-        var account = await Accounts.GetById(value.AccountId, cancellationToken) ?? throw new Exception("account not found");
+        if (value.AccountId is null) throw new UnauthorizedAccessException();
+
+        var account = await Accounts.GetById(value.AccountId.Value, cancellationToken) ?? throw new Exception("account not found");
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var chat = await Chats.GetById(value.ChatId, cancellationToken) ?? throw new Exception("chat not found");
         var message = await Storage.Create(value, cancellationToken: cancellationToken);
@@ -83,7 +85,9 @@ public class MessageService(IServiceProvider provider) : IMessageService
 
     public async Task<Message> Update(Message value, CancellationToken cancellationToken = default)
     {
-        var account = await Accounts.GetById(value.AccountId, cancellationToken) ?? throw new Exception("account not found");
+        if (value.AccountId is null) throw new UnauthorizedAccessException();
+
+        var account = await Accounts.GetById(value.AccountId.Value, cancellationToken) ?? throw new Exception("account not found");
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var chat = await Chats.GetById(value.ChatId, cancellationToken) ?? throw new Exception("chat not found");
         var message = await Storage.Update(value, cancellationToken: cancellationToken);
@@ -102,7 +106,10 @@ public class MessageService(IServiceProvider provider) : IMessageService
     public async Task Delete(Guid id, CancellationToken cancellationToken = default)
     {
         var message = await GetById(id, cancellationToken) ?? throw new Exception("message not found");
-        var account = await Accounts.GetById(message.AccountId, cancellationToken) ?? throw new Exception("account not found");
+
+        if (message.AccountId is null) throw new UnauthorizedAccessException();
+
+        var account = await Accounts.GetById(message.AccountId.Value, cancellationToken) ?? throw new Exception("account not found");
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var chat = await Chats.GetById(message.ChatId, cancellationToken) ?? throw new Exception("chat not found");
 
