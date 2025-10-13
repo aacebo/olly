@@ -46,7 +46,7 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
 
         var app = await AppClient.GitHubApps.GetCurrent();
         var user = await client.User.Current();
-        var account = await Accounts.GetBySourceId(tenant.Id, SourceType.Github, user.NodeId);
+        var account = await Accounts.GetBySourceId(tenant.Id, SourceType.Github, user.NodeId, cancellationToken);
 
         if (account is null)
         {
