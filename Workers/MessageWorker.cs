@@ -1,8 +1,6 @@
 using Microsoft.Teams.AI.Models.OpenAI;
 using Microsoft.Teams.Api.Activities;
 using Microsoft.Teams.Apps;
-using Microsoft.Teams.Cards;
-using Microsoft.Teams.Common;
 
 using NetMQ;
 
@@ -76,36 +74,9 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
     private async Task<bool> OnEvent(IPromptContext context, OpenAIChatPrompt prompt, CancellationToken cancellationToken = default)
     {
         await context.Send(new TypingActivity(), cancellationToken);
-
-        var now = DateTime.UtcNow;
         var res = await prompt.Send(context.Message.Text, null, cancellationToken);
-        var elapse = DateTime.UtcNow - now;
         var message = new MessageActivity(res.Content);
-
-        if (Env.IsDevelopment() || Env.IsEnvironment("Local"))
-        {
-            message = message.AddAttachment(new AdaptiveCard(
-                new ColumnSet().WithColumns(
-                    new Column(
-                        new TextBlock("Elapse Time:")
-                            .WithWeight(TextWeight.Bolder)
-                            .WithFontType(FontType.Monospace)
-                            .WithIsSubtle(true)
-                            .WithWrap(false)
-                    ).WithWidth(new Union<string, float>("auto")),
-                    new Column(
-                        new TextBlock($"{elapse.Milliseconds}ms")
-                            .WithIsSubtle(true)
-                            .WithWrap(false)
-                            .WithHorizontalAlignment(HorizontalAlignment.Left)
-                    )
-                    .WithHorizontalAlignment(HorizontalAlignment.Left)
-                    .WithWidth(new Union<string, float>("stretch"))
-                )
-            ));
-        }
-
-        await context.Send(message);
+        await context.Send(message, cancellationToken);
         return true;
     }
 }

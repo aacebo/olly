@@ -27,7 +27,11 @@ public class MainPrompt(IPromptContext context)
     });
 
     [Function]
-    [Function.Description("say something to the user")]
+    [Function.Description(
+        "say something to the user.",
+        "this function should only be used to provide updates to ",
+        "user during a long process."
+    )]
     public async Task Say([Param] string message)
     {
         await context.Send(new MessageActivity(message));

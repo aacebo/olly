@@ -78,7 +78,7 @@ public class PromptContext : IPromptContext
 
         if (res is MessageActivity message)
         {
-            if (message.Id is null) return;
+            if (string.IsNullOrEmpty(message.Id)) return;
 
             await Storage.Messages.Create(new()
             {
