@@ -35,15 +35,15 @@ public class MainPrompt(IPromptContext context)
     }
 
     [Function]
-    [Function.Description("get the chat information")]
-    public Task<Chat> GetChat()
+    [Function.Description("get the current users chat information")]
+    public Task<Chat> GetCurrentChat()
     {
         return Task.FromResult(context.Chat);
     }
 
     [Function]
-    [Function.Description("get the users account information")]
-    public Task<Account> GetAccount()
+    [Function.Description("get the current users account information")]
+    public Task<Account> GetCurrentAccount()
     {
         return Task.FromResult(context.Account);
     }
