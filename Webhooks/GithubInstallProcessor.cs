@@ -1,3 +1,4 @@
+using Octokit;
 using Octokit.Webhooks;
 using Octokit.Webhooks.Events;
 using Octokit.Webhooks.Events.Installation;
@@ -18,14 +19,16 @@ public class GithubInstallProcessor(IServiceScopeFactory scopeFactory) : Webhook
     )
     {
         var scope = scopeFactory.CreateScope();
+        var client = scope.ServiceProvider.GetRequiredService<GitHubClient>();
         var tenants = scope.ServiceProvider.GetRequiredService<ITenantService>();
         var accounts = scope.ServiceProvider.GetRequiredService<IAccountService>();
         var chats = scope.ServiceProvider.GetRequiredService<IChatService>();
-        var org = @event.Installation;
         var tenant = await tenants.GetBySourceId(SourceType.Github, @event.Installation.Id.ToString(), cancellationToken)
             ?? throw new UnauthorizedAccessException("tenant not found");
 
         var account = await accounts.GetBySourceId(tenant.Id, SourceType.Github, @event.Installation.Account.NodeId, cancellationToken);
+        var install = await client.GitHubApps.GetInstallationForCurrent(@event.Installation.Id);
+        var accessToken = await client.GitHubApps.CreateInstallationToken(@event.Installation.Id);
 
         if (account is null)
         {
@@ -37,8 +40,9 @@ public class GithubInstallProcessor(IServiceScopeFactory scopeFactory) : Webhook
                 Name = @event.Installation.Account.Login,
                 Data = new Data.Account.Github()
                 {
-                    Install = @event.Installation,
-                    User = @event.Installation.Account
+                    Install = install,
+                    User = install.Account,
+                    AccessToken = accessToken
                 }
             }, cancellationToken);
         }
@@ -47,8 +51,9 @@ public class GithubInstallProcessor(IServiceScopeFactory scopeFactory) : Webhook
             account.Name = @event.Installation.Account.Login;
             account.Data = new Data.Account.Github()
             {
-                Install = @event.Installation,
-                User = @event.Installation.Account
+                Install = install,
+                User = install.Account,
+                AccessToken = accessToken
             };
 
             account = await accounts.Update(account, cancellationToken);

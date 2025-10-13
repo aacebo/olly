@@ -47,6 +47,8 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
         var app = await AppClient.GitHubApps.GetCurrent();
         var user = await client.User.Current();
         var account = await Accounts.GetBySourceId(tenant.Id, SourceType.Github, user.NodeId, cancellationToken);
+        var install = await AppClient.GitHubApps.GetInstallationForCurrent(installationId);
+        var accessToken = await AppClient.GitHubApps.CreateInstallationToken(installationId);
 
         if (account is null)
         {
@@ -57,7 +59,12 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
                 SourceType = SourceType.Github,
                 SourceId = user.NodeId,
                 Name = user.Login,
-                Data = new Data.Account()
+                Data = new Data.Account.Github()
+                {
+                    Install = install,
+                    User = install.Account,
+                    AccessToken = accessToken
+                }
             }, cancellationToken);
         }
 

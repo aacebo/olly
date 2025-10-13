@@ -24,10 +24,13 @@ public class Data
         public class Github : Account
         {
             [JsonPropertyName("user")]
-            public required Octokit.Webhooks.Models.User User { get; set; }
+            public required Octokit.User User { get; set; }
 
             [JsonPropertyName("install")]
-            public required Octokit.Webhooks.Models.Installation Install { get; set; }
+            public required Octokit.Installation Install { get; set; }
+
+            [JsonPropertyName("access_token")]
+            public required Octokit.AccessToken AccessToken { get; set; }
         }
 
         public class Teams : Account
