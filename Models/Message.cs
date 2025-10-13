@@ -1,4 +1,3 @@
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using SqlKata;
@@ -6,7 +5,7 @@ using SqlKata;
 namespace OS.Agent.Models;
 
 [Model]
-public class Message : Model
+public class Message : Model<Data.Message>
 {
     [Column("id")]
     [JsonPropertyName("id")]
@@ -31,10 +30,6 @@ public class Message : Model
     [Column("text")]
     [JsonPropertyName("text")]
     public required string Text { get; set; }
-
-    [Column("data")]
-    [JsonPropertyName("data")]
-    public JsonDocument Data { get; set; } = JsonDocument.Parse("{}");
 
     [Column("created_at")]
     [JsonPropertyName("created_at")]

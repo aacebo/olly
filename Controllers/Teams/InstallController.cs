@@ -1,5 +1,3 @@
-using Json.More;
-
 using Microsoft.Teams.Api.Activities;
 using Microsoft.Teams.Apps;
 using Microsoft.Teams.Apps.Activities;
@@ -32,9 +30,8 @@ public class InstallController(IServiceScopeFactory scopeFactory)
         {
             tenant = await tenants.Create(new()
             {
-                SourceId = tenantId,
-                SourceType = SourceType.Teams,
-                Data = context.Activity.ToJsonDocument()
+                Sources = [Tenant.Source.Teams(tenantId)],
+                Data = new Data()
             }, context.CancellationToken);
         }
 
@@ -54,13 +51,22 @@ public class InstallController(IServiceScopeFactory scopeFactory)
                 SourceType = SourceType.Teams,
                 Type = context.Activity.Conversation.Type,
                 Name = context.Activity.Conversation.Name,
-                Data = context.Activity.Conversation.ToJsonDocument()
+                Data = new Data.Chat.Teams()
+                {
+                    Conversation = context.Activity.Conversation,
+                    ServiceUrl = context.Activity.ServiceUrl
+                }
             }, context.CancellationToken);
         }
         else
         {
             chat.Name = context.Activity.Conversation.Name;
-            chat.Data = context.Activity.Conversation.ToJsonDocument();
+            chat.Data = new Data.Chat.Teams()
+            {
+                Conversation = context.Activity.Conversation,
+                ServiceUrl = context.Activity.ServiceUrl
+            };
+
             await chats.Update(chat, context.CancellationToken);
         }
 
@@ -71,15 +77,22 @@ public class InstallController(IServiceScopeFactory scopeFactory)
             account = await accounts.Create(new()
             {
                 TenantId = tenant.Id,
-                Name = context.Activity.From.Name ?? "<anonymous>",
+                Name = context.Activity.From.Name,
                 SourceId = context.Activity.From.Id,
                 SourceType = SourceType.Teams,
-                Data = context.Activity.From.ToJsonDocument()
+                Data = new Data.Account.Teams()
+                {
+                    User = context.Activity.From
+                }
             }, context.CancellationToken);
         }
         else
         {
-            account.Data = context.Activity.From.ToJsonDocument();
+            account.Data = new Data.Account.Teams()
+            {
+                User = context.Activity.From
+            };
+
             account = await accounts.Update(account, context.CancellationToken);
         }
 
@@ -87,7 +100,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
         {
             var user = await users.Create(new()
             {
-                Name = context.Activity.From.Name ?? "<anonymous>"
+                Name = context.Activity.From.Name
             }, context.CancellationToken);
 
             account.UserId = user.Id;

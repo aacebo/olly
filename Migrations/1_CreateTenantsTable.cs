@@ -9,16 +9,13 @@ public class CreateTenantsTable : Migration
     {
         Create.Table("tenants")
             .WithColumn("id").AsGuid().PrimaryKey()
-            .WithColumn("source_id").AsString().NotNullable()
-            .WithColumn("source_type").AsString().NotNullable()
+            .WithColumn("sources").AsCustom("JSONB").NotNullable()
             .WithColumn("name").AsString().Nullable()
             .WithColumn("data").AsCustom("JSONB").NotNullable()
             .WithColumn("created_at").AsDateTimeOffset().NotNullable()
             .WithColumn("updated_at").AsDateTimeOffset().NotNullable();
 
-        Create.UniqueConstraint()
-            .OnTable("tenants")
-            .Columns("source_id", "source_type");
+        Execute.Sql("CREATE INDEX ON tenants USING GIN (sources jsonb_path_ops);");
     }
 
     public override void Down()

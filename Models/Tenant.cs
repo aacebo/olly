@@ -1,4 +1,3 @@
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using SqlKata;
@@ -6,27 +5,19 @@ using SqlKata;
 namespace OS.Agent.Models;
 
 [Model]
-public class Tenant : Model
+public class Tenant : Model<Data>
 {
     [Column("id")]
     [JsonPropertyName("id")]
     public Guid Id { get; init; } = Guid.NewGuid();
 
-    [Column("source_id")]
-    [JsonPropertyName("source_id")]
-    public required string SourceId { get; set; }
-
-    [Column("source_type")]
-    [JsonPropertyName("source_type")]
-    public required SourceType SourceType { get; init; }
+    [Column("sources")]
+    [JsonPropertyName("sources")]
+    public SourceList Sources { get; set; } = [];
 
     [Column("name")]
     [JsonPropertyName("name")]
     public string? Name { get; set; }
-
-    [Column("data")]
-    [JsonPropertyName("data")]
-    public JsonDocument Data { get; set; } = JsonDocument.Parse("{}");
 
     [Column("created_at")]
     [JsonPropertyName("created_at")]
@@ -35,4 +26,30 @@ public class Tenant : Model
     [Column("updated_at")]
     [JsonPropertyName("updated_at")]
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
+
+    public class Source
+    {
+        [JsonPropertyName("id")]
+        public required string Id { get; set; }
+
+        [JsonPropertyName("type")]
+        public required SourceType Type { get; set; }
+
+        public static Source Teams(string id) => new()
+        {
+            Type = SourceType.Teams,
+            Id = id
+        };
+
+        public static Source Github(string id) => new()
+        {
+            Type = SourceType.Github,
+            Id = id
+        };
+    }
+
+    public class SourceList : List<Source>, IList<Source>
+    {
+        
+    }
 }

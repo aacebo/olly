@@ -78,6 +78,12 @@ public class AccountService(IServiceProvider provider) : IAccountService
             Account = account
         }));
 
+        if (tenant.Name is null && value.Name != tenant.Name)
+        {
+            tenant.Name = account.Name;
+            await Tenants.Update(tenant, cancellationToken);
+        }
+
         return account;
     }
 
@@ -91,6 +97,12 @@ public class AccountService(IServiceProvider provider) : IAccountService
             Tenant = tenant,
             Account = account
         }));
+
+        if (tenant.Name is null && value.Name != tenant.Name)
+        {
+            tenant.Name = account.Name;
+            await Tenants.Update(tenant, cancellationToken);
+        }
 
         return account;
     }

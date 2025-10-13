@@ -93,14 +93,27 @@ public static class IServiceCollectionExtensions
             var jsonOptions = provider.GetService<JsonSerializerOptions>();
 
             // load type handlers
-            if (!Dapper.SqlMapper.HasTypeHandler(typeof(JsonDocument)))
+            if (!Dapper.SqlMapper.HasTypeHandler(typeof(Data)))
             {
-                Dapper.SqlMapper.AddTypeHandler(new JsonDocumentTypeHandler(jsonOptions));
+                Dapper.SqlMapper.AddTypeHandler(new DataTypeHandler<Data>(jsonOptions));
+                Dapper.SqlMapper.AddTypeHandler(new DataTypeHandler<Data.Account>(jsonOptions));
+                Dapper.SqlMapper.AddTypeHandler(new DataTypeHandler<Data.Account.Teams>(jsonOptions));
+                Dapper.SqlMapper.AddTypeHandler(new DataTypeHandler<Data.Account.Github>(jsonOptions));
+                Dapper.SqlMapper.AddTypeHandler(new DataTypeHandler<Data.Chat>(jsonOptions));
+                Dapper.SqlMapper.AddTypeHandler(new DataTypeHandler<Data.Chat.Teams>(jsonOptions));
+                Dapper.SqlMapper.AddTypeHandler(new DataTypeHandler<Data.Message>(jsonOptions));
+                Dapper.SqlMapper.AddTypeHandler(new DataTypeHandler<Data.Message.Teams>(jsonOptions));
             }
 
             if (!Dapper.SqlMapper.HasTypeHandler(typeof(StringEnum)))
             {
                 Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<SourceType>());
+            }
+
+            if (!Dapper.SqlMapper.HasTypeHandler(typeof(Tenant.SourceList)))
+            {
+                Dapper.SqlMapper.AddTypeHandler(new ListTypeHandler(jsonOptions));
+                // Dapper.SqlMapper.AddTypeHandler(new SourceTypeHandler(jsonOptions));
             }
 
             return new NpgsqlDataSourceBuilder(config.GetConnectionString("Postgres"))
@@ -122,7 +135,9 @@ public static class IServiceCollectionExtensions
                 logger.LogInformation("opened successfully!");
             }
 
-            return new QueryFactory(connection, new PostgresCompiler());
+            var factory = new QueryFactory(connection, new PostgresCompiler());
+            factory.Logger = q => logger.LogDebug("{}", q);
+            return factory;
         });
     }
 }

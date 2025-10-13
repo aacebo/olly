@@ -1,5 +1,3 @@
-using Json.More;
-
 using Microsoft.Teams.Api.Activities;
 using Microsoft.Teams.Apps;
 using Microsoft.Teams.Apps.Activities;
@@ -40,7 +38,10 @@ public class MessageController(IServiceScopeFactory scopeFactory)
             SourceId = context.Activity.Id,
             SourceType = SourceType.Teams,
             Text = context.Activity.Text,
-            Data = context.Activity.ToJsonDocument()
+            Data = new Data.Message.Teams()
+            {
+                Activity = context.Activity
+            }
         }, context.CancellationToken);
     }
 }

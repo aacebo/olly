@@ -1,5 +1,3 @@
-using Json.More;
-
 using Microsoft.Teams.Api.Activities;
 using Microsoft.Teams.Apps;
 using Microsoft.Teams.Apps.Activities;
@@ -48,13 +46,22 @@ public class ChatController(IServiceScopeFactory scopeFactory)
                 SourceType = SourceType.Teams,
                 Type = context.Activity.Conversation.Type,
                 Name = context.Activity.Conversation.Name,
-                Data = context.Activity.Conversation.ToJsonDocument()
+                Data = new Data.Chat.Teams()
+                {
+                    Conversation = context.Activity.Conversation,
+                    ServiceUrl = context.Activity.ServiceUrl
+                }
             }, context.CancellationToken);
         }
         else
         {
             chat.Name = context.Activity.Conversation.Name;
-            chat.Data = context.Activity.Conversation.ToJsonDocument();
+            chat.Data = new Data.Chat.Teams()
+            {
+                Conversation = context.Activity.Conversation,
+                ServiceUrl = context.Activity.ServiceUrl
+            };
+            
             await chats.Update(chat, context.CancellationToken);
         }
 
@@ -74,14 +81,21 @@ public class ChatController(IServiceScopeFactory scopeFactory)
                     TenantId = tenant.Id,
                     SourceId = member.Id,
                     SourceType = SourceType.Teams,
-                    Name = member.Name ?? "<anonymous>",
-                    Data = member.ToJsonDocument()
+                    Name = member.Name,
+                    Data = new Data.Account.Teams()
+                    {
+                        User = member
+                    }
                 }, context.CancellationToken);
             }
             else
             {
                 account.Name = member.Name ?? account.Name;
-                account.Data = member.ToJsonDocument();
+                account.Data = new Data.Account.Teams()
+                {
+                    User = member
+                };
+
                 await accounts.Update(account, context.CancellationToken);
             }
         }

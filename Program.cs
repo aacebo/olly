@@ -78,7 +78,6 @@ builder.Services.AddSingleton<NetMQQueue<Event<EntityEvent>>>(); // entities.(cr
 builder.Services.AddSingleton<WebhookEventProcessor, GithubInstallProcessor>();
 
 // Workers
-builder.Services.AddHostedService<GithubInstallWorker>();
 builder.Services.AddHostedService<MessageWorker>();
 
 // Storage

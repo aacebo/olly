@@ -1,5 +1,3 @@
-using Json.More;
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
@@ -49,6 +47,7 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
         };
 
         var user = await client.User.Current();
+        var install = await client.GitHubApps.GetUserInstallationForCurrent(user.Login);
 
         if (account is null)
         {
@@ -59,7 +58,7 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
                 SourceType = SourceType.Github,
                 SourceId = user.NodeId,
                 Name = user.Login,
-                Data = user.ToJsonDocument()
+                Data = new Data.Account()
             }, cancellationToken);
         }
 
@@ -85,6 +84,17 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
             token.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(res.ExpiresIn);
             token.RefreshExpiresAt = DateTimeOffset.UtcNow.AddSeconds(res.RefreshTokenExpiresIn);
             await Tokens.Update(token, cancellationToken);
+        }
+
+        if (!tenant.Sources.Any(s => s.Type == SourceType.Github && s.Id == install.Id.ToString()))
+        {
+            tenant.Sources.Add(new()
+            {
+                Id = install.Id.ToString(),
+                Type = SourceType.Github
+            });
+
+            await Tenants.Update(tenant, cancellationToken);
         }
 
         return Results.Ok();

@@ -1,17 +1,15 @@
-using NetMQ;
-
 using Octokit.Webhooks;
 using Octokit.Webhooks.Events;
 using Octokit.Webhooks.Events.Installation;
 
-using OS.Agent.Events;
 using OS.Agent.Models;
+using OS.Agent.Services;
 
 namespace OS.Agent.Webhooks;
 
-public class GithubInstallProcessor(ILogger<GithubInstallProcessor> logger, NetMQQueue<Event<GithubInstallEvent>> events) : WebhookEventProcessor
+public class GithubInstallProcessor(IServiceScopeFactory scopeFactory) : WebhookEventProcessor
 {
-    protected override ValueTask ProcessInstallationWebhookAsync
+    protected override async ValueTask ProcessInstallationWebhookAsync
     (
         WebhookHeaders headers,
         InstallationEvent @event,
@@ -19,29 +17,52 @@ public class GithubInstallProcessor(ILogger<GithubInstallProcessor> logger, NetM
         CancellationToken cancellationToken = default
     )
     {
-        try
+        var scope = scopeFactory.CreateScope();
+        var tenants = scope.ServiceProvider.GetRequiredService<ITenantService>();
+        var accounts = scope.ServiceProvider.GetRequiredService<IAccountService>();
+        var chats = scope.ServiceProvider.GetRequiredService<IChatService>();
+        var org = @event.Installation;
+        var tenant = await tenants.GetBySourceId(SourceType.Github, @event.Installation.Id.ToString(), cancellationToken)
+            ?? throw new UnauthorizedAccessException("tenant not found");
+
+        var account = await accounts.GetBySourceId(tenant.Id, SourceType.Github, @event.Installation.Account.NodeId, cancellationToken);
+
+        if (account is null)
         {
-            var ev = new Event<GithubInstallEvent>(
-                action == InstallationAction.Created ? "github.install.create" : "github.install.delete",
-                new()
+            account = await accounts.Create(new()
+            {
+                TenantId = tenant.Id,
+                SourceType = SourceType.Github,
+                SourceId = @event.Installation.Account.NodeId,
+                Name = @event.Installation.Account.Login,
+                Data = new Data.Account.Github()
                 {
                     Install = @event.Installation,
-                    Org = @event.Organization
+                    User = @event.Installation.Account
                 }
-            );
-
-            Task.Run(() =>
-            {
-                events.Enqueue(ev);
-                logger.LogDebug("[{}] => queued", ev.Name);
             }, cancellationToken);
         }
-        catch (Exception ex)
+        else
         {
-            logger.LogError("{}", ex);
-            throw new Exception("github.webhooks.install", ex);
+            account.Name = @event.Installation.Account.Login;
+            account.Data = new Data.Account.Github()
+            {
+                Install = @event.Installation,
+                User = @event.Installation.Account
+            };
+
+            account = await accounts.Update(account, cancellationToken);
         }
 
-        return ValueTask.CompletedTask;
+        if (!tenant.Sources.Any(t => t.Type == SourceType.Github && t.Id == @event.Installation.Id.ToString()))
+        {
+            tenant.Sources.Add(new()
+            {
+                Type = SourceType.Github,
+                Id = @event.Installation.Id.ToString()
+            });
+
+            await tenants.Update(tenant, cancellationToken);
+        }
     }
 }

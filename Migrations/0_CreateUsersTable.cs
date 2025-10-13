@@ -9,7 +9,7 @@ public class CreateUsersTable : Migration
     {
         Create.Table("users")
             .WithColumn("id").AsGuid().PrimaryKey()
-            .WithColumn("name").AsString().NotNullable()
+            .WithColumn("name").AsString().Nullable()
             .WithColumn("created_at").AsDateTimeOffset().NotNullable()
             .WithColumn("updated_at").AsDateTimeOffset().NotNullable();
     }

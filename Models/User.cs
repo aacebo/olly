@@ -13,7 +13,7 @@ public class User : Model
 
     [Column("name")]
     [JsonPropertyName("name")]
-    public required string Name { get; set; }
+    public string? Name { get; set; }
 
     [Column("created_at")]
     [JsonPropertyName("created_at")]

@@ -32,9 +32,8 @@ public class TenantStorage(ILogger<ITenantStorage> logger, QueryFactory db) : IT
         logger.LogDebug("GetBySourceId");
         return await db
             .Query("tenants")
-            .Select("*")
-            .Where("source_type", "=", type.ToString())
-            .Where("source_id", "=", sourceId)
+            .Select("id", "sources", "name", "data", "created_at", "updated_at")
+            .WhereRaw("sources @> ?::JSONB", $"[{{\"type\": \"{type}\", \"id\": \"{sourceId}\"}}]")
             .FirstOrDefaultAsync<Tenant?>(cancellationToken: cancellationToken);
     }
 
