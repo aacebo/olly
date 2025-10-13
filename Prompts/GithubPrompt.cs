@@ -15,6 +15,20 @@ namespace OS.Agent.Prompts;
 public class GithubPrompt(IPromptContext context)
 {
     [Function]
+    [Function.Description("get the current users chat information")]
+    public Task<Chat> GetCurrentChat()
+    {
+        return Task.FromResult(context.Chat);
+    }
+
+    [Function]
+    [Function.Description("get the current users account information")]
+    public Task<Account> GetCurrentAccount()
+    {
+        return Task.FromResult(context.Account);
+    }
+
+    [Function]
     [Function.Description("get a list of connected data source accounts for the user")]
     public async Task<IEnumerable<Account>> GetAllAccounts()
     {
