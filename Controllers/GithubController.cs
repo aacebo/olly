@@ -20,14 +20,12 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
     private ITokenService Tokens => accessor.HttpContext!.RequestServices.GetRequiredService<ITokenService>();
 
     [HttpGet("redirect")]
-    public async Task<IResult> OnRedirect([FromQuery] string code, [FromQuery] string state, CancellationToken cancellationToken)
+    public async Task<IResult> OnRedirect([FromQuery] string code, [FromQuery] string state, [FromQuery(Name = "installation_id")] string installationId, CancellationToken cancellationToken)
     {
         var tokenState = Token.State.Decode(state);
         var tenant = await Tenants.GetById(tokenState.TenantId, cancellationToken) ?? throw new UnauthorizedAccessException("tenant not found");
-        var account = tokenState.AccountId is not null
-            ? await Accounts.GetById(tokenState.AccountId.Value, cancellationToken)
-            : null;
 
+        // create user oauth token
         var res = await AppClient.Oauth.CreateAccessToken(new(Settings.ClientId, Settings.ClientSecret, code)
         {
             RedirectUri = new Uri(Settings.RedirectUrl)
@@ -46,8 +44,9 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
             )
         };
 
+        var app = await AppClient.GitHubApps.GetCurrent();
         var user = await client.User.Current();
-        var install = await client.GitHubApps.GetUserInstallationForCurrent(user.Login);
+        var account = await Accounts.GetBySourceId(tenant.Id, SourceType.Github, user.NodeId);
 
         if (account is null)
         {
@@ -86,11 +85,11 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
             await Tokens.Update(token, cancellationToken);
         }
 
-        if (!tenant.Sources.Any(s => s.Type == SourceType.Github && s.Id == install.Id.ToString()))
+        if (!tenant.Sources.Any(s => s.Type == SourceType.Github && s.Id == installationId))
         {
             tenant.Sources.Add(new()
             {
-                Id = install.Id.ToString(),
+                Id = installationId,
                 Type = SourceType.Github
             });
 

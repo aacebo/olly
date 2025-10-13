@@ -22,7 +22,7 @@ public sealed class StringEnumTypeHandler<T> : SqlMapper.TypeHandler<T> where T 
 
     public override T? Parse(object value) => value switch
     {
-        string s => JsonSerializer.Deserialize<T>(@$"""{value}"""),
+        string s => JsonSerializer.Deserialize<T>(@$"""{s}"""),
         _ => default
     };
 }

@@ -15,7 +15,7 @@ public class CreateTenantsTable : Migration
             .WithColumn("created_at").AsDateTimeOffset().NotNullable()
             .WithColumn("updated_at").AsDateTimeOffset().NotNullable();
 
-        Execute.Sql("CREATE INDEX ON tenants USING GIN (sources jsonb_path_ops);");
+        Execute.Sql("CREATE INDEX ON tenants USING GIN (sources);");
     }
 
     public override void Down()

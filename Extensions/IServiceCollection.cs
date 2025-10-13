@@ -3,7 +3,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Text.Json;
 
 using FluentMigrator.Runner;
 
@@ -63,17 +62,32 @@ public static class IServiceCollectionExtensions
         // load model type mappings
         var modelTypes = Assembly.GetExecutingAssembly().GetTypes().Where(type => type.GetCustomAttribute<ModelAttribute>() != null);
 
+        Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<SourceType>());
+        Dapper.SqlMapper.AddTypeHandler(typeof(Data), new JsonObjectTypeHandler());
+        Dapper.SqlMapper.AddTypeHandler(typeof(Data.Account), new JsonObjectTypeHandler());
+        Dapper.SqlMapper.AddTypeHandler(typeof(Data.Account.Github), new JsonObjectTypeHandler());
+        Dapper.SqlMapper.AddTypeHandler(typeof(Data.Account.Teams), new JsonObjectTypeHandler());
+        Dapper.SqlMapper.AddTypeHandler(typeof(Data.Chat), new JsonObjectTypeHandler());
+        Dapper.SqlMapper.AddTypeHandler(typeof(Data.Chat.Teams), new JsonObjectTypeHandler());
+        Dapper.SqlMapper.AddTypeHandler(typeof(Data.Message), new JsonObjectTypeHandler());
+        Dapper.SqlMapper.AddTypeHandler(typeof(Data.Message.Teams), new JsonObjectTypeHandler());
+        Dapper.SqlMapper.AddTypeHandler(typeof(List<Source>), new JsonArrayTypeHandler());
+
         foreach (var type in modelTypes)
         {
             Dapper.SqlMapper.SetTypeMap(type, new Dapper.CustomPropertyTypeMap
             (
                 type,
-                (type, columnName) =>
-                    type.GetProperties().FirstOrDefault(prop =>
-                        prop.GetCustomAttributes(false)
+                (type, name) =>
+                {
+                    var property = type.GetProperties().FirstOrDefault(p =>
+                        p.GetCustomAttributes()
                             .OfType<ColumnAttribute>()
-                            .Any(attr => attr.Name == columnName)
-                    ) ?? throw new Exception($"property '{columnName}' not found on type '{type.FullName}'")
+                            .Any(attr => attr.Name == name)
+                    );
+
+                    return property ?? throw new Exception($"property '{name}' not found on type '{type.FullName}'");
+                }
             ));
         }
 
@@ -88,33 +102,7 @@ public static class IServiceCollectionExtensions
         // add database connection
         services.AddTransient(provider =>
         {
-            var logger = provider.GetRequiredService<ILogger<NpgsqlDataSource>>();
             var config = provider.GetRequiredService<IConfiguration>();
-            var jsonOptions = provider.GetService<JsonSerializerOptions>();
-
-            // load type handlers
-            if (!Dapper.SqlMapper.HasTypeHandler(typeof(Data)))
-            {
-                Dapper.SqlMapper.AddTypeHandler(new DataTypeHandler<Data>(jsonOptions));
-                Dapper.SqlMapper.AddTypeHandler(new DataTypeHandler<Data.Account>(jsonOptions));
-                Dapper.SqlMapper.AddTypeHandler(new DataTypeHandler<Data.Account.Teams>(jsonOptions));
-                Dapper.SqlMapper.AddTypeHandler(new DataTypeHandler<Data.Account.Github>(jsonOptions));
-                Dapper.SqlMapper.AddTypeHandler(new DataTypeHandler<Data.Chat>(jsonOptions));
-                Dapper.SqlMapper.AddTypeHandler(new DataTypeHandler<Data.Chat.Teams>(jsonOptions));
-                Dapper.SqlMapper.AddTypeHandler(new DataTypeHandler<Data.Message>(jsonOptions));
-                Dapper.SqlMapper.AddTypeHandler(new DataTypeHandler<Data.Message.Teams>(jsonOptions));
-            }
-
-            if (!Dapper.SqlMapper.HasTypeHandler(typeof(StringEnum)))
-            {
-                Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<SourceType>());
-            }
-
-            if (!Dapper.SqlMapper.HasTypeHandler(typeof(Tenant.SourceList)))
-            {
-                Dapper.SqlMapper.AddTypeHandler(new ListTypeHandler(jsonOptions));
-                // Dapper.SqlMapper.AddTypeHandler(new SourceTypeHandler(jsonOptions));
-            }
 
             return new NpgsqlDataSourceBuilder(config.GetConnectionString("Postgres"))
                     .EnableDynamicJson()

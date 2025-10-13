@@ -13,7 +13,7 @@ public class Tenant : Model<Data>
 
     [Column("sources")]
     [JsonPropertyName("sources")]
-    public SourceList Sources { get; set; } = [];
+    public List<Source> Sources { get; set; } = [];
 
     [Column("name")]
     [JsonPropertyName("name")]
@@ -26,30 +26,4 @@ public class Tenant : Model<Data>
     [Column("updated_at")]
     [JsonPropertyName("updated_at")]
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
-
-    public class Source
-    {
-        [JsonPropertyName("id")]
-        public required string Id { get; set; }
-
-        [JsonPropertyName("type")]
-        public required SourceType Type { get; set; }
-
-        public static Source Teams(string id) => new()
-        {
-            Type = SourceType.Teams,
-            Id = id
-        };
-
-        public static Source Github(string id) => new()
-        {
-            Type = SourceType.Github,
-            Id = id
-        };
-    }
-
-    public class SourceList : List<Source>, IList<Source>
-    {
-        
-    }
 }

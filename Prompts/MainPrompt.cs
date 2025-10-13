@@ -69,8 +69,7 @@ public class MainPrompt(IPromptContext context)
             var state = new Token.State()
             {
                 TenantId = context.Tenant.Id,
-                UserId = context.UserId,
-                AccountId = account?.Id
+                UserId = context.UserId
             };
 
             await context.Send(
@@ -83,7 +82,7 @@ public class MainPrompt(IPromptContext context)
                         Type = Api.ConversationType.Personal
                     }
                 }.AddAttachment(
-                    Cards.SignIn($"{GithubSettings.Value.OAuthUrl}&state={state.Encode()}")
+                    Cards.SignIn($"{GithubSettings.Value.InstallUrl}&state={state.Encode()}")
                 )
             );
 

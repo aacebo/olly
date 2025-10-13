@@ -30,7 +30,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
         {
             tenant = await tenants.Create(new()
             {
-                Sources = [Tenant.Source.Teams(tenantId)],
+                Sources = [Source.Teams(tenantId)],
                 Data = new Data()
             }, context.CancellationToken);
         }
