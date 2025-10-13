@@ -20,7 +20,7 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
     private ITokenService Tokens => accessor.HttpContext!.RequestServices.GetRequiredService<ITokenService>();
 
     [HttpGet("redirect")]
-    public async Task<IResult> OnRedirect([FromQuery] string code, [FromQuery] string state, [FromQuery(Name = "installation_id")] string installationId, CancellationToken cancellationToken)
+    public async Task<IResult> OnRedirect([FromQuery] string code, [FromQuery] string state, [FromQuery(Name = "installation_id")] long installationId, CancellationToken cancellationToken)
     {
         var tokenState = Token.State.Decode(state);
         var tenant = await Tenants.GetById(tokenState.TenantId, cancellationToken) ?? throw new UnauthorizedAccessException("tenant not found");
@@ -85,11 +85,11 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
             await Tokens.Update(token, cancellationToken);
         }
 
-        if (!tenant.Sources.Any(s => s.Type == SourceType.Github && s.Id == installationId))
+        if (!tenant.Sources.Any(s => s.Type == SourceType.Github && s.Id == installationId.ToString()))
         {
             tenant.Sources.Add(new()
             {
-                Id = installationId,
+                Id = installationId.ToString(),
                 Type = SourceType.Github
             });
 
