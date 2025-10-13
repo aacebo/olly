@@ -61,7 +61,7 @@ public class ChatController(IServiceScopeFactory scopeFactory)
                 Conversation = context.Activity.Conversation,
                 ServiceUrl = context.Activity.ServiceUrl
             };
-            
+
             await chats.Update(chat, context.CancellationToken);
         }
 
