@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Npgsql" Version="9.*" />
+    <PackageReference Include="Dapper" Version="2.*" />
+    <PackageReference Include="Dapper.AOT" Version="1.*" />
+    <PackageReference Include="FluentMigrator" Version="7.*" />
+    <PackageReference Include="FluentMigrator.Runner" Version="7.*" />
+    <PackageReference Include="FluentMigrator.Runner.Postgres" Version="7.*" />
+    <PackageReference Include="SqlKata" Version="4.*" />
+    <PackageReference Include="SqlKata.Execution" Version="4.*" />
+  </ItemGroup>
+</Project>

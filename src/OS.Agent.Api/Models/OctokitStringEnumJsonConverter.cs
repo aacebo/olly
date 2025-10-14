@@ -9,7 +9,6 @@ public class OctokitJsonConverter<T> : JsonConverter<T>
 
     public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-
         var asString = JsonDocument.ParseValue(ref reader).RootElement.GetRawText();
         return Serializer.Deserialize<T>(asString);
     }

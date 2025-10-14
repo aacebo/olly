@@ -1,0 +1,5 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="NetMQ" Version="4.*" />
+  </ItemGroup>
+</Project>
