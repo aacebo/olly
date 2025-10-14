@@ -52,7 +52,7 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
                 catch (Exception ex)
                 {
                     Logger.LogError("{}", ex);
-                    throw new Exception("MessageActivityWorker", ex);
+                    throw new Exception("MessageWorker", ex);
                 }
             }
         };
