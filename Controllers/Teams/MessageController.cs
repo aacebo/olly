@@ -38,7 +38,7 @@ public class MessageController(IServiceScopeFactory scopeFactory)
             SourceId = context.Activity.Id,
             SourceType = SourceType.Teams,
             Text = context.Activity.Text,
-            Data = new Data.Message.Teams()
+            Data = new TeamsMessageData()
             {
                 Activity = context.Activity
             }

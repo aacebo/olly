@@ -1,7 +1,4 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
-
-using SqlKata;
 
 namespace OS.Agent.Models;
 
@@ -22,11 +19,4 @@ public abstract class Model
     {
         return JsonSerializer.Serialize(this, options);
     }
-}
-
-public abstract class Model<TData> : Model where TData : Data
-{
-    [Column("data")]
-    [JsonPropertyName("data")]
-    public required TData Data { get; set; }
 }

@@ -46,7 +46,7 @@ public class ChatController(IServiceScopeFactory scopeFactory)
                 SourceType = SourceType.Teams,
                 Type = context.Activity.Conversation.Type,
                 Name = context.Activity.Conversation.Name,
-                Data = new Data.Chat.Teams()
+                Data = new TeamsChatData()
                 {
                     Conversation = context.Activity.Conversation,
                     ServiceUrl = context.Activity.ServiceUrl
@@ -56,7 +56,7 @@ public class ChatController(IServiceScopeFactory scopeFactory)
         else
         {
             chat.Name = context.Activity.Conversation.Name;
-            chat.Data = new Data.Chat.Teams()
+            chat.Data = new TeamsChatData()
             {
                 Conversation = context.Activity.Conversation,
                 ServiceUrl = context.Activity.ServiceUrl
@@ -82,7 +82,7 @@ public class ChatController(IServiceScopeFactory scopeFactory)
                     SourceId = member.Id,
                     SourceType = SourceType.Teams,
                     Name = member.Name,
-                    Data = new Data.Account.Teams()
+                    Data = new TeamsAccountData()
                     {
                         User = member
                     }
@@ -91,7 +91,7 @@ public class ChatController(IServiceScopeFactory scopeFactory)
             else
             {
                 account.Name = member.Name ?? account.Name;
-                account.Data = new Data.Account.Teams()
+                account.Data = new TeamsAccountData()
                 {
                     User = member
                 };

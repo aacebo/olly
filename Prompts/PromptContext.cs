@@ -86,7 +86,7 @@ public class PromptContext : IPromptContext
                 SourceType = Message.SourceType,
                 SourceId = message.Id,
                 Text = message.Text,
-                Data = new Data.Message.Teams()
+                Data = new TeamsMessageData()
                 {
                     Activity = message
                 }

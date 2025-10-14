@@ -64,13 +64,13 @@ public static class IServiceCollectionExtensions
 
         Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<SourceType>());
         Dapper.SqlMapper.AddTypeHandler(typeof(Data), new JsonObjectTypeHandler());
-        Dapper.SqlMapper.AddTypeHandler(typeof(Data.Account), new JsonObjectTypeHandler());
-        Dapper.SqlMapper.AddTypeHandler(typeof(Data.Account.Github), new JsonObjectTypeHandler());
-        Dapper.SqlMapper.AddTypeHandler(typeof(Data.Account.Teams), new JsonObjectTypeHandler());
-        Dapper.SqlMapper.AddTypeHandler(typeof(Data.Chat), new JsonObjectTypeHandler());
-        Dapper.SqlMapper.AddTypeHandler(typeof(Data.Chat.Teams), new JsonObjectTypeHandler());
-        Dapper.SqlMapper.AddTypeHandler(typeof(Data.Message), new JsonObjectTypeHandler());
-        Dapper.SqlMapper.AddTypeHandler(typeof(Data.Message.Teams), new JsonObjectTypeHandler());
+        Dapper.SqlMapper.AddTypeHandler(typeof(AccountData), new JsonObjectTypeHandler());
+        Dapper.SqlMapper.AddTypeHandler(typeof(GithubAccountData), new JsonObjectTypeHandler());
+        Dapper.SqlMapper.AddTypeHandler(typeof(TeamsAccountData), new JsonObjectTypeHandler());
+        Dapper.SqlMapper.AddTypeHandler(typeof(ChatData), new JsonObjectTypeHandler());
+        Dapper.SqlMapper.AddTypeHandler(typeof(TeamsChatData), new JsonObjectTypeHandler());
+        Dapper.SqlMapper.AddTypeHandler(typeof(MessageData), new JsonObjectTypeHandler());
+        Dapper.SqlMapper.AddTypeHandler(typeof(TeamsMessageData), new JsonObjectTypeHandler());
         Dapper.SqlMapper.AddTypeHandler(typeof(List<Source>), new JsonArrayTypeHandler());
 
         foreach (var type in modelTypes)

@@ -59,7 +59,7 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
                 SourceType = SourceType.Github,
                 SourceId = user.NodeId,
                 Name = user.Login,
-                Data = new Data.Account.Github()
+                Data = new GithubAccountData()
                 {
                     Install = install,
                     User = install.Account,

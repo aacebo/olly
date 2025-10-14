@@ -9,7 +9,7 @@ namespace OS.Agent.Models;
 /// or collection of data
 /// </summary>
 [Model]
-public class Entity : Model<Data>
+public class Entity : Model
 {
     [Column("id")]
     [JsonPropertyName("id")]
@@ -42,6 +42,10 @@ public class Entity : Model<Data>
     [Column("name")]
     [JsonPropertyName("name")]
     public string? Name { get; set; }
+
+    [Column("data")]
+    [JsonPropertyName("data")]
+    public required Data Data { get; set; }
 
     [Column("created_at")]
     [JsonPropertyName("created_at")]

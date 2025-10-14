@@ -51,7 +51,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
                 SourceType = SourceType.Teams,
                 Type = context.Activity.Conversation.Type,
                 Name = context.Activity.Conversation.Name,
-                Data = new Data.Chat.Teams()
+                Data = new TeamsChatData()
                 {
                     Conversation = context.Activity.Conversation,
                     ServiceUrl = context.Activity.ServiceUrl
@@ -61,7 +61,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
         else
         {
             chat.Name = context.Activity.Conversation.Name;
-            chat.Data = new Data.Chat.Teams()
+            chat.Data = new TeamsChatData()
             {
                 Conversation = context.Activity.Conversation,
                 ServiceUrl = context.Activity.ServiceUrl
@@ -80,7 +80,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
                 Name = context.Activity.From.Name,
                 SourceId = context.Activity.From.Id,
                 SourceType = SourceType.Teams,
-                Data = new Data.Account.Teams()
+                Data = new TeamsAccountData()
                 {
                     User = context.Activity.From
                 }
@@ -88,7 +88,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
         }
         else
         {
-            account.Data = new Data.Account.Teams()
+            account.Data = new TeamsAccountData()
             {
                 User = context.Activity.From
             };

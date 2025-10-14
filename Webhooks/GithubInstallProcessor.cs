@@ -38,7 +38,7 @@ public class GithubInstallProcessor(IServiceScopeFactory scopeFactory) : Webhook
                 SourceType = SourceType.Github,
                 SourceId = @event.Installation.Account.NodeId,
                 Name = @event.Installation.Account.Login,
-                Data = new Data.Account.Github()
+                Data = new GithubAccountData()
                 {
                     Install = install,
                     User = install.Account,
@@ -49,7 +49,7 @@ public class GithubInstallProcessor(IServiceScopeFactory scopeFactory) : Webhook
         else
         {
             account.Name = @event.Installation.Account.Login;
-            account.Data = new Data.Account.Github()
+            account.Data = new GithubAccountData()
             {
                 Install = install,
                 User = install.Account,

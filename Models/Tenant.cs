@@ -5,7 +5,7 @@ using SqlKata;
 namespace OS.Agent.Models;
 
 [Model]
-public class Tenant : Model<Data>
+public class Tenant : Model
 {
     [Column("id")]
     [JsonPropertyName("id")]
@@ -18,6 +18,10 @@ public class Tenant : Model<Data>
     [Column("name")]
     [JsonPropertyName("name")]
     public string? Name { get; set; }
+
+    [Column("data")]
+    [JsonPropertyName("data")]
+    public required Data Data { get; set; }
 
     [Column("created_at")]
     [JsonPropertyName("created_at")]

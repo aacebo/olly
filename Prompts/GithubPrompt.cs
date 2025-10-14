@@ -15,26 +15,14 @@ namespace OS.Agent.Prompts;
 public class GithubPrompt(IPromptContext context)
 {
     [Function]
-    [Function.Description("get the current users chat information")]
-    public Task<Chat> GetCurrentChat()
+    [Function.Description("get a list of connected Github data source accounts for the user")]
+    public async Task<IEnumerable<Account>> GetAllGithubAccounts()
     {
-        return Task.FromResult(context.Chat);
-    }
-
-    [Function]
-    [Function.Description("get the current users account information")]
-    public Task<Account> GetCurrentAccount()
-    {
-        return Task.FromResult(context.Account);
-    }
-
-    [Function]
-    [Function.Description("get a list of connected data source accounts for the user")]
-    public async Task<IEnumerable<Account>> GetAllAccounts()
-    {
-        return await context.Accounts.GetByTenantId(
+        var accounts = await context.Accounts.GetByTenantId(
             context.Tenant.Id,
             context.CancellationToken
         );
+
+        return accounts.Where(a => a.SourceType == SourceType.Github);
     }
 }

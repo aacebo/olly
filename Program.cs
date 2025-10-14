@@ -37,11 +37,13 @@ builder.Services.Configure<GithubSettings>(builder.Configuration.GetSection("Git
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    options.SerializerOptions.AllowOutOfOrderMetadataProperties = true;
 });
 
 builder.Services.AddSingleton(new JsonSerializerOptions()
 {
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    AllowOutOfOrderMetadataProperties = true
 });
 
 builder.Services.AddOpenApi();

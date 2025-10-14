@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 using SqlKata;
@@ -5,7 +6,7 @@ using SqlKata;
 namespace OS.Agent.Models;
 
 [Model]
-public class Account : Model<Data.Account>
+public class Account : Model
 {
     [Column("id")]
     [JsonPropertyName("id")]
@@ -31,6 +32,10 @@ public class Account : Model<Data.Account>
     [JsonPropertyName("name")]
     public string? Name { get; set; }
 
+    [Column("data")]
+    [JsonPropertyName("data")]
+    public required AccountData Data { get; set; }
+
     [Column("created_at")]
     [JsonPropertyName("created_at")]
     public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
@@ -38,4 +43,38 @@ public class Account : Model<Data.Account>
     [Column("updated_at")]
     [JsonPropertyName("updated_at")]
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
+}
+
+[JsonPolymorphic]
+[JsonDerivedType(typeof(AccountData), typeDiscriminator: "account")]
+[JsonDerivedType(typeof(GithubAccountData), typeDiscriminator: "account.github")]
+[JsonDerivedType(typeof(TeamsAccountData), typeDiscriminator: "account.teams")]
+public class AccountData : Data
+{
+    [JsonExtensionData]
+    public new IDictionary<string, JsonElement> Properties = new Dictionary<string, JsonElement>();
+}
+
+public class GithubAccountData : AccountData
+{
+    [JsonPropertyName("user")]
+    public required Octokit.User User { get; set; }
+
+    [JsonPropertyName("install")]
+    public required Octokit.Installation Install { get; set; }
+
+    [JsonPropertyName("access_token")]
+    public required Octokit.AccessToken AccessToken { get; set; }
+
+    [JsonExtensionData]
+    public new IDictionary<string, JsonElement> Properties = new Dictionary<string, JsonElement>();
+}
+
+public class TeamsAccountData : AccountData
+{
+    [JsonPropertyName("user")]
+    public required Microsoft.Teams.Api.Account User { get; set; }
+
+    [JsonExtensionData]
+    public new IDictionary<string, JsonElement> Properties = new Dictionary<string, JsonElement>();
 }

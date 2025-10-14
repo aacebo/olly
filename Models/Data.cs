@@ -1,10 +1,17 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-using Microsoft.Teams.Api.Activities;
-
 namespace OS.Agent.Models;
 
+[JsonPolymorphic]
+[JsonDerivedType(typeof(Data), typeDiscriminator: "data")]
+[JsonDerivedType(typeof(AccountData), typeDiscriminator: "account")]
+[JsonDerivedType(typeof(TeamsAccountData), typeDiscriminator: "account.teams")]
+[JsonDerivedType(typeof(GithubAccountData), typeDiscriminator: "account.github")]
+[JsonDerivedType(typeof(ChatData), typeDiscriminator: "chat")]
+[JsonDerivedType(typeof(TeamsChatData), typeDiscriminator: "chat.teams")]
+[JsonDerivedType(typeof(MessageData), typeDiscriminator: "message")]
+[JsonDerivedType(typeof(TeamsMessageData), typeDiscriminator: "message.teams")]
 public class Data
 {
     [JsonExtensionData]
@@ -15,49 +22,8 @@ public class Data
         return JsonSerializer.Serialize(this, new JsonSerializerOptions()
         {
             WriteIndented = true,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            AllowOutOfOrderMetadataProperties = true
         });
-    }
-
-    public class Account : Data
-    {
-        public class Github : Account
-        {
-            [JsonPropertyName("user")]
-            public required Octokit.User User { get; set; }
-
-            [JsonPropertyName("install")]
-            public required Octokit.Installation Install { get; set; }
-
-            [JsonPropertyName("access_token")]
-            public required Octokit.AccessToken AccessToken { get; set; }
-        }
-
-        public class Teams : Account
-        {
-            [JsonPropertyName("user")]
-            public required Microsoft.Teams.Api.Account User { get; set; }
-        }
-    }
-
-    public class Chat : Data
-    {
-        public class Teams : Chat
-        {
-            [JsonPropertyName("conversation")]
-            public required Microsoft.Teams.Api.Conversation Conversation { get; set; }
-
-            [JsonPropertyName("service_url")]
-            public string? ServiceUrl { get; set; }
-        }
-    }
-
-    public class Message : Data
-    {
-        public class Teams : Message
-        {
-            [JsonPropertyName("activity")]
-            public required MessageActivity Activity { get; set; }
-        }
     }
 }

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Data;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Dapper;
 
@@ -12,7 +13,11 @@ namespace OS.Agent.Postgres;
 
 public sealed class JsonArrayTypeHandler : SqlMapper.ITypeHandler
 {
-    private JsonSerializerOptions Options { get; init; } = new(JsonSerializerDefaults.Web);
+    private JsonSerializerOptions Options { get; init; } = new(JsonSerializerDefaults.Web)
+    {
+        AllowOutOfOrderMetadataProperties = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
 
     public void SetValue(IDbDataParameter parameter, object? value)
     {
