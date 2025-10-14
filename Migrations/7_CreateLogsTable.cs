@@ -16,6 +16,13 @@ public class CreateLogsTable : Migration
             .WithColumn("text").AsString().NotNullable()
             .WithColumn("data").AsCustom("JSONB").NotNullable()
             .WithColumn("created_at").AsDateTimeOffset().NotNullable();
+
+        Create.Index()
+            .OnTable("logs")
+            .OnColumn("tenant_id").Ascending()
+            .OnColumn("level").Ascending()
+            .OnColumn("type").Ascending()
+            .OnColumn("created_at").Descending();
     }
 
     public override void Down()

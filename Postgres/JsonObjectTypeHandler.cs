@@ -27,7 +27,7 @@ public sealed class JsonObjectTypeHandler : SqlMapper.ITypeHandler
 
     public object? Parse(Type type, object value)
     {
-        var data = value switch
+        return value switch
         {
             string s => JsonSerializer.Deserialize(s, type, Options),
             JsonElement je => JsonSerializer.Deserialize(je.GetRawText(), type, Options),
@@ -35,8 +35,5 @@ public sealed class JsonObjectTypeHandler : SqlMapper.ITypeHandler
             byte[] bytes => JsonSerializer.Deserialize(bytes, type, Options),
             _ => default
         };
-
-        Console.WriteLine(data);
-        return data;
     }
 }

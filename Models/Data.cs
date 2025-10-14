@@ -15,10 +15,10 @@ namespace OS.Agent.Models;
 [JsonDerivedType(typeof(TeamsChatData), typeDiscriminator: "chat.teams")]
 [JsonDerivedType(typeof(MessageData), typeDiscriminator: "message")]
 [JsonDerivedType(typeof(TeamsMessageData), typeDiscriminator: "message.teams")]
-public class Data(params IEnumerable<KeyValuePair<string, JsonElement>> pairs)
+public class Data
 {
     [JsonExtensionData]
-    public IDictionary<string, JsonElement> Properties = new Dictionary<string, JsonElement>(pairs);
+    public IDictionary<string, JsonElement> Properties = new Dictionary<string, JsonElement>();
 
     public override string ToString()
     {

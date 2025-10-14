@@ -1,5 +1,9 @@
 using System.Data;
 
+using Npgsql;
+
+using NpgsqlTypes;
+
 using OS.Agent.Models;
 
 using SqlKata.Execution;
@@ -53,7 +57,31 @@ public class ChatStorage(ILogger<IChatStorage> logger, QueryFactory db) : IChatS
     public async Task<Chat> Create(Chat value, IDbTransaction? tx = null, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Create");
-        await db.Query("chats").InsertAsync(value, tx, cancellationToken: cancellationToken);
+        using var cmd = new NpgsqlCommand(
+        """
+            INSERT INTO chats
+            (id, tenant_id, parent_id, source_id, source_type, type, name, data, notes, created_at, updated_at)
+            VALUES
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        """, (NpgsqlConnection)db.Connection)
+        {
+            Parameters =
+            {
+                new() { Value = value.Id, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.TenantId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.ParentId is null ? DBNull.Value : value.ParentId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.SourceId, NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Type is null ? DBNull.Value : value.Type, NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Name is null ? DBNull.Value : value.Name, NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Data, NpgsqlDbType = NpgsqlDbType.Jsonb },
+                new() { Value = value.Notes, NpgsqlDbType = NpgsqlDbType.Jsonb },
+                new() { Value = value.CreatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
+                new() { Value = value.UpdatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz }
+            }
+        };
+
+        await cmd.ExecuteNonQueryAsync(cancellationToken);
         return value;
     }
 
@@ -61,7 +89,39 @@ public class ChatStorage(ILogger<IChatStorage> logger, QueryFactory db) : IChatS
     {
         logger.LogDebug("Update");
         value.UpdatedAt = DateTimeOffset.UtcNow;
-        await db.Query("chats").Where("id", "=", value.Id).UpdateAsync(value, tx, cancellationToken: cancellationToken);
+        using var cmd = new NpgsqlCommand(
+        """
+            UPDATE chats SET
+                tenant_id = $2,
+                parent_id = $3,
+                source_id = $4,
+                source_type = $5,
+                type = $6,
+                name = $7,
+                data = $8,
+                notes = $9,
+                created_at = $10,
+                updated_at = $11
+            WHERE id = $1
+        """, (NpgsqlConnection)db.Connection)
+        {
+            Parameters =
+            {
+                new() { Value = value.Id, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.TenantId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.ParentId is null ? DBNull.Value : value.ParentId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.SourceId, NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Type is null ? DBNull.Value : value.Type, NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Name is null ? DBNull.Value : value.Name, NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Data, NpgsqlDbType = NpgsqlDbType.Jsonb },
+                new() { Value = value.Notes, NpgsqlDbType = NpgsqlDbType.Jsonb },
+                new() { Value = value.CreatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
+                new() { Value = value.UpdatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz }
+            }
+        };
+
+        await cmd.ExecuteNonQueryAsync(cancellationToken);
         return value;
     }
 

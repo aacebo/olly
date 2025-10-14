@@ -74,6 +74,7 @@ public static class IServiceCollectionExtensions
         Dapper.SqlMapper.AddTypeHandler(typeof(MessageData), new JsonObjectTypeHandler());
         Dapper.SqlMapper.AddTypeHandler(typeof(TeamsMessageData), new JsonObjectTypeHandler());
         Dapper.SqlMapper.AddTypeHandler(typeof(List<Source>), new JsonArrayTypeHandler());
+        Dapper.SqlMapper.AddTypeHandler(typeof(List<Note>), new JsonArrayTypeHandler());
 
         foreach (var type in modelTypes)
         {

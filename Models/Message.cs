@@ -40,6 +40,10 @@ public class Message : Model
     [JsonPropertyName("data")]
     public MessageData Data { get; set; } = new MessageData();
 
+    [Column("notes")]
+    [JsonPropertyName("notes")]
+    public List<Note> Notes { get; set; } = [];
+
     [Column("created_at")]
     [JsonPropertyName("created_at")]
     public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;

@@ -40,6 +40,10 @@ public class Chat : Model
     [JsonPropertyName("data")]
     public ChatData Data { get; set; } = new ChatData();
 
+    [Column("notes")]
+    [JsonPropertyName("notes")]
+    public List<Note> Notes { get; set; } = [];
+
     [Column("created_at")]
     [JsonPropertyName("created_at")]
     public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
