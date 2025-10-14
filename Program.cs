@@ -75,6 +75,7 @@ builder.Services.AddSingleton<NetMQQueue<Event<ChatEvent>>>(); // chats.(create 
 builder.Services.AddSingleton<NetMQQueue<Event<MessageEvent>>>(); // messages.(create | update | delete)
 builder.Services.AddSingleton<NetMQQueue<Event<TokenEvent>>>(); // tokens.(create | update | delete)
 builder.Services.AddSingleton<NetMQQueue<Event<EntityEvent>>>(); // entities.(create | update | delete)
+builder.Services.AddSingleton<NetMQQueue<Event<LogEvent>>>(); // logs.create
 
 // Webhooks
 builder.Services.AddSingleton<WebhookEventProcessor, GithubInstallProcessor>();
@@ -91,6 +92,7 @@ builder.Services.AddScoped<IChatStorage, ChatStorage>();
 builder.Services.AddScoped<IMessageStorage, MessageStorage>();
 builder.Services.AddScoped<IEntityStorage, EntityStorage>();
 builder.Services.AddScoped<ITokenStorage, TokenStorage>();
+builder.Services.AddScoped<ILogStorage, LogStorage>();
 
 // Services
 builder.Services.AddScoped<IUserService, UserService>();
@@ -99,6 +101,7 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<ILogService, LogService>();
 
 // Drivers
 builder.Services.AddScoped<TeamsDriver>();

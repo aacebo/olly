@@ -63,6 +63,8 @@ public static class IServiceCollectionExtensions
         var modelTypes = Assembly.GetExecutingAssembly().GetTypes().Where(type => type.GetCustomAttribute<ModelAttribute>() != null);
 
         Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<SourceType>());
+        Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<Models.LogLevel>());
+        Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<LogType>());
         Dapper.SqlMapper.AddTypeHandler(typeof(Data), new JsonObjectTypeHandler());
         Dapper.SqlMapper.AddTypeHandler(typeof(AccountData), new JsonObjectTypeHandler());
         Dapper.SqlMapper.AddTypeHandler(typeof(GithubAccountData), new JsonObjectTypeHandler());

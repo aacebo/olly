@@ -38,7 +38,7 @@ public class Message : Model
 
     [Column("data")]
     [JsonPropertyName("data")]
-    public required MessageData Data { get; set; }
+    public MessageData Data { get; set; } = new MessageData();
 
     [Column("created_at")]
     [JsonPropertyName("created_at")]

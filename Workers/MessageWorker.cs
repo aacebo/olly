@@ -7,6 +7,7 @@ using NetMQ;
 using OS.Agent.Events;
 using OS.Agent.Models;
 using OS.Agent.Prompts;
+using OS.Agent.Services;
 using OS.Agent.Stores;
 
 namespace OS.Agent.Workers;
@@ -28,12 +29,21 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
             var storage = scope.ServiceProvider.GetRequiredService<IStorage>();
             var app = scope.ServiceProvider.GetRequiredService<App>();
             var model = scope.ServiceProvider.GetRequiredService<OpenAIChatModel>();
+            var logs = scope.ServiceProvider.GetRequiredService<ILogService>();
 
             while (args.Queue.TryDequeue(out var @event, TimeSpan.FromMilliseconds(200)))
             {
                 try
                 {
                     Logger.LogDebug("{}", @event);
+                    await logs.Create(new()
+                    {
+                        TenantId = @event.Body.Tenant.Id,
+                        Type = LogType.Message,
+                        TypeId = @event.Body.Message.Id.ToString(),
+                        Text = "new message",
+                        Data = Data.From(@event.Body)
+                    }, lifetime.ApplicationStopping);
 
                     var context = new PromptContext(@event.Body, scope, lifetime.ApplicationStopping);
                     var mainPrompt = new MainPrompt(context);

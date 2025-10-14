@@ -38,7 +38,7 @@ public class Chat : Model
 
     [Column("data")]
     [JsonPropertyName("data")]
-    public required ChatData Data { get; set; }
+    public ChatData Data { get; set; } = new ChatData();
 
     [Column("created_at")]
     [JsonPropertyName("created_at")]

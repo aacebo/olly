@@ -34,7 +34,7 @@ public class Account : Model
 
     [Column("data")]
     [JsonPropertyName("data")]
-    public required AccountData Data { get; set; }
+    public AccountData Data { get; set; } = new AccountData();
 
     [Column("created_at")]
     [JsonPropertyName("created_at")]

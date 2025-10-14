@@ -21,7 +21,7 @@ public class Tenant : Model
 
     [Column("data")]
     [JsonPropertyName("data")]
-    public required Data Data { get; set; }
+    public Data Data { get; set; } = new Data();
 
     [Column("created_at")]
     [JsonPropertyName("created_at")]
