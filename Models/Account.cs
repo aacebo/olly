@@ -57,12 +57,15 @@ public class AccountData : Data
 
 public class GithubAccountData : AccountData
 {
+    [JsonConverter(typeof(OctokitJsonConverter<Octokit.User>))]
     [JsonPropertyName("user")]
     public required Octokit.User User { get; set; }
 
+    [JsonConverter(typeof(OctokitJsonConverter<Octokit.Installation>))]
     [JsonPropertyName("install")]
     public required Octokit.Installation Install { get; set; }
 
+    [JsonConverter(typeof(OctokitJsonConverter<Octokit.AccessToken>))]
     [JsonPropertyName("access_token")]
     public required Octokit.AccessToken AccessToken { get; set; }
 
