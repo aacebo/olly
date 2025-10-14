@@ -13,7 +13,6 @@ namespace OS.Agent.Workers;
 
 public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scopeFactory) : IHostedService
 {
-    private IWebHostEnvironment Env { get; init; } = provider.GetRequiredService<IWebHostEnvironment>();
     private ILogger<MessageWorker> Logger { get; init; } = provider.GetRequiredService<ILogger<MessageWorker>>();
     private NetMQQueue<Event<MessageEvent>> Events { get; init; } = provider.GetRequiredService<NetMQQueue<Event<MessageEvent>>>();
     private NetMQPoller Poller { get; init; } = [];
