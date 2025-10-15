@@ -14,11 +14,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Octokit" Version="14.*" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\OS.Agent.Events\OS.Agent.Events.csproj" />
     <ProjectReference Include="..\OS.Agent.Storage\OS.Agent.Storage.csproj" />
     <ProjectReference Include="..\OS.Agent.Services\OS.Agent.Services.csproj" />
     <ProjectReference Include="..\OS.Agent.Drivers\OS.Agent.Drivers.csproj" />
-    <ProjectReference Include="..\OS.Agent.Settings\OS.Agent.Settings.csproj" />
+    <ProjectReference Include="..\OS.Agent.Drivers.Github\OS.Agent.Drivers.Github.csproj" />
     <ProjectReference Include="..\OS.Agent.Cards\OS.Agent.Cards.csproj" />
   </ItemGroup>
 </Project>

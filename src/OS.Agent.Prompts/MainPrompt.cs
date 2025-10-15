@@ -4,7 +4,7 @@ using Microsoft.Teams.AI.Annotations;
 using Microsoft.Teams.AI.Models.OpenAI;
 using Microsoft.Teams.Api.Activities;
 
-using OS.Agent.Settings;
+using OS.Agent.Drivers.Github;
 using OS.Agent.Storage.Models;
 
 using Api = Microsoft.Teams.Api;

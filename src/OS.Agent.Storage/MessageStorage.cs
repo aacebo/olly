@@ -15,7 +15,7 @@ namespace OS.Agent.Storage;
 public interface IMessageStorage
 {
     Task<Message?> GetById(Guid id, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Message>> GetByChatId(Guid chatId, CancellationToken cancellationToken = default);
+    Task<PaginationResult<Message>> GetByChatId(Guid chatId, Page? page = null, CancellationToken cancellationToken = default);
     Task<Message?> GetBySourceId(Guid chatId, SourceType type, string sourceId, CancellationToken cancellationToken = default);
     Task<Message> Create(Message value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
     Task<Message> Update(Message value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
@@ -34,14 +34,16 @@ public class MessageStorage(ILogger<IMessageStorage> logger, QueryFactory db) : 
             .FirstOrDefaultAsync<Message?>(cancellationToken: cancellationToken);
     }
 
-    public async Task<IEnumerable<Message>> GetByChatId(Guid chatId, CancellationToken cancellationToken = default)
+    public async Task<PaginationResult<Message>> GetByChatId(Guid chatId, Page? page = null, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("GetByChatId");
-        return await db
+        page ??= new();
+        var query = db
             .Query("messages")
             .Select("*")
-            .Where("chat_id", "=", chatId)
-            .GetAsync<Message>(cancellationToken: cancellationToken);
+            .Where("chat_id", "=", chatId);
+
+        return await page.Invoke<Message>(query, cancellationToken);
     }
 
     public async Task<Message?> GetBySourceId(Guid chatId, SourceType type, string sourceId, CancellationToken cancellationToken = default)

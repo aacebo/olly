@@ -1,4 +1,4 @@
-namespace OS.Agent.Settings;
+namespace OS.Agent.Drivers.Github;
 
 public class GithubSettings
 {

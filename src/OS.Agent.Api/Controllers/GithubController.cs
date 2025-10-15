@@ -3,8 +3,8 @@ using Microsoft.Extensions.Options;
 
 using Octokit;
 
+using OS.Agent.Drivers.Github;
 using OS.Agent.Services;
-using OS.Agent.Settings;
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Api.Controllers;

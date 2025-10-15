@@ -13,6 +13,7 @@ namespace OS.Agent.Prompts;
 public interface IPromptContext
 {
     Guid UserId { get; }
+    Octokit.GitHubClient AppGithub { get; }
     OpenAIChatModel Model { get; }
     Tenant Tenant { get; }
     Account Account { get; }
@@ -33,6 +34,7 @@ public interface IPromptContext
 public class PromptContext : IPromptContext
 {
     public Guid UserId => Account.UserId ?? throw new InvalidDataException("Accounts sending messages must be assigned to a user!");
+    public Octokit.GitHubClient AppGithub { get; }
     public OpenAIChatModel Model { get; }
     public Tenant Tenant { get; set; }
     public Account Account { get; set; }
@@ -50,6 +52,7 @@ public class PromptContext : IPromptContext
 
     public PromptContext(MessageEvent @event, IServiceScope scope, CancellationToken cancellationToken = default)
     {
+        AppGithub = scope.ServiceProvider.GetRequiredService<Octokit.GitHubClient>();
         Tenants = scope.ServiceProvider.GetRequiredService<ITenantService>();
         Accounts = scope.ServiceProvider.GetRequiredService<IAccountService>();
         Chats = scope.ServiceProvider.GetRequiredService<IChatService>();

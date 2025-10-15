@@ -23,6 +23,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\OS.Agent.Json\OS.Agent.Json.csproj" />
+    <ProjectReference Include="..\OS.Agent.Drivers.Github\OS.Agent.Drivers.Github.csproj" />
   </ItemGroup>
 </Project>

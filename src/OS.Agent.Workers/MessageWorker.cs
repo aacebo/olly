@@ -1,6 +1,10 @@
+using System.Text.Json;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Teams.AI;
+using Microsoft.Teams.AI.Messages;
 using Microsoft.Teams.AI.Models.OpenAI;
 using Microsoft.Teams.Api.Activities;
 using Microsoft.Teams.Apps;
@@ -39,6 +43,7 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
                 try
                 {
                     Logger.LogDebug("{}", @event);
+
                     await logs.Create(new()
                     {
                         TenantId = @event.Body.Tenant.Id,
@@ -86,7 +91,22 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
     private async Task<bool> OnEvent(IPromptContext context, OpenAIChatPrompt prompt, CancellationToken cancellationToken = default)
     {
         await context.Send(new TypingActivity(), cancellationToken);
-        var res = await prompt.Send(context.Message.Text, null, cancellationToken);
+        var messages = await context.Messages.GetByChatId(context.Chat.Id, cancellationToken: cancellationToken);
+        var memory = messages
+            .List.Select(m =>
+                m.AccountId is null
+                    ? new ModelMessage<string>(m.Text) as IMessage
+                    : new UserMessage<string>(m.Text)
+            )
+            .ToList();
+
+        Logger.LogDebug("{}", JsonSerializer.Serialize(memory));
+
+        var res = await prompt.Send(context.Message.Text, new()
+        {
+            Messages = memory
+        }, null, cancellationToken);
+
         var message = new MessageActivity(res.Content);
         await context.Send(message, cancellationToken);
         return true;

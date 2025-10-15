@@ -7,12 +7,14 @@ using OS.Agent.Events;
 using OS.Agent.Storage;
 using OS.Agent.Storage.Models;
 
+using SqlKata.Execution;
+
 namespace OS.Agent.Services;
 
 public interface IMessageService
 {
     Task<Message?> GetById(Guid id, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Message>> GetByChatId(Guid chatId, CancellationToken cancellationToken = default);
+    Task<PaginationResult<Message>> GetByChatId(Guid chatId, Page? page = null, CancellationToken cancellationToken = default);
     Task<Message?> GetBySourceId(Guid chatId, SourceType type, string sourceId, CancellationToken cancellationToken = default);
     Task<Message> Create(Message value, CancellationToken cancellationToken = default);
     Task<Message> Update(Message value, CancellationToken cancellationToken = default);
@@ -47,9 +49,9 @@ public class MessageService(IServiceProvider provider) : IMessageService
         return message;
     }
 
-    public async Task<IEnumerable<Message>> GetByChatId(Guid chatId, CancellationToken cancellationToken = default)
+    public async Task<PaginationResult<Message>> GetByChatId(Guid chatId, Page? page = null, CancellationToken cancellationToken = default)
     {
-        return await Storage.GetByChatId(chatId, cancellationToken);
+        return await Storage.GetByChatId(chatId, page, cancellationToken);
     }
 
     public async Task<Message?> GetBySourceId(Guid chatId, SourceType type, string sourceId, CancellationToken cancellationToken = default)

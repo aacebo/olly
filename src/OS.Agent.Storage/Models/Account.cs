@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-using OS.Agent.Json;
+using OS.Agent.Drivers.Github;
 
 using SqlKata;
 

@@ -25,4 +25,27 @@ public class GithubPrompt(IPromptContext context)
 
         return accounts.Where(a => a.SourceType == SourceType.Github);
     }
+
+    [Function]
+    [Function.Description("get a list of the users Github repositories")]
+    public async Task<IEnumerable<Octokit.Repository>> GetRepositoriesByAccountId([Param] Guid accountId)
+    {
+        var account = await context.Accounts.GetById(accountId) ?? throw new Exception("account not found");
+
+        if (account.Data is GithubAccountData data)
+        {
+            var client = new Octokit.GitHubClient(new Octokit.ProductHeaderValue("TOS-Agent"))
+            {
+                Credentials = new Octokit.Credentials(
+                    data.AccessToken.Token,
+                    Octokit.AuthenticationType.Bearer
+                )
+            };
+
+            var res = await client.GitHubApps.Installation.GetAllRepositoriesForCurrent();
+            return res.Repositories;
+        }
+
+        throw new UnauthorizedAccessException("account must be of type github");
+    }
 }

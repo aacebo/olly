@@ -7,7 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 
 using Octokit;
 
-using OS.Agent.Settings;
+using OS.Agent.Drivers.Github;
 
 namespace OS.Agent.Api.Extensions;
 

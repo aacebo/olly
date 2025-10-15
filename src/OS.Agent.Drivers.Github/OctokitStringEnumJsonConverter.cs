@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace OS.Agent.Json;
+namespace OS.Agent.Drivers.Github;
 
 public class OctokitJsonConverter<T> : JsonConverter<T>
 {
