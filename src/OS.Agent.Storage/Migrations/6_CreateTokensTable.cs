@@ -1,6 +1,6 @@
 using FluentMigrator;
 
-namespace OS.Agent.Migrations;
+namespace OS.Agent.Storage.Migrations;
 
 [Migration(6)]
 public class CreateTokensTable : Migration

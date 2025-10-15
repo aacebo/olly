@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 
 using Octokit;
 
-namespace OS.Agent.Controllers;
+namespace OS.Agent.Api.Controllers;
 
 [Route("/api")]
 [ApiController]

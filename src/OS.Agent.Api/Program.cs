@@ -15,18 +15,18 @@ using NetMQ;
 using Octokit.Webhooks;
 using Octokit.Webhooks.AspNetCore;
 
-using OS.Agent.Controllers.Teams;
+using OS.Agent.Api.Controllers.Teams;
+using OS.Agent.Api.Extensions;
+using OS.Agent.Api.Middleware;
+using OS.Agent.Api.Webhooks;
 using OS.Agent.Drivers;
 using OS.Agent.Drivers.Teams;
 using OS.Agent.Events;
-using OS.Agent.Extensions;
-using OS.Agent.Middleware;
 using OS.Agent.Services;
 using OS.Agent.Settings;
 using OS.Agent.Storage;
 using OS.Agent.Storage.Extensions;
 using OS.Agent.Storage.Models;
-using OS.Agent.Webhooks;
 using OS.Agent.Workers;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -67,7 +67,6 @@ builder.Services.AddScoped<InstallController>();
 builder.Services.AddScoped<MessageController>();
 
 // Queues
-builder.Services.AddSingleton<NetMQQueue<Event<GithubInstallEvent>>>(); // github.install.(create | delete)
 builder.Services.AddSingleton<NetMQQueue<Event<UserEvent>>>(); // users.(create | update | delete)
 builder.Services.AddSingleton<NetMQQueue<Event<TenantEvent>>>(); // tenants.(create | update | delete)
 builder.Services.AddSingleton<NetMQQueue<Event<AccountEvent>>>(); // accounts.(create | update | delete)

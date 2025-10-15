@@ -9,7 +9,7 @@ using Octokit;
 
 using OS.Agent.Settings;
 
-namespace OS.Agent.Extensions;
+namespace OS.Agent.Api.Extensions;
 
 public static class IServiceCollectionExtensions
 {

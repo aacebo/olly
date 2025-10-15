@@ -1,16 +1,17 @@
 using FluentMigrator;
 
-namespace OS.Agent.Migrations;
+namespace OS.Agent.Storage.Migrations;
 
-[Migration(3)]
-public class CreateChatsTable : Migration
+[Migration(5)]
+public class CreateEntitiesTable : Migration
 {
     public override void Up()
     {
-        Create.Table("chats")
+        Create.Table("entities")
             .WithColumn("id").AsGuid().PrimaryKey()
             .WithColumn("tenant_id").AsGuid().ForeignKey("tenants", "id").NotNullable()
-            .WithColumn("parent_id").AsGuid().ForeignKey("chats", "id").Nullable()
+            .WithColumn("account_id").AsGuid().ForeignKey("accounts", "id").Nullable()
+            .WithColumn("parent_id").AsGuid().ForeignKey("entities", "id").Nullable()
             .WithColumn("source_id").AsString().NotNullable()
             .WithColumn("source_type").AsString().NotNullable()
             .WithColumn("type").AsString().Nullable()
@@ -21,12 +22,12 @@ public class CreateChatsTable : Migration
             .WithColumn("updated_at").AsDateTimeOffset().NotNullable();
 
         Create.UniqueConstraint()
-            .OnTable("chats")
+            .OnTable("entities")
             .Columns("tenant_id", "source_id", "source_type");
     }
 
     public override void Down()
     {
-        Delete.Table("chats");
+        Delete.Table("entities");
     }
 }

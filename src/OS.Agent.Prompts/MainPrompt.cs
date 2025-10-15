@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Teams.AI.Annotations;
 using Microsoft.Teams.AI.Models.OpenAI;
@@ -87,7 +88,7 @@ public class MainPrompt(IPromptContext context)
                         Type = Api.ConversationType.Personal
                     }
                 }.AddAttachment(
-                    Cards.SignIn($"{GithubSettings.Value.InstallUrl}&state={state.Encode()}")
+                    Cards.Auth.SignIn($"{GithubSettings.Value.InstallUrl}&state={state.Encode()}")
                 )
             );
 

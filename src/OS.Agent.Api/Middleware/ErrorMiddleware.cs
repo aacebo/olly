@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace OS.Agent.Middleware;
+namespace OS.Agent.Api.Middleware;
 
 public class ErrorMiddleware(ILogger logger) : IMiddleware
 {

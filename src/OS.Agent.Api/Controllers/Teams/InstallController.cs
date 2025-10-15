@@ -6,7 +6,7 @@ using Microsoft.Teams.Apps.Annotations;
 using OS.Agent.Services;
 using OS.Agent.Storage.Models;
 
-namespace OS.Agent.Controllers.Teams;
+namespace OS.Agent.Api.Controllers.Teams;
 
 [TeamsController]
 public class InstallController(IServiceScopeFactory scopeFactory)

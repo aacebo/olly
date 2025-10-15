@@ -1,8 +1,8 @@
 using Microsoft.Teams.Cards;
 
-namespace OS.Agent;
+namespace OS.Agent.Cards;
 
-public static partial class Cards
+public static partial class Auth
 {
     public static AdaptiveCard SignIn(string url, string? imageUrl = null)
     {

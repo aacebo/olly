@@ -1,6 +1,6 @@
 using FluentMigrator;
 
-namespace OS.Agent.Migrations;
+namespace OS.Agent.Storage.Migrations;
 
 [Migration(0)]
 public class CreateUsersTable : Migration

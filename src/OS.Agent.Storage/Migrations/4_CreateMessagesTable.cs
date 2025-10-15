@@ -1,6 +1,6 @@
 using FluentMigrator;
 
-namespace OS.Agent.Migrations;
+namespace OS.Agent.Storage.Migrations;
 
 [Migration(4)]
 public class CreateMessagesTable : Migration

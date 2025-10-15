@@ -7,7 +7,7 @@ using OS.Agent.Services;
 using OS.Agent.Settings;
 using OS.Agent.Storage.Models;
 
-namespace OS.Agent.Controllers;
+namespace OS.Agent.Api.Controllers;
 
 [Route("/api/github")]
 [ApiController]

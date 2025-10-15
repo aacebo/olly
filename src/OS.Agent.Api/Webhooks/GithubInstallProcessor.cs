@@ -6,7 +6,7 @@ using Octokit.Webhooks.Events.Installation;
 using OS.Agent.Services;
 using OS.Agent.Storage.Models;
 
-namespace OS.Agent.Webhooks;
+namespace OS.Agent.Api.Webhooks;
 
 public class GithubInstallProcessor(IServiceScopeFactory scopeFactory) : WebhookEventProcessor
 {
