@@ -21,4 +21,8 @@
     <PackageReference Include="SqlKata" Version="4.*" />
     <PackageReference Include="SqlKata.Execution" Version="4.*" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OS.Agent.Json\OS.Agent.Json.csproj" />
+  </ItemGroup>
 </Project>

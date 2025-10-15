@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+using OS.Agent.Json;
+
 using SqlKata;
 
 namespace OS.Agent.Storage.Models;
