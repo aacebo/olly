@@ -3,8 +3,8 @@ using Microsoft.Extensions.Caching.Memory;
 using NetMQ;
 
 using OS.Agent.Events;
-using OS.Agent.Models;
-using OS.Agent.Stores;
+using OS.Agent.Storage;
+using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Services;
 

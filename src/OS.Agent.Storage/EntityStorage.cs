@@ -1,14 +1,16 @@
 using System.Data;
 
+using Microsoft.Extensions.Logging;
+
 using Npgsql;
 
 using NpgsqlTypes;
 
-using OS.Agent.Models;
+using OS.Agent.Storage.Models;
 
 using SqlKata.Execution;
 
-namespace OS.Agent.Stores;
+namespace OS.Agent.Storage;
 
 public interface IEntityStorage
 {

@@ -1,10 +1,12 @@
 using System.Data;
 
-using OS.Agent.Models;
+using Microsoft.Extensions.Logging;
+
+using OS.Agent.Storage.Models;
 
 using SqlKata.Execution;
 
-namespace OS.Agent.Stores;
+namespace OS.Agent.Storage;
 
 public interface ILogStorage
 {

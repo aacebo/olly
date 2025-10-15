@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 using Json.More;
 
-namespace OS.Agent.Models;
+namespace OS.Agent.Storage.Models;
 
 [JsonPolymorphic]
 [JsonDerivedType(typeof(Data), typeDiscriminator: "data")]

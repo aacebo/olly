@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace OS.Agent.Models;
+namespace OS.Agent.Storage.Models;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
 public class ModelAttribute : Attribute

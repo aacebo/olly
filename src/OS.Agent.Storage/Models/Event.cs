@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 using SqlKata;
 
-namespace OS.Agent.Models;
+namespace OS.Agent.Storage.Models;
 
 public class Event<T>(string name, T body)
 {

@@ -32,6 +32,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\OS.Agent.Storage\OS.Agent.Storage.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="*.pem">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

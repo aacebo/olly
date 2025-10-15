@@ -3,8 +3,8 @@ using Octokit.Webhooks;
 using Octokit.Webhooks.Events;
 using Octokit.Webhooks.Events.Installation;
 
-using OS.Agent.Models;
 using OS.Agent.Services;
+using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Webhooks;
 

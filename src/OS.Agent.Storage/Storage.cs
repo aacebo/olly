@@ -1,4 +1,6 @@
-namespace OS.Agent.Stores;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace OS.Agent.Storage;
 
 public interface IStorage
 {

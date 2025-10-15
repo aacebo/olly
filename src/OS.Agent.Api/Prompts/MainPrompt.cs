@@ -3,8 +3,8 @@ using Microsoft.Teams.AI.Annotations;
 using Microsoft.Teams.AI.Models.OpenAI;
 using Microsoft.Teams.Api.Activities;
 
-using OS.Agent.Models;
 using OS.Agent.Settings;
+using OS.Agent.Storage.Models;
 
 using Api = Microsoft.Teams.Api;
 

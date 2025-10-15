@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace OS.Agent.Models;
+namespace OS.Agent.Storage.Models;
 
 [JsonConverter(typeof(Converter<StringEnum>))]
 public class StringEnum(string value, bool caseSensitive = true) : ICloneable, IComparable, IComparable<string>, IEquatable<string>

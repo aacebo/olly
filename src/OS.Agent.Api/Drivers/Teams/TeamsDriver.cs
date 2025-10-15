@@ -1,7 +1,7 @@
 using Microsoft.Teams.Api.Activities;
 using Microsoft.Teams.Apps;
 
-using OS.Agent.Models;
+using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Teams;
 

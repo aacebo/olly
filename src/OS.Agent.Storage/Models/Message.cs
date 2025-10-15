@@ -6,7 +6,7 @@ using Microsoft.Teams.Api.Activities;
 
 using SqlKata;
 
-namespace OS.Agent.Models;
+namespace OS.Agent.Storage.Models;
 
 [Model]
 public class Message : Model

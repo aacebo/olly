@@ -8,7 +8,7 @@ using Npgsql;
 
 using NpgsqlTypes;
 
-namespace OS.Agent.Postgres;
+namespace OS.Agent.Storage.Postgres;
 
 public sealed class JsonObjectTypeHandler : SqlMapper.ITypeHandler
 {

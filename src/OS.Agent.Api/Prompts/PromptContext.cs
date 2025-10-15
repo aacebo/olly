@@ -3,9 +3,9 @@ using Microsoft.Teams.Api.Activities;
 
 using OS.Agent.Drivers;
 using OS.Agent.Events;
-using OS.Agent.Models;
 using OS.Agent.Services;
-using OS.Agent.Stores;
+using OS.Agent.Storage;
+using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Prompts;
 

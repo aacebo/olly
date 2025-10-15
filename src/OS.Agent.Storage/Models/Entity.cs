@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 using SqlKata;
 
-namespace OS.Agent.Models;
+namespace OS.Agent.Storage.Models;
 
 /// <summary>
 /// any generic unit of data

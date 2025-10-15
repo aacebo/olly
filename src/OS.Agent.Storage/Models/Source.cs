@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace OS.Agent.Models;
+namespace OS.Agent.Storage.Models;
 
 [Model]
 public class Source : Model, IEquatable<Source>

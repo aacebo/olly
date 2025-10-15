@@ -3,9 +3,9 @@ using Microsoft.Extensions.Options;
 
 using Octokit;
 
-using OS.Agent.Models;
 using OS.Agent.Services;
 using OS.Agent.Settings;
+using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Controllers;
 

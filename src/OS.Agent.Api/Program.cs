@@ -7,7 +7,6 @@ using Microsoft.Teams.AI.Models.OpenAI;
 using Microsoft.Teams.AI.Models.OpenAI.Extensions;
 using Microsoft.Teams.Apps.Extensions;
 using Microsoft.Teams.Extensions.Logging;
-
 using Microsoft.Teams.Plugins.AspNetCore.DevTools.Extensions;
 using Microsoft.Teams.Plugins.AspNetCore.Extensions;
 
@@ -22,10 +21,11 @@ using OS.Agent.Drivers.Teams;
 using OS.Agent.Events;
 using OS.Agent.Extensions;
 using OS.Agent.Middleware;
-using OS.Agent.Models;
 using OS.Agent.Services;
 using OS.Agent.Settings;
-using OS.Agent.Stores;
+using OS.Agent.Storage;
+using OS.Agent.Storage.Extensions;
+using OS.Agent.Storage.Models;
 using OS.Agent.Webhooks;
 using OS.Agent.Workers;
 

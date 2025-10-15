@@ -1,10 +1,12 @@
 using System.Data;
 
-using OS.Agent.Models;
+using Microsoft.Extensions.Logging;
+
+using OS.Agent.Storage.Models;
 
 using SqlKata.Execution;
 
-namespace OS.Agent.Stores;
+namespace OS.Agent.Storage;
 
 public interface IUserStorage
 {
@@ -14,7 +16,7 @@ public interface IUserStorage
     Task Delete(Guid id, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
 }
 
-public class UserStorage(ILogger<IAccountStorage> logger, QueryFactory db) : IUserStorage
+public class UserStorage(ILogger<IUserStorage> logger, QueryFactory db) : IUserStorage
 {
     public async Task<User?> GetById(Guid id, CancellationToken cancellationToken = default)
     {

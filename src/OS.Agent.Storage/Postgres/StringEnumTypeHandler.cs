@@ -7,9 +7,9 @@ using Npgsql;
 
 using NpgsqlTypes;
 
-using OS.Agent.Models;
+using OS.Agent.Storage.Models;
 
-namespace OS.Agent.Postgres;
+namespace OS.Agent.Storage.Postgres;
 
 public sealed class StringEnumTypeHandler<T> : SqlMapper.TypeHandler<T> where T : StringEnum
 {

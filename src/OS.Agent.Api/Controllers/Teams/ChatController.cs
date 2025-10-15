@@ -3,8 +3,8 @@ using Microsoft.Teams.Apps;
 using Microsoft.Teams.Apps.Activities;
 using Microsoft.Teams.Apps.Annotations;
 
-using OS.Agent.Models;
 using OS.Agent.Services;
+using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Controllers.Teams;
 
