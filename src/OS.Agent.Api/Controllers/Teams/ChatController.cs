@@ -57,6 +57,7 @@ public class ChatController(IServiceScopeFactory scopeFactory)
         else
         {
             chat.Name = context.Activity.Conversation.Name;
+            chat.Type = context.Activity.Conversation.Type;
             chat.Data = new TeamsChatData()
             {
                 Conversation = context.Activity.Conversation,

@@ -19,3 +19,11 @@ public class TeamsChatData : ChatData
     [JsonExtensionData]
     public new IDictionary<string, JsonElement> Properties = new Dictionary<string, JsonElement>();
 }
+
+public static partial class ChatDataExtensions
+{
+    public static TeamsChatData? Teams(this ChatData data)
+    {
+        return data as TeamsChatData;
+    }
+}

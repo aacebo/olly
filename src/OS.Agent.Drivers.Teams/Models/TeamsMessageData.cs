@@ -18,3 +18,11 @@ public class TeamsMessageData : MessageData
     [JsonExtensionData]
     public new IDictionary<string, JsonElement> Properties = new Dictionary<string, JsonElement>();
 }
+
+public static partial class MessageDataExtensions
+{
+    public static TeamsMessageData? Teams(this MessageData data)
+    {
+        return data as TeamsMessageData;
+    }
+}

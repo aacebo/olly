@@ -4,6 +4,9 @@ using Microsoft.Teams.Api.Activities;
 using Octokit.GraphQL;
 using Octokit.GraphQL.Model;
 
+using OS.Agent.Drivers.Github.Models;
+using OS.Agent.Errors;
+using OS.Agent.Services;
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github;
@@ -12,29 +15,54 @@ public class GithubDriver(IServiceProvider provider) : IChatDriver
 {
     public SourceType Type => SourceType.Github;
 
-    private Connection GraphQL { get; init; } = provider.GetRequiredService<Connection>();
+    private Octokit.GitHubClient AppClient => provider.GetRequiredService<Octokit.GitHubClient>();
+    private IAccountService Accounts => provider.GetRequiredService<IAccountService>();
 
-    public async Task<IActivity> Send(IActivity activity, CancellationToken cancellationToken = default)
+    public async Task<TActivity> Send<TActivity>(Account account, TActivity activity, CancellationToken cancellationToken = default) where TActivity : IActivity
     {
         if (activity is not MessageActivity)
         {
             return activity;
         }
 
-        var comment = await GraphQL.Run(
-            new Mutation()
-                .AddDiscussionComment(new AddDiscussionCommentInput()
-                {
-                    DiscussionId = new ID(activity.Conversation.Id),
-                    ReplyToId = activity.ReplyToId is not null ? new(activity.ReplyToId) : null,
-                    Body = activity is MessageActivity message ? message.Text : string.Empty
-                })
-                .Select(res => res.Comment)
-                .Compile(),
+        if (activity.ReplyToId is not null && activity.Conversation.Type == "discussion")
+        {
+            activity.ReplyToId = null;
+        }
+
+        var data = account.Data.GithubInstall() ?? throw HttpException.UnAuthorized();
+
+        if (data.AccessToken.ExpiresAt >= DateTimeOffset.UtcNow.AddMinutes(-5))
+        {
+            data.AccessToken = await AppClient.GitHubApps.CreateInstallationToken(data.Install.Id);
+            await Accounts.Update(account, cancellationToken);
+        }
+
+        var client = new Connection(new ProductHeaderValue("TOS-Agent"), data.AccessToken.Token);
+        var query = new Mutation()
+            .AddDiscussionComment(new AddDiscussionCommentInput()
+            {
+                DiscussionId = new ID(activity.Conversation.Id),
+                ReplyToId = activity.ReplyToId is not null ? new(activity.ReplyToId) : null,
+                Body = activity is MessageActivity message ? message.Text : string.Empty
+            })
+            .Select(res => new GithubDiscussionComment()
+            {
+                Id = res.Comment.Id,
+                Url = res.Comment.Url,
+                Body = res.Comment.Body,
+                UpVotes = res.Comment.UpvoteCount
+            })
+            .Compile();
+
+        var comment = await client.Run(
+            query,
             cancellationToken: cancellationToken
         );
 
         activity.Id = comment.Id.ToString();
+        activity.ChannelData ??= new();
+        activity.ChannelData.Properties["github"] = comment;
         return activity;
     }
 }

@@ -39,8 +39,8 @@ public class MainPrompt(IPromptContext context)
     )]
     public async Task Say([Param] string message)
     {
-        await context.Send(new MessageActivity(message));
-        await context.Send(new TypingActivity());
+        await context.Send(context.Account, new MessageActivity(message));
+        await context.Send(context.Account, new TypingActivity());
     }
 
     [Function]
@@ -82,6 +82,7 @@ public class MainPrompt(IPromptContext context)
             };
 
             await context.Send(
+                context.Account,
                 new MessageActivity()
                 {
                     InputHint = Api.InputHint.AcceptingInput,

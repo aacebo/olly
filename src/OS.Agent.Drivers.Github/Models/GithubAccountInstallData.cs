@@ -25,3 +25,11 @@ public class GithubAccountInstallData : AccountData
     [JsonExtensionData]
     public new IDictionary<string, JsonElement> Properties = new Dictionary<string, JsonElement>();
 }
+
+public static partial class AccountDataExtensions
+{
+    public static GithubAccountInstallData? GithubInstall(this AccountData data)
+    {
+        return data as GithubAccountInstallData;
+    }
+}

@@ -91,10 +91,16 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
 
     private async Task<bool> OnEvent(IPromptContext context, OpenAIChatPrompt prompt, CancellationToken cancellationToken = default)
     {
-        await context.Send(new TypingActivity(), cancellationToken);
-        var messages = await context.Messages.GetByChatId(context.Chat.Id, cancellationToken: cancellationToken);
-        var memory = messages
-            .List.Select(m =>
+        await context.Send(context.Account, new TypingActivity(), cancellationToken);
+
+        var messages = await context.Messages.GetByChatId(
+            context.Chat.Id,
+            Page.Create().Sort(SortDirection.Desc, "created_at").Build(),
+            cancellationToken
+        );
+
+        var memory = messages.List
+            .Select(m =>
                 m.AccountId is null
                     ? new ModelMessage<string>(m.Text) as IMessage
                     : new UserMessage<string>(m.Text)
@@ -109,7 +115,7 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
         }, null, cancellationToken);
 
         var message = new MessageActivity(res.Content);
-        await context.Send(message, cancellationToken);
+        await context.Send(context.Account, message, cancellationToken);
         return true;
     }
 }

@@ -24,6 +24,17 @@ public class CreateEntitiesTable : Migration
         Create.UniqueConstraint()
             .OnTable("entities")
             .Columns("tenant_id", "source_id", "source_type");
+
+        Create.Index()
+            .OnTable("entities")
+            .OnColumn("tenant_id").Ascending()
+            .OnColumn("created_at").Descending();
+
+        Create.Index()
+            .OnTable("entities")
+            .OnColumn("tenant_id").Ascending()
+            .OnColumn("source_type").Ascending()
+            .OnColumn("created_at").Descending();
     }
 
     public override void Down()

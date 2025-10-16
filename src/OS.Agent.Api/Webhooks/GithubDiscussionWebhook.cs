@@ -1,4 +1,3 @@
-using Octokit;
 using Octokit.Webhooks;
 using Octokit.Webhooks.Events;
 using Octokit.Webhooks.Events.Discussion;
@@ -22,7 +21,6 @@ public class GithubDiscussionWebhook(IServiceScopeFactory scopeFactory) : Webhoo
     {
         var installLite = @event.Installation ?? throw HttpException.UnAuthorized().AddMessage("installation not found");
         var scope = scopeFactory.CreateScope();
-        var client = scope.ServiceProvider.GetRequiredService<GitHubClient>();
         var tenants = scope.ServiceProvider.GetRequiredService<ITenantService>();
         var accounts = scope.ServiceProvider.GetRequiredService<IAccountService>();
         var chats = scope.ServiceProvider.GetRequiredService<IChatService>();

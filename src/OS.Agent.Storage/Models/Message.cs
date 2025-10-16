@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -19,10 +18,13 @@ public class Message : Model
     [JsonPropertyName("chat_id")]
     public required Guid ChatId { get; init; }
 
-    [AllowNull]
     [Column("account_id")]
     [JsonPropertyName("account_id")]
     public Guid? AccountId { get; init; }
+
+    [Column("reply_to_id")]
+    [JsonPropertyName("reply_to_id")]
+    public Guid? ReplyToId { get; set; }
 
     [Column("source_id")]
     [JsonPropertyName("source_id")]

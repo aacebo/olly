@@ -16,3 +16,11 @@ public class GithubAccountData : AccountData
     [JsonExtensionData]
     public new IDictionary<string, JsonElement> Properties = new Dictionary<string, JsonElement>();
 }
+
+public static partial class AccountDataExtensions
+{
+    public static GithubAccountData? Github(this AccountData data)
+    {
+        return data as GithubAccountData;
+    }
+}

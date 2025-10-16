@@ -29,7 +29,7 @@ public interface IPromptContext
     CancellationToken CancellationToken { get; }
     IServiceProvider Services { get; }
 
-    Task Send(IActivity activity, CancellationToken cancellationToken = default);
+    Task Send<TActivity>(Account account, TActivity activity, CancellationToken cancellationToken = default) where TActivity : IActivity;
 }
 
 public class PromptContext : IPromptContext
@@ -70,8 +70,9 @@ public class PromptContext : IPromptContext
         Services = scope.ServiceProvider;
     }
 
-    public async Task Send(IActivity activity, CancellationToken cancellationToken = default)
+    public async Task Send<TActivity>(Account account, TActivity activity, CancellationToken cancellationToken = default) where TActivity : IActivity
     {
+        activity.ReplyToId = Message.SourceId;
         activity.Conversation = new()
         {
             Id = Chat.SourceId,
@@ -79,7 +80,7 @@ public class PromptContext : IPromptContext
             Name = Chat.Name
         };
 
-        var res = await Driver.Send(activity, cancellationToken);
+        var res = await Driver.Send(account, activity, cancellationToken);
 
         if (res is MessageActivity message)
         {
@@ -88,6 +89,7 @@ public class PromptContext : IPromptContext
             await Storage.Messages.Create(new()
             {
                 ChatId = Chat.Id,
+                ReplyToId = Message.Id,
                 SourceType = Message.SourceType,
                 SourceId = message.Id,
                 Text = message.Text,

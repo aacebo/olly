@@ -33,7 +33,7 @@ public class MessageController(IServiceScopeFactory scopeFactory)
             return;
         }
 
-        await messages.Create(new()
+        var message = new Storage.Models.Message()
         {
             AccountId = account.Id,
             ChatId = chat.Id,
@@ -44,6 +44,14 @@ public class MessageController(IServiceScopeFactory scopeFactory)
             {
                 Activity = context.Activity
             }
-        }, context.CancellationToken);
+        };
+
+        if (context.Activity.ReplyToId is not null)
+        {
+            var replyTo = await messages.GetBySourceId(chat.Id, SourceType.Teams, context.Activity.ReplyToId, context.CancellationToken);
+            message.ReplyToId = replyTo?.Id;
+        }
+
+        await messages.Create(message, context.CancellationToken);
     }
 }

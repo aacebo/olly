@@ -12,3 +12,11 @@ public class GithubDiscussionData : ChatData
     [JsonPropertyName("discussion")]
     public required Octokit.Webhooks.Models.Discussion Discussion { get; set; }
 }
+
+public static partial class ChatDataExtensions
+{
+    public static GithubDiscussionData? GithubDiscussion(this ChatData data)
+    {
+        return data as GithubDiscussionData;
+    }
+}

@@ -12,11 +12,116 @@ public class Page
     [JsonPropertyName("size")]
     public int Size { get; set; } = 20;
 
-    [JsonPropertyName("sort_by")]
-    public string SortBy { get; set; } = "created_at";
+    [JsonPropertyName("sort")]
+    public Sort? Sort { get; set; }
 
     public Task<PaginationResult<T>> Invoke<T>(SqlKata.Query query, CancellationToken cancellationToken = default)
     {
-        return query.OrderByDesc(SortBy).PaginateAsync<T>(Index + 1, Size, cancellationToken: cancellationToken);
+        if (Sort is not null)
+        {
+            query = Sort.Direction == SortDirection.Asc ? query.OrderBy(Sort.Columns) : query.OrderByDesc(Sort.Columns);
+        }
+
+        return query.PaginateAsync<T>(Index + 1, Size, cancellationToken: cancellationToken);
     }
+
+    public static PageBuilder Create() => new();
+
+    public class PageBuilder
+    {
+        private int _index = 0;
+        private int _size = 20;
+        private Sort? _sort;
+
+        public PageBuilder Index(int index)
+        {
+            _index = index;
+            return this;
+        }
+
+        public PageBuilder Size(int size)
+        {
+            _size = size;
+            return this;
+        }
+
+        public PageBuilder Sort(Sort sort)
+        {
+            _sort = sort;
+            return this;
+        }
+
+        public PageBuilder Sort(SortDirection direction, params string[] columns)
+        {
+            _sort = new Sort()
+            {
+                Columns = columns,
+                Direction = direction
+            };
+
+            return this;
+        }
+
+        public Page Build()
+        {
+            return new()
+            {
+                Index = _index,
+                Size = _size,
+                Sort = _sort
+            };
+        }
+    }
+}
+
+public class Sort
+{
+    [JsonPropertyName("by")]
+    public string[] Columns { get; set; } = [];
+
+    [JsonPropertyName("direction")]
+    public SortDirection Direction { get; set; } = SortDirection.Desc;
+
+    public static SortBuilder Create(params string[] columns) => new(columns);
+
+    public class SortBuilder(params string[] columns)
+    {
+        private readonly IList<string> _columns = columns;
+        private SortDirection _direction = SortDirection.Asc;
+
+        public SortBuilder Columns(params string[] columns)
+        {
+            foreach (var column in columns)
+            {
+                if (!_columns.Contains(column)) continue;
+                _columns.Add(column);
+            }
+
+            return this;
+        }
+
+        public SortBuilder Direction(SortDirection direction)
+        {
+            _direction = direction;
+            return this;
+        }
+
+        public Sort Build()
+        {
+            return new()
+            {
+                Columns = [.. _columns],
+                Direction = _direction
+            };
+        }
+    }
+}
+
+public enum SortDirection
+{
+    [JsonStringEnumMemberName("asc")]
+    Asc,
+
+    [JsonStringEnumMemberName("desc")]
+    Desc
 }

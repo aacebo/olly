@@ -16,6 +16,7 @@ public interface IMessageStorage
 {
     Task<Message?> GetById(Guid id, CancellationToken cancellationToken = default);
     Task<PaginationResult<Message>> GetByChatId(Guid chatId, Page? page = null, CancellationToken cancellationToken = default);
+    Task<PaginationResult<Message>> GetByParentId(Guid id, Page? page = null, CancellationToken cancellationToken = default);
     Task<Message?> GetBySourceId(Guid chatId, SourceType type, string sourceId, CancellationToken cancellationToken = default);
     Task<Message> Create(Message value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
     Task<Message> Update(Message value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
@@ -46,6 +47,18 @@ public class MessageStorage(ILogger<IMessageStorage> logger, QueryFactory db) : 
         return await page.Invoke<Message>(query, cancellationToken);
     }
 
+    public async Task<PaginationResult<Message>> GetByParentId(Guid id, Page? page = null, CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("GetByParentId");
+        page ??= new();
+        var query = db
+            .Query("messages")
+            .Select("*")
+            .Where("reply_to_id", "=", id);
+
+        return await page.Invoke<Message>(query, cancellationToken);
+    }
+
     public async Task<Message?> GetBySourceId(Guid chatId, SourceType type, string sourceId, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("GetBySourceId");
@@ -64,9 +77,9 @@ public class MessageStorage(ILogger<IMessageStorage> logger, QueryFactory db) : 
         using var cmd = new NpgsqlCommand(
         """
             INSERT INTO messages
-            (id, chat_id, account_id, source_id, source_type, text, data, notes, created_at, updated_at)
+            (id, chat_id, account_id, reply_to_id, source_id, source_type, text, data, notes, created_at, updated_at)
             VALUES
-            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         """, (NpgsqlConnection)db.Connection)
         {
             Parameters =
@@ -74,6 +87,7 @@ public class MessageStorage(ILogger<IMessageStorage> logger, QueryFactory db) : 
                 new() { Value = value.Id, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.ChatId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.AccountId is null ? DBNull.Value : value.AccountId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.ReplyToId is null ? DBNull.Value : value.ReplyToId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.SourceId, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Text, NpgsqlDbType = NpgsqlDbType.Text },
@@ -97,13 +111,14 @@ public class MessageStorage(ILogger<IMessageStorage> logger, QueryFactory db) : 
             UPDATE messages Set
                 chat_id = $2,
                 account_id = $3,
-                source_id = $4,
-                source_type = $5,
-                text = $6,
-                data = $7,
-                notes = $8,
-                created_at = $9,
-                updated_at = $10
+                reply_to_id = $4,
+                source_id = $5,
+                source_type = $6,
+                text = $7,
+                data = $8,
+                notes = $9,
+                created_at = $10,
+                updated_at = $11
             WHERE id = $1
         """, (NpgsqlConnection)db.Connection)
         {
@@ -112,6 +127,7 @@ public class MessageStorage(ILogger<IMessageStorage> logger, QueryFactory db) : 
                 new() { Value = value.Id, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.ChatId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.AccountId is null ? DBNull.Value : value.AccountId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.ReplyToId is null ? DBNull.Value : value.ReplyToId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.SourceId, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Text, NpgsqlDbType = NpgsqlDbType.Text },

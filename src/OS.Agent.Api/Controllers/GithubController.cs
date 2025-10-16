@@ -26,8 +26,6 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
     {
         var tokenState = Token.State.Decode(state);
         var tenant = await Tenants.GetById(tokenState.TenantId, cancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("tenant not found");
-
-        // create user oauth token
         var res = await AppClient.Oauth.CreateAccessToken(new(Settings.ClientId, Settings.ClientSecret, code)
         {
             RedirectUri = new Uri(Settings.RedirectUrl)

@@ -62,6 +62,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
         else
         {
             chat.Name = context.Activity.Conversation.Name;
+            chat.Type = context.Activity.Conversation.Type;
             chat.Data = new TeamsChatData()
             {
                 Conversation = context.Activity.Conversation,
@@ -89,6 +90,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
         }
         else
         {
+            account.Name = context.Activity.From.Name;
             account.Data = new TeamsAccountData()
             {
                 User = context.Activity.From
