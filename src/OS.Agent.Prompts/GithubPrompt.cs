@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Teams.AI.Annotations;
 
+using Octokit.GraphQL;
 using Octokit.Internal;
 
 using OS.Agent.Drivers.Github;
@@ -59,5 +60,41 @@ public class GithubPrompt(IPromptContext context)
         }
 
         throw HttpException.UnAuthorized().AddMessage("account must be of type github");
+    }
+
+    [Function]
+    [Function.Description("get a list of a Github repositories discussions")]
+    public async Task<string> GetRepositoryDiscussions([Param] Guid accountId, [Param] string repositoryName)
+    {
+        var account = await context.Accounts.GetById(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
+        var data = account.Data.GithubInstall() ?? throw HttpException.UnAuthorized();
+
+        if (data.AccessToken.ExpiresAt >= DateTimeOffset.UtcNow.AddMinutes(-5))
+        {
+            data.AccessToken = await context.AppGithub.GitHubApps.CreateInstallationToken(data.Install.Id);
+            await context.Accounts.Update(account, context.CancellationToken);
+        }
+
+        var client = new Connection(
+            new ProductHeaderValue("TOS-Agent"),
+            data.AccessToken.Token
+        );
+
+        var query = new Query()
+            .RepositoryOwner(account.Name)
+            .Repository(repositoryName)
+            .Discussions()
+            .AllPages()
+            .Select(discussion => new
+            {
+                discussion.Id,
+                discussion.Title,
+                discussion.Url,
+                discussion.Body
+            })
+            .Compile();
+
+        var discussions = await client.Run(query, cancellationToken: context.CancellationToken);
+        return JsonSerializer.Serialize(discussions, SerializationOptions);
     }
 }
