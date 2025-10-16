@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+using OS.Agent.Json;
+
 using SqlKata;
 
 namespace OS.Agent.Storage.Models;
@@ -54,22 +56,10 @@ public class Chat : Model
 }
 
 [JsonPolymorphic]
-[JsonDerivedType(typeof(ChatData), typeDiscriminator: "chat")]
-[JsonDerivedType(typeof(TeamsChatData), typeDiscriminator: "chat.teams")]
+[JsonDerivedFromType(typeof(Data), "chat")]
+[JsonDerivedType(typeof(ChatData), "chat")]
 public class ChatData : Data
 {
-    [JsonExtensionData]
-    public new IDictionary<string, JsonElement> Properties = new Dictionary<string, JsonElement>();
-}
-
-public class TeamsChatData : ChatData
-{
-    [JsonPropertyName("conversation")]
-    public required Microsoft.Teams.Api.Conversation Conversation { get; set; }
-
-    [JsonPropertyName("service_url")]
-    public string? ServiceUrl { get; set; }
-
     [JsonExtensionData]
     public new IDictionary<string, JsonElement> Properties = new Dictionary<string, JsonElement>();
 }

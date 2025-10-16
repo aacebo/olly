@@ -1,5 +1,10 @@
+using System.Text.Json;
+
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Teams.AI.Annotations;
 
+using OS.Agent.Drivers.Github.Models;
+using OS.Agent.Errors;
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Prompts;
@@ -14,23 +19,25 @@ namespace OS.Agent.Prompts;
 )]
 public class GithubPrompt(IPromptContext context)
 {
+    public JsonSerializerOptions SerializationOptions = context.Services.GetRequiredService<JsonSerializerOptions>();
+
     [Function]
     [Function.Description("get a list of connected Github data source accounts for the user")]
-    public async Task<IEnumerable<Account>> GetAllGithubAccounts()
+    public async Task<string> GetAllGithubAccounts()
     {
         var accounts = await context.Accounts.GetByTenantId(
             context.Tenant.Id,
             context.CancellationToken
         );
 
-        return accounts.Where(a => a.SourceType == SourceType.Github);
+        return JsonSerializer.Serialize(accounts.Where(a => a.SourceType == SourceType.Github), SerializationOptions);
     }
 
     [Function]
     [Function.Description("get a list of the users Github repositories")]
-    public async Task<IEnumerable<Octokit.Repository>> GetRepositoriesByAccountId([Param] Guid accountId)
+    public async Task<string> GetRepositoriesByAccountId([Param] Guid accountId)
     {
-        var account = await context.Accounts.GetById(accountId) ?? throw new Exception("account not found");
+        var account = await context.Accounts.GetById(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
 
         if (account.Data is GithubAccountData data)
         {
@@ -43,9 +50,9 @@ public class GithubPrompt(IPromptContext context)
             };
 
             var res = await client.GitHubApps.Installation.GetAllRepositoriesForCurrent();
-            return res.Repositories;
+            return JsonSerializer.Serialize(res.Repositories, SerializationOptions);
         }
 
-        throw new UnauthorizedAccessException("account must be of type github");
+        throw HttpException.UnAuthorized().AddMessage("account must be of type github");
     }
 }

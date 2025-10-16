@@ -1,20 +1,28 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Text.Json;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 using Octokit;
 
-using OS.Agent.Drivers.Github;
+using OS.Agent.Drivers.Github.Models;
+using OS.Agent.Storage.Postgres;
 
-namespace OS.Agent.Api.Extensions;
+namespace OS.Agent.Drivers.Github.Extensions;
 
 public static class IServiceCollectionExtensions
 {
-    public static IServiceCollection AddGithubClient(this IServiceCollection services)
+    public static IServiceCollection AddGithubDriver(this IServiceCollection services)
     {
+        var provider = services.BuildServiceProvider();
+        var jsonOptions = provider.GetRequiredService<JsonSerializerOptions>();
+
+        Dapper.SqlMapper.AddTypeHandler(typeof(GithubAccountData), new JsonObjectTypeHandler(jsonOptions));
+
         return services.AddSingleton(provider =>
         {
             var settings = provider.GetRequiredService<IOptions<GithubSettings>>();

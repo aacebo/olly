@@ -3,6 +3,8 @@ using Microsoft.Teams.Apps;
 using Microsoft.Teams.Apps.Activities;
 using Microsoft.Teams.Apps.Annotations;
 
+using OS.Agent.Drivers.Teams.Models;
+using OS.Agent.Errors;
 using OS.Agent.Services;
 using OS.Agent.Storage.Models;
 
@@ -21,9 +23,9 @@ public class MessageController(IServiceScopeFactory scopeFactory)
         var messages = scope.ServiceProvider.GetRequiredService<IMessageService>();
         var tenantId = context.Activity.Conversation.TenantId ?? context.TenantId;
 
-        var tenant = await tenants.GetBySourceId(SourceType.Teams, tenantId, context.CancellationToken) ?? throw new UnauthorizedAccessException("tenant not found");
-        var account = await accounts.GetBySourceId(tenant.Id, SourceType.Teams, context.Activity.From.Id, context.CancellationToken) ?? throw new UnauthorizedAccessException("account not found");
-        var chat = await chats.GetBySourceId(tenant.Id, SourceType.Teams, context.Activity.Conversation.Id, context.CancellationToken) ?? throw new UnauthorizedAccessException("chat not found");
+        var tenant = await tenants.GetBySourceId(SourceType.Teams, tenantId, context.CancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("tenant not found");
+        var account = await accounts.GetBySourceId(tenant.Id, SourceType.Teams, context.Activity.From.Id, context.CancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
+        var chat = await chats.GetBySourceId(tenant.Id, SourceType.Teams, context.Activity.Conversation.Id, context.CancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("chat not found");
 
         if (account.UserId is null)
         {

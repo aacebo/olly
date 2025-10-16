@@ -9,7 +9,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.*" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\OS.Agent.Storage\OS.Agent.Storage.csproj" />
     <ProjectReference Include="..\OS.Agent.Drivers\OS.Agent.Drivers.csproj" />
+    <ProjectReference Include="..\OS.Agent.Json\OS.Agent.Json.csproj" />
   </ItemGroup>
 </Project>

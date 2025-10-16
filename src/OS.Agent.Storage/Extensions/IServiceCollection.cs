@@ -1,5 +1,6 @@
 using System.Data;
 using System.Reflection;
+using System.Text.Json;
 
 using FluentMigrator.Runner;
 
@@ -23,21 +24,19 @@ public static class IServiceCollectionExtensions
     public static IServiceCollection AddPostgres(this IServiceCollection services)
     {
         // load model type mappings
+        var provider = services.BuildServiceProvider();
+        var jsonOptions = provider.GetRequiredService<JsonSerializerOptions>();
         var modelTypes = Assembly.GetExecutingAssembly().GetTypes().Where(type => type.GetCustomAttribute<ModelAttribute>() != null);
 
         Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<SourceType>());
         Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<Models.LogLevel>());
         Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<LogType>());
-        Dapper.SqlMapper.AddTypeHandler(typeof(Data), new JsonObjectTypeHandler());
-        Dapper.SqlMapper.AddTypeHandler(typeof(AccountData), new JsonObjectTypeHandler());
-        Dapper.SqlMapper.AddTypeHandler(typeof(GithubAccountData), new JsonObjectTypeHandler());
-        Dapper.SqlMapper.AddTypeHandler(typeof(TeamsAccountData), new JsonObjectTypeHandler());
-        Dapper.SqlMapper.AddTypeHandler(typeof(ChatData), new JsonObjectTypeHandler());
-        Dapper.SqlMapper.AddTypeHandler(typeof(TeamsChatData), new JsonObjectTypeHandler());
-        Dapper.SqlMapper.AddTypeHandler(typeof(MessageData), new JsonObjectTypeHandler());
-        Dapper.SqlMapper.AddTypeHandler(typeof(TeamsMessageData), new JsonObjectTypeHandler());
-        Dapper.SqlMapper.AddTypeHandler(typeof(List<Source>), new JsonArrayTypeHandler());
-        Dapper.SqlMapper.AddTypeHandler(typeof(List<Note>), new JsonArrayTypeHandler());
+        Dapper.SqlMapper.AddTypeHandler(typeof(Data), new JsonObjectTypeHandler(jsonOptions));
+        Dapper.SqlMapper.AddTypeHandler(typeof(ChatData), new JsonObjectTypeHandler(jsonOptions));
+        Dapper.SqlMapper.AddTypeHandler(typeof(AccountData), new JsonObjectTypeHandler(jsonOptions));
+        Dapper.SqlMapper.AddTypeHandler(typeof(MessageData), new JsonObjectTypeHandler(jsonOptions));
+        Dapper.SqlMapper.AddTypeHandler(typeof(List<Source>), new JsonArrayTypeHandler(jsonOptions));
+        Dapper.SqlMapper.AddTypeHandler(typeof(List<Note>), new JsonArrayTypeHandler(jsonOptions));
 
         foreach (var type in modelTypes)
         {
@@ -72,6 +71,8 @@ public static class IServiceCollectionExtensions
 
             return new NpgsqlDataSourceBuilder(config.GetConnectionString("Postgres"))
                     .EnableDynamicJson()
+                    .ConfigureJsonOptions(jsonOptions)
+                    // .AddTypeInfoResolverFactory()
                     .Build()
                     .CreateConnection();
         });
@@ -81,6 +82,7 @@ public static class IServiceCollectionExtensions
         {
             var logger = provider.GetRequiredService<ILogger<QueryFactory>>();
             var connection = provider.GetRequiredService<NpgsqlConnection>();
+            var jsonSerializerOptions = provider.GetRequiredService<JsonSerializerOptions>();
 
             if (connection.State != ConnectionState.Open)
             {
@@ -90,7 +92,7 @@ public static class IServiceCollectionExtensions
             }
 
             var factory = new QueryFactory(connection, new PostgresCompiler());
-            factory.Logger = q => logger.LogDebug("{}", q);
+            factory.Logger = q => logger.LogDebug("{}", JsonSerializer.Serialize(q, jsonSerializerOptions));
             return factory;
         });
     }

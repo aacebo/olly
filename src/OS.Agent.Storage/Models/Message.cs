@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-using Microsoft.Teams.Api.Activities;
+using OS.Agent.Json;
 
 using SqlKata;
 
@@ -54,19 +54,10 @@ public class Message : Model
 }
 
 [JsonPolymorphic]
-[JsonDerivedType(typeof(MessageData), typeDiscriminator: "message")]
-[JsonDerivedType(typeof(TeamsMessageData), typeDiscriminator: "message.teams")]
+[JsonDerivedFromType(typeof(Data), "message")]
+[JsonDerivedType(typeof(MessageData), "account")]
 public class MessageData : Data
 {
-    [JsonExtensionData]
-    public new IDictionary<string, JsonElement> Properties = new Dictionary<string, JsonElement>();
-}
-
-public class TeamsMessageData : MessageData
-{
-    [JsonPropertyName("activity")]
-    public required MessageActivity Activity { get; set; }
-
     [JsonExtensionData]
     public new IDictionary<string, JsonElement> Properties = new Dictionary<string, JsonElement>();
 }

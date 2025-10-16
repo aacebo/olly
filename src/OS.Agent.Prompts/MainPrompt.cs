@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Teams.AI.Annotations;
@@ -22,10 +24,11 @@ namespace OS.Agent.Prompts;
 )]
 public class MainPrompt(IPromptContext context)
 {
-    public readonly IOptions<GithubSettings> GithubSettings = context.Scope.ServiceProvider.GetRequiredService<IOptions<GithubSettings>>();
+    public readonly IOptions<GithubSettings> GithubSettings = context.Services.GetRequiredService<IOptions<GithubSettings>>();
+    public readonly JsonSerializerOptions SerializationOptions = context.Services.GetRequiredService<JsonSerializerOptions>();
     public readonly OpenAIChatPrompt GithubPrompt = OpenAIChatPrompt.From(context.Model, new GithubPrompt(context), new()
     {
-        Logger = context.Scope.ServiceProvider.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>()
+        Logger = context.Services.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>()
     });
 
     [Function]
@@ -42,16 +45,16 @@ public class MainPrompt(IPromptContext context)
 
     [Function]
     [Function.Description("get the current users chat information")]
-    public Task<Chat> GetCurrentChat()
+    public Task<string> GetCurrentChat()
     {
-        return Task.FromResult(context.Chat);
+        return Task.FromResult(JsonSerializer.Serialize(context.Chat, SerializationOptions));
     }
 
     [Function]
     [Function.Description("get the current users account information")]
-    public Task<Account> GetCurrentAccount()
+    public Task<string> GetCurrentAccount()
     {
-        return Task.FromResult(context.Account);
+        return Task.FromResult(JsonSerializer.Serialize(context.Account, SerializationOptions));
     }
 
     [Function]

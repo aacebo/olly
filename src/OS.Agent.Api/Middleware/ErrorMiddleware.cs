@@ -1,8 +1,10 @@
-using System.Net;
+using System.Text.Json;
+
+using OS.Agent.Errors;
 
 namespace OS.Agent.Api.Middleware;
 
-public class ErrorMiddleware(ILogger logger) : IMiddleware
+public class ErrorMiddleware(ILogger logger, JsonSerializerOptions? jsonOptions) : IMiddleware
 {
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
@@ -10,15 +12,15 @@ public class ErrorMiddleware(ILogger logger) : IMiddleware
         {
             await next(context);
         }
+        catch (HttpException ex)
+        {
+            logger.LogWarning("{}", ex);
+            await Results.Json(ex, jsonOptions, statusCode: (int)ex.Code).ExecuteAsync(context);
+        }
         catch (Exception ex)
         {
             logger.LogError("{}", ex);
-
-            await Results.Json(new
-            {
-                code = HttpStatusCode.InternalServerError,
-                message = ex.Message
-            }).ExecuteAsync(context);
+            await Results.Json(new HttpException(ex.Message, ex)).ExecuteAsync(context);
         }
     }
 }

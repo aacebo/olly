@@ -31,6 +31,8 @@
     <ProjectReference Include="..\OS.Agent.Drivers\OS.Agent.Drivers.csproj" />
     <ProjectReference Include="..\OS.Agent.Drivers.Teams\OS.Agent.Drivers.Teams.csproj" />
     <ProjectReference Include="..\OS.Agent.Drivers.Github\OS.Agent.Drivers.Github.csproj" />
+    <ProjectReference Include="..\OS.Agent.Errors\OS.Agent.Errors.csproj" />
+    <ProjectReference Include="..\OS.Agent.Json\OS.Agent.Json.csproj" />
   </ItemGroup>
 
   <ItemGroup>

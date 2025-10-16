@@ -7,27 +7,13 @@ using Json.More;
 namespace OS.Agent.Storage.Models;
 
 [JsonPolymorphic]
-[JsonDerivedType(typeof(Data), typeDiscriminator: "data")]
-[JsonDerivedType(typeof(AccountData), typeDiscriminator: "account")]
-[JsonDerivedType(typeof(TeamsAccountData), typeDiscriminator: "account.teams")]
-[JsonDerivedType(typeof(GithubAccountData), typeDiscriminator: "account.github")]
-[JsonDerivedType(typeof(ChatData), typeDiscriminator: "chat")]
-[JsonDerivedType(typeof(TeamsChatData), typeDiscriminator: "chat.teams")]
-[JsonDerivedType(typeof(MessageData), typeDiscriminator: "message")]
-[JsonDerivedType(typeof(TeamsMessageData), typeDiscriminator: "message.teams")]
+[JsonDerivedType(typeof(Data), "data")]
 public class Data
 {
     [JsonExtensionData]
     public IDictionary<string, JsonElement> Properties = new Dictionary<string, JsonElement>();
 
-    public override string ToString()
-    {
-        return JsonSerializer.Serialize(this, JsonOptions);
-    }
-
-    public object? Get(string path) => Get<object>(path);
-
-    public T? Get<T>(string path)
+    public JsonElement? Get(string path)
     {
         var parts = path.Split('.', 1);
         JsonElement value = Properties.ToJsonDocument().RootElement;
@@ -42,10 +28,10 @@ public class Data
             value = el;
         }
 
-        return value.Deserialize<T>(JsonOptions);
+        return value;
     }
 
-    public static Data From<T>(T value) where T : class
+    public static Data From<T>(T value, JsonSerializerOptions? options = null) where T : class
     {
         var data = new Data();
 
@@ -53,16 +39,9 @@ public class Data
         {
             var attr = field.GetCustomAttribute<JsonPropertyNameAttribute>();
             var name = attr?.Name ?? field.Name;
-            data.Properties.Add(name, JsonSerializer.SerializeToElement(field.GetValue(value), JsonOptions));
+            data.Properties.Add(name, JsonSerializer.SerializeToElement(field.GetValue(value), options));
         }
 
         return data;
     }
-
-    public static JsonSerializerOptions JsonOptions => new()
-    {
-        WriteIndented = true,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-        AllowOutOfOrderMetadataProperties = true
-    };
 }

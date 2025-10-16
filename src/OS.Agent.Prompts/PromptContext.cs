@@ -3,6 +3,7 @@ using Microsoft.Teams.AI.Models.OpenAI;
 using Microsoft.Teams.Api.Activities;
 
 using OS.Agent.Drivers;
+using OS.Agent.Drivers.Teams.Models;
 using OS.Agent.Events;
 using OS.Agent.Services;
 using OS.Agent.Storage;
@@ -26,7 +27,7 @@ public interface IPromptContext
     ITokenService Tokens { get; }
     IChatDriver Driver { get; }
     CancellationToken CancellationToken { get; }
-    IServiceScope Scope { get; }
+    IServiceProvider Services { get; }
 
     Task Send(IActivity activity, CancellationToken cancellationToken = default);
 }
@@ -48,7 +49,7 @@ public class PromptContext : IPromptContext
     public IChatDriver Driver { get; }
     public IStorage Storage { get; }
     public CancellationToken CancellationToken { get; }
-    public IServiceScope Scope { get; }
+    public IServiceProvider Services { get; }
 
     public PromptContext(MessageEvent @event, IServiceScope scope, CancellationToken cancellationToken = default)
     {
@@ -66,7 +67,7 @@ public class PromptContext : IPromptContext
         Chat = @event.Chat;
         Message = @event.Message;
         CancellationToken = cancellationToken;
-        Scope = scope;
+        Services = scope.ServiceProvider;
     }
 
     public async Task Send(IActivity activity, CancellationToken cancellationToken = default)

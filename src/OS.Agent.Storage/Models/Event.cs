@@ -25,9 +25,4 @@ public class Event<T>(string name, T body)
 
     [JsonExtensionData]
     public IDictionary<string, JsonElement> Extra { get; set; } = new Dictionary<string, JsonElement>();
-
-    public override string ToString()
-    {
-        return JsonSerializer.Serialize(this);
-    }
 }

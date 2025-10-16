@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-using OS.Agent.Drivers.Github;
+using OS.Agent.Json;
 
 using SqlKata;
 
@@ -48,38 +48,10 @@ public class Account : Model
 }
 
 [JsonPolymorphic]
-[JsonDerivedType(typeof(AccountData), typeDiscriminator: "account")]
-[JsonDerivedType(typeof(GithubAccountData), typeDiscriminator: "account.github")]
-[JsonDerivedType(typeof(TeamsAccountData), typeDiscriminator: "account.teams")]
+[JsonDerivedFromType(typeof(Data), "account")]
+[JsonDerivedType(typeof(AccountData), "account")]
 public class AccountData : Data
 {
-    [JsonExtensionData]
-    public new IDictionary<string, JsonElement> Properties = new Dictionary<string, JsonElement>();
-}
-
-public class GithubAccountData : AccountData
-{
-    [JsonConverter(typeof(OctokitJsonConverter<Octokit.User>))]
-    [JsonPropertyName("user")]
-    public required Octokit.User User { get; set; }
-
-    [JsonConverter(typeof(OctokitJsonConverter<Octokit.Installation>))]
-    [JsonPropertyName("install")]
-    public required Octokit.Installation Install { get; set; }
-
-    [JsonConverter(typeof(OctokitJsonConverter<Octokit.AccessToken>))]
-    [JsonPropertyName("access_token")]
-    public required Octokit.AccessToken AccessToken { get; set; }
-
-    [JsonExtensionData]
-    public new IDictionary<string, JsonElement> Properties = new Dictionary<string, JsonElement>();
-}
-
-public class TeamsAccountData : AccountData
-{
-    [JsonPropertyName("user")]
-    public required Microsoft.Teams.Api.Account User { get; set; }
-
     [JsonExtensionData]
     public new IDictionary<string, JsonElement> Properties = new Dictionary<string, JsonElement>();
 }

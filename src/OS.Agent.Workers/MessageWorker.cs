@@ -23,6 +23,7 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
 {
     private ILogger<MessageWorker> Logger { get; init; } = provider.GetRequiredService<ILogger<MessageWorker>>();
     private NetMQQueue<Event<MessageEvent>> Events { get; init; } = provider.GetRequiredService<NetMQQueue<Event<MessageEvent>>>();
+    private JsonSerializerOptions JsonOptions { get; init; } = provider.GetRequiredService<JsonSerializerOptions>();
     private NetMQPoller Poller { get; init; } = [];
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -42,7 +43,7 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
             {
                 try
                 {
-                    Logger.LogDebug("{}", @event);
+                    Logger.LogDebug("{}", JsonSerializer.Serialize(@event, JsonOptions));
 
                     await logs.Create(new()
                     {

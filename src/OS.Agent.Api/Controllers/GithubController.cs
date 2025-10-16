@@ -4,6 +4,8 @@ using Microsoft.Extensions.Options;
 using Octokit;
 
 using OS.Agent.Drivers.Github;
+using OS.Agent.Drivers.Github.Models;
+using OS.Agent.Errors;
 using OS.Agent.Services;
 using OS.Agent.Storage.Models;
 
@@ -23,7 +25,7 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
     public async Task<IResult> OnRedirect([FromQuery] string code, [FromQuery] string state, [FromQuery(Name = "installation_id")] long installationId, CancellationToken cancellationToken)
     {
         var tokenState = Token.State.Decode(state);
-        var tenant = await Tenants.GetById(tokenState.TenantId, cancellationToken) ?? throw new UnauthorizedAccessException("tenant not found");
+        var tenant = await Tenants.GetById(tokenState.TenantId, cancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("tenant not found");
 
         // create user oauth token
         var res = await AppClient.Oauth.CreateAccessToken(new(Settings.ClientId, Settings.ClientSecret, code)
@@ -33,7 +35,7 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
 
         if (res.Error is not null)
         {
-            throw new UnauthorizedAccessException(res.Error);
+            throw HttpException.UnAuthorized().AddMessage(res.Error);
         }
 
         var client = new GitHubClient(new ProductHeaderValue("TOS-Agent"))

@@ -3,6 +3,8 @@ using Octokit.Webhooks;
 using Octokit.Webhooks.Events;
 using Octokit.Webhooks.Events.Installation;
 
+using OS.Agent.Drivers.Github.Models;
+using OS.Agent.Errors;
 using OS.Agent.Services;
 using OS.Agent.Storage.Models;
 
@@ -24,7 +26,7 @@ public class GithubInstallProcessor(IServiceScopeFactory scopeFactory) : Webhook
         var accounts = scope.ServiceProvider.GetRequiredService<IAccountService>();
         var chats = scope.ServiceProvider.GetRequiredService<IChatService>();
         var tenant = await tenants.GetBySourceId(SourceType.Github, @event.Installation.Id.ToString(), cancellationToken)
-            ?? throw new UnauthorizedAccessException("tenant not found");
+            ?? throw HttpException.UnAuthorized().AddMessage("tenant not found");
 
         var account = await accounts.GetBySourceId(tenant.Id, SourceType.Github, @event.Installation.Account.NodeId, cancellationToken);
         var install = await client.GitHubApps.GetInstallationForCurrent(@event.Installation.Id);
