@@ -10,17 +10,8 @@ namespace OS.Agent.Drivers.Github.Models;
 [JsonDerivedFromType(typeof(AccountData), "account.github")]
 public class GithubAccountData : AccountData
 {
-    [JsonConverter(typeof(GithubJsonConverter<Octokit.User>))]
     [JsonPropertyName("user")]
-    public required Octokit.User User { get; set; }
-
-    [JsonConverter(typeof(GithubJsonConverter<Octokit.Installation>))]
-    [JsonPropertyName("install")]
-    public required Octokit.Installation Install { get; set; }
-
-    [JsonConverter(typeof(GithubJsonConverter<Octokit.AccessToken>))]
-    [JsonPropertyName("access_token")]
-    public required Octokit.AccessToken AccessToken { get; set; }
+    public required Octokit.Webhooks.Models.User User { get; set; }
 
     [JsonExtensionData]
     public new IDictionary<string, JsonElement> Properties = new Dictionary<string, JsonElement>();

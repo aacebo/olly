@@ -21,7 +21,39 @@ public static class IServiceCollectionExtensions
         var provider = services.BuildServiceProvider();
         var jsonOptions = provider.GetRequiredService<JsonSerializerOptions>();
 
+        services.AddScoped<GithubDriver>();
+        services.AddScoped<IDriver>(provider => provider.GetRequiredService<GithubDriver>());
+        services.AddScoped<IChatDriver>(provider => provider.GetRequiredService<GithubDriver>());
+
         Dapper.SqlMapper.AddTypeHandler(typeof(GithubAccountData), new JsonObjectTypeHandler(jsonOptions));
+        Dapper.SqlMapper.AddTypeHandler(typeof(GithubAccountInstallData), new JsonObjectTypeHandler(jsonOptions));
+        Dapper.SqlMapper.AddTypeHandler(typeof(GithubDiscussionData), new JsonObjectTypeHandler(jsonOptions));
+
+        services.AddSingleton(provider =>
+        {
+            var settings = provider.GetRequiredService<IOptions<GithubSettings>>();
+            var pem = File.ReadAllText(@"github.private-key.pem");
+            var rsa = RSA.Create();
+            var time = new DateTimeOffset(DateTime.UtcNow);
+            rsa.ImportFromPem(pem);
+
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.CreateJwtSecurityToken(
+                subject: new ClaimsIdentity([]),
+                expires: DateTime.UtcNow.AddMinutes(10).AddSeconds(-10),
+                issuedAt: DateTime.UtcNow.AddSeconds(-60),
+                signingCredentials: new SigningCredentials(
+                    new RsaSecurityKey(rsa),
+                    SecurityAlgorithms.RsaSha256
+                ),
+                issuer: settings.Value.ClientId
+            );
+
+            return new Octokit.GraphQL.Connection(
+                new Octokit.GraphQL.ProductHeaderValue("TOS-Agent"),
+                handler.WriteToken(token)
+            );
+        });
 
         return services.AddSingleton(provider =>
         {

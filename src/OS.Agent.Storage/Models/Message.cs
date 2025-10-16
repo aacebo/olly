@@ -55,7 +55,7 @@ public class Message : Model
 
 [JsonPolymorphic]
 [JsonDerivedFromType(typeof(Data), "message")]
-[JsonDerivedType(typeof(MessageData), "account")]
+[JsonDerivedType(typeof(MessageData), "message")]
 public class MessageData : Data
 {
     [JsonExtensionData]

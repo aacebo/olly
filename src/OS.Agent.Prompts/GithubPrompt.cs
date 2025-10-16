@@ -42,7 +42,7 @@ public class GithubPrompt(IPromptContext context)
     {
         var account = await context.Accounts.GetById(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
 
-        if (account.Data is GithubAccountData data)
+        if (account.Data is GithubAccountInstallData data)
         {
             var adapter = new HttpClientAdapter(() => new GithubTokenRefreshHandler(context.Services, account));
             var connection = new Octokit.Connection(new Octokit.ProductHeaderValue("TOS-Agent"), adapter)

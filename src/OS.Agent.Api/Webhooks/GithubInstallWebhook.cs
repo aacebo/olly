@@ -10,7 +10,7 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Api.Webhooks;
 
-public class GithubInstallProcessor(IServiceScopeFactory scopeFactory) : WebhookEventProcessor
+public class GithubInstallWebhook(IServiceScopeFactory scopeFactory) : WebhookEventProcessor
 {
     protected override async ValueTask ProcessInstallationWebhookAsync
     (
@@ -40,7 +40,7 @@ public class GithubInstallProcessor(IServiceScopeFactory scopeFactory) : Webhook
                 SourceType = SourceType.Github,
                 SourceId = @event.Installation.Account.NodeId,
                 Name = @event.Installation.Account.Login,
-                Data = new GithubAccountData()
+                Data = new GithubAccountInstallData()
                 {
                     Install = install,
                     User = install.Account,
@@ -51,7 +51,7 @@ public class GithubInstallProcessor(IServiceScopeFactory scopeFactory) : Webhook
         else
         {
             account.Name = @event.Installation.Account.Login;
-            account.Data = new GithubAccountData()
+            account.Data = new GithubAccountInstallData()
             {
                 Install = install,
                 User = install.Account,

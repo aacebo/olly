@@ -24,7 +24,7 @@ public class GithubTokenRefreshHandler(IServiceProvider provider, Account accoun
         }
         catch (Octokit.AuthorizationException ex)
         {
-            if (account.Data is GithubAccountData data)
+            if (account.Data is GithubAccountInstallData data)
             {
                 var accessToken = await AppClient.GitHubApps.CreateInstallationToken(data.Install.Id);
                 data.AccessToken = accessToken;
