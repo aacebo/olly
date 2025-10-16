@@ -43,13 +43,15 @@ public static class IServiceCollectionExtensions
                 issuer: settings.Value.ClientId
             );
 
-            return new GitHubClient(new ProductHeaderValue("TOS-Agent"))
+            var connection = new Connection(new ProductHeaderValue("TOS-Agent"))
             {
                 Credentials = new Credentials(
                     handler.WriteToken(token),
                     AuthenticationType.Bearer
                 )
             };
+
+            return new GitHubClient(connection);
         });
     }
 }

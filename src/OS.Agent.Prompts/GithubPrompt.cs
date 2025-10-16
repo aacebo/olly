@@ -3,6 +3,9 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Teams.AI.Annotations;
 
+using Octokit.Internal;
+
+using OS.Agent.Drivers.Github;
 using OS.Agent.Drivers.Github.Models;
 using OS.Agent.Errors;
 using OS.Agent.Storage.Models;
@@ -41,7 +44,8 @@ public class GithubPrompt(IPromptContext context)
 
         if (account.Data is GithubAccountData data)
         {
-            var client = new Octokit.GitHubClient(new Octokit.ProductHeaderValue("TOS-Agent"))
+            var adapter = new HttpClientAdapter(() => new GithubTokenRefreshHandler(context.Services, account));
+            var connection = new Octokit.Connection(new Octokit.ProductHeaderValue("TOS-Agent"), adapter)
             {
                 Credentials = new Octokit.Credentials(
                     data.AccessToken.Token,
@@ -49,6 +53,7 @@ public class GithubPrompt(IPromptContext context)
                 )
             };
 
+            var client = new Octokit.GitHubClient(connection);
             var res = await client.GitHubApps.Installation.GetAllRepositoriesForCurrent();
             return JsonSerializer.Serialize(res.Repositories, SerializationOptions);
         }

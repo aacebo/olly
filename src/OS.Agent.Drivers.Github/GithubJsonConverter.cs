@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace OS.Agent.Drivers.Github;
 
-public class OctokitJsonConverter<T> : JsonConverter<T>
+public class GithubJsonConverter<T> : JsonConverter<T>
 {
     private Octokit.Internal.SimpleJsonSerializer Serializer { get; init; } = new();
 
