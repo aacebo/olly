@@ -24,11 +24,12 @@ public class GithubTokenRefreshHandler(IServiceProvider provider, Account accoun
         }
         catch (Octokit.AuthorizationException ex)
         {
-            if (account.Data is GithubAccountInstallData data)
+            var entity = account.Entities.Get<GithubAccountInstallEntity>();
+
+            if (entity is not null)
             {
-                var accessToken = await AppClient.GitHubApps.CreateInstallationToken(data.Install.Id);
-                data.AccessToken = accessToken;
-                account.Data = data;
+                var accessToken = await AppClient.GitHubApps.CreateInstallationToken(entity.Install.Id);
+                entity.AccessToken = accessToken;
                 account = await Accounts.Update(account, cancellationToken);
                 request.Headers.Authorization = new("Bearer", accessToken.Token);
                 return await SendAsync(request, cancellationToken);

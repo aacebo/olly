@@ -40,23 +40,25 @@ public class GithubInstallWebhook(IServiceScopeFactory scopeFactory) : WebhookEv
                 SourceType = SourceType.Github,
                 SourceId = @event.Installation.Account.NodeId,
                 Name = @event.Installation.Account.Login,
-                Data = new GithubAccountInstallData()
-                {
-                    Install = install,
-                    User = install.Account,
-                    AccessToken = accessToken
-                }
+                Entities = [
+                    new GithubAccountInstallEntity()
+                    {
+                        Install = install,
+                        User = install.Account,
+                        AccessToken = accessToken
+                    }
+                ]
             }, cancellationToken);
         }
         else
         {
             account.Name = @event.Installation.Account.Login;
-            account.Data = new GithubAccountInstallData()
+            account.Entities.Put(new GithubAccountInstallEntity()
             {
                 Install = install,
                 User = install.Account,
                 AccessToken = accessToken
-            };
+            });
 
             account = await accounts.Update(account, cancellationToken);
         }

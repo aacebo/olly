@@ -2,9 +2,6 @@ using System.Text.Json;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using OS.Agent.Drivers.Teams.Models;
-using OS.Agent.Storage.Postgres;
-
 namespace OS.Agent.Drivers.Teams.Extensions;
 
 public static class IServiceProviderExtensions
@@ -18,9 +15,9 @@ public static class IServiceProviderExtensions
         services.AddScoped<IDriver>(provider => provider.GetRequiredService<TeamsDriver>());
         services.AddScoped<IChatDriver>(provider => provider.GetRequiredService<TeamsDriver>());
 
-        Dapper.SqlMapper.AddTypeHandler(typeof(TeamsAccountData), new JsonObjectTypeHandler(jsonOptions));
-        Dapper.SqlMapper.AddTypeHandler(typeof(TeamsChatData), new JsonObjectTypeHandler(jsonOptions));
-        Dapper.SqlMapper.AddTypeHandler(typeof(TeamsMessageData), new JsonObjectTypeHandler(jsonOptions));
+        // Dapper.SqlMapper.AddTypeHandler(typeof(TeamsAccountEntity), new JsonObjectTypeHandler(jsonOptions));
+        // Dapper.SqlMapper.AddTypeHandler(typeof(TeamsChatEntity), new JsonObjectTypeHandler(jsonOptions));
+        // Dapper.SqlMapper.AddTypeHandler(typeof(TeamsMessageEntity), new JsonObjectTypeHandler(jsonOptions));
         return services;
     }
 }

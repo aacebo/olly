@@ -2,7 +2,7 @@ using FluentMigrator;
 
 namespace OS.Agent.Storage.Migrations;
 
-[Migration(7)]
+[Migration(6)]
 public class CreateLogsTable : Migration
 {
     public override void Up()
@@ -14,7 +14,7 @@ public class CreateLogsTable : Migration
             .WithColumn("type").AsString().NotNullable()
             .WithColumn("type_id").AsString().Nullable()
             .WithColumn("text").AsString().NotNullable()
-            .WithColumn("data").AsCustom("JSONB").NotNullable()
+            .WithColumn("entities").AsCustom("JSONB").NotNullable()
             .WithColumn("created_at").AsDateTimeOffset().NotNullable();
 
         Create.Index()

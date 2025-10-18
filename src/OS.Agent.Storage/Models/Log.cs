@@ -31,9 +31,9 @@ public class Log : Model
     [JsonPropertyName("text")]
     public required string Text { get; init; }
 
-    [Column("data")]
-    [JsonPropertyName("data")]
-    public Data Data { get; init; } = new Data();
+    [Column("entities")]
+    [JsonPropertyName("entities")]
+    public Entities Entities { get; init; } = [];
 
     [Column("created_at")]
     [JsonPropertyName("created_at")]

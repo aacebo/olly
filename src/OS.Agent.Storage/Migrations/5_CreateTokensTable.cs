@@ -2,7 +2,7 @@ using FluentMigrator;
 
 namespace OS.Agent.Storage.Migrations;
 
-[Migration(6)]
+[Migration(5)]
 public class CreateTokensTable : Migration
 {
     public override void Up()

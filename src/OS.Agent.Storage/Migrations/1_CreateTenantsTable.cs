@@ -11,7 +11,7 @@ public class CreateTenantsTable : Migration
             .WithColumn("id").AsGuid().PrimaryKey()
             .WithColumn("sources").AsCustom("JSONB").NotNullable()
             .WithColumn("name").AsString().Nullable()
-            .WithColumn("data").AsCustom("JSONB").NotNullable()
+            .WithColumn("entities").AsCustom("JSONB").NotNullable()
             .WithColumn("created_at").AsDateTimeOffset().NotNullable()
             .WithColumn("updated_at").AsDateTimeOffset().NotNullable();
 

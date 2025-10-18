@@ -31,12 +31,8 @@ public static class IServiceCollectionExtensions
         Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<SourceType>());
         Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<Models.LogLevel>());
         Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<LogType>());
-        Dapper.SqlMapper.AddTypeHandler(typeof(Data), new JsonObjectTypeHandler(jsonOptions));
-        Dapper.SqlMapper.AddTypeHandler(typeof(ChatData), new JsonObjectTypeHandler(jsonOptions));
-        Dapper.SqlMapper.AddTypeHandler(typeof(AccountData), new JsonObjectTypeHandler(jsonOptions));
-        Dapper.SqlMapper.AddTypeHandler(typeof(MessageData), new JsonObjectTypeHandler(jsonOptions));
         Dapper.SqlMapper.AddTypeHandler(typeof(List<Source>), new JsonArrayTypeHandler(jsonOptions));
-        Dapper.SqlMapper.AddTypeHandler(typeof(List<Note>), new JsonArrayTypeHandler(jsonOptions));
+        Dapper.SqlMapper.AddTypeHandler(typeof(Entities), new JsonArrayTypeHandler(jsonOptions));
 
         foreach (var type in modelTypes)
         {
@@ -72,7 +68,6 @@ public static class IServiceCollectionExtensions
             return new NpgsqlDataSourceBuilder(config.GetConnectionString("Postgres"))
                     .EnableDynamicJson()
                     .ConfigureJsonOptions(jsonOptions)
-                    // .AddTypeInfoResolverFactory()
                     .Build()
                     .CreateConnection();
         });
@@ -92,7 +87,7 @@ public static class IServiceCollectionExtensions
             }
 
             var factory = new QueryFactory(connection, new PostgresCompiler());
-            factory.Logger = q => logger.LogDebug("{}", JsonSerializer.Serialize(q, jsonSerializerOptions));
+            factory.Logger = q => logger.LogDebug("{}", q.RawSql);
             return factory;
         });
     }

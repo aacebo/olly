@@ -2,6 +2,10 @@ using System.Data;
 
 using Microsoft.Extensions.Logging;
 
+using Npgsql;
+
+using NpgsqlTypes;
+
 using OS.Agent.Storage.Models;
 
 using SqlKata.Execution;
@@ -87,7 +91,29 @@ public class AccountStorage(ILogger<IAccountStorage> logger, QueryFactory db) : 
     public async Task<Account> Create(Account value, IDbTransaction? tx = null, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Create");
-        await db.Query("accounts").InsertAsync(value, tx, cancellationToken: cancellationToken);
+        using var cmd = new NpgsqlCommand(
+        """
+            INSERT INTO accounts
+            (id, user_id, tenant_id, source_id, source_type, name, entities, created_at, updated_at)
+            VALUES
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        """, (NpgsqlConnection)db.Connection)
+        {
+            Parameters =
+            {
+                new() { Value = value.Id, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.UserId is null ? DBNull.Value : value.UserId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.TenantId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.SourceId, NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Name is null ? DBNull.Value : value.Name, NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Entities, NpgsqlDbType = NpgsqlDbType.Jsonb },
+                new() { Value = value.CreatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
+                new() { Value = value.UpdatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz }
+            }
+        };
+
+        await cmd.ExecuteNonQueryAsync(cancellationToken);
         return value;
     }
 
@@ -95,7 +121,35 @@ public class AccountStorage(ILogger<IAccountStorage> logger, QueryFactory db) : 
     {
         logger.LogDebug("Update");
         value.UpdatedAt = DateTimeOffset.UtcNow;
-        await db.Query("accounts").Where("id", "=", value.Id).UpdateAsync(value, tx, cancellationToken: cancellationToken);
+        using var cmd = new NpgsqlCommand(
+        """
+            UPDATE accounts SET
+                user_id = $2,
+                tenant_id = $3,
+                source_id = $4,
+                source_type = $5,
+                name = $6,
+                entities = $7,
+                created_at = $8,
+                updated_at = $9
+            WHERE id = $1
+        """, (NpgsqlConnection)db.Connection)
+        {
+            Parameters =
+            {
+                new() { Value = value.Id, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.UserId is null ? DBNull.Value : value.UserId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.TenantId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.SourceId, NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Name is null ? DBNull.Value : value.Name, NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Entities, NpgsqlDbType = NpgsqlDbType.Jsonb },
+                new() { Value = value.CreatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
+                new() { Value = value.UpdatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz }
+            }
+        };
+
+        await cmd.ExecuteNonQueryAsync(cancellationToken);
         return value;
     }
 

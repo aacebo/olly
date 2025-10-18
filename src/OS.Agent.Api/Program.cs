@@ -78,7 +78,6 @@ builder.Services.AddSingleton<NetMQQueue<Event<AccountEvent>>>(); // accounts.(c
 builder.Services.AddSingleton<NetMQQueue<Event<ChatEvent>>>(); // chats.(create | update | delete)
 builder.Services.AddSingleton<NetMQQueue<Event<MessageEvent>>>(); // messages.(create | update | delete)
 builder.Services.AddSingleton<NetMQQueue<Event<TokenEvent>>>(); // tokens.(create | update | delete)
-builder.Services.AddSingleton<NetMQQueue<Event<EntityEvent>>>(); // entities.(create | update | delete)
 builder.Services.AddSingleton<NetMQQueue<Event<LogEvent>>>(); // logs.create
 
 // Webhooks
@@ -95,7 +94,6 @@ builder.Services.AddScoped<ITenantStorage, TenantStorage>();
 builder.Services.AddScoped<IAccountStorage, AccountStorage>();
 builder.Services.AddScoped<IChatStorage, ChatStorage>();
 builder.Services.AddScoped<IMessageStorage, MessageStorage>();
-builder.Services.AddScoped<IEntityStorage, EntityStorage>();
 builder.Services.AddScoped<ITokenStorage, TokenStorage>();
 builder.Services.AddScoped<ILogStorage, LogStorage>();
 
@@ -107,7 +105,6 @@ builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ILogService, LogService>();
-builder.Services.AddScoped<IEntityService, EntityService>();
 
 var app = builder.Build();
 

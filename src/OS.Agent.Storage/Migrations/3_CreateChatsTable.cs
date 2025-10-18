@@ -15,8 +15,7 @@ public class CreateChatsTable : Migration
             .WithColumn("source_type").AsString().NotNullable()
             .WithColumn("type").AsString().Nullable()
             .WithColumn("name").AsString().Nullable()
-            .WithColumn("data").AsCustom("JSONB").NotNullable()
-            .WithColumn("notes").AsCustom("JSONB").NotNullable()
+            .WithColumn("entities").AsCustom("JSONB").NotNullable()
             .WithColumn("created_at").AsDateTimeOffset().NotNullable()
             .WithColumn("updated_at").AsDateTimeOffset().NotNullable();
 

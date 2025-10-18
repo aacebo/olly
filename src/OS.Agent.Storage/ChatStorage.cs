@@ -62,9 +62,9 @@ public class ChatStorage(ILogger<IChatStorage> logger, QueryFactory db) : IChatS
         using var cmd = new NpgsqlCommand(
         """
             INSERT INTO chats
-            (id, tenant_id, parent_id, source_id, source_type, type, name, data, notes, created_at, updated_at)
+            (id, tenant_id, parent_id, source_id, source_type, type, name, entities, created_at, updated_at)
             VALUES
-            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         """, (NpgsqlConnection)db.Connection)
         {
             Parameters =
@@ -76,8 +76,7 @@ public class ChatStorage(ILogger<IChatStorage> logger, QueryFactory db) : IChatS
                 new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Type is null ? DBNull.Value : value.Type, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Name is null ? DBNull.Value : value.Name, NpgsqlDbType = NpgsqlDbType.Text },
-                new() { Value = value.Data, NpgsqlDbType = NpgsqlDbType.Jsonb },
-                new() { Value = value.Notes, NpgsqlDbType = NpgsqlDbType.Jsonb },
+                new() { Value = value.Entities, NpgsqlDbType = NpgsqlDbType.Jsonb },
                 new() { Value = value.CreatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
                 new() { Value = value.UpdatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz }
             }
@@ -100,10 +99,9 @@ public class ChatStorage(ILogger<IChatStorage> logger, QueryFactory db) : IChatS
                 source_type = $5,
                 type = $6,
                 name = $7,
-                data = $8,
-                notes = $9,
-                created_at = $10,
-                updated_at = $11
+                entities = $8,
+                created_at = $9,
+                updated_at = $10
             WHERE id = $1
         """, (NpgsqlConnection)db.Connection)
         {
@@ -116,8 +114,7 @@ public class ChatStorage(ILogger<IChatStorage> logger, QueryFactory db) : IChatS
                 new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Type is null ? DBNull.Value : value.Type, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Name is null ? DBNull.Value : value.Name, NpgsqlDbType = NpgsqlDbType.Text },
-                new() { Value = value.Data, NpgsqlDbType = NpgsqlDbType.Jsonb },
-                new() { Value = value.Notes, NpgsqlDbType = NpgsqlDbType.Jsonb },
+                new() { Value = value.Entities, NpgsqlDbType = NpgsqlDbType.Jsonb },
                 new() { Value = value.CreatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
                 new() { Value = value.UpdatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz }
             }

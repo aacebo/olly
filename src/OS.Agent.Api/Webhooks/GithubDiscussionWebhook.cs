@@ -38,21 +38,21 @@ public class GithubDiscussionWebhook(IServiceScopeFactory scopeFactory) : Webhoo
                 SourceId = @event.Discussion.User.NodeId,
                 SourceType = SourceType.Github,
                 Name = @event.Discussion.User.Login,
-                Data = new GithubAccountData()
-                {
-                    User = @event.Discussion.User
-                }
+                Entities = [
+                    new GithubAccountEntity()
+                    {
+                        User = @event.Discussion.User
+                    }
+                ]
             }, cancellationToken);
         }
         else
         {
-            if (account.Data is GithubAccountData)
-            {
-                account.Data = new GithubAccountData()
-                {
-                    User = @event.Discussion.User
-                };
+            var entity = account.Entities.Get<GithubAccountEntity>();
 
+            if (entity is not null)
+            {
+                entity.User = @event.Discussion.User;
                 account = await accounts.Update(account, cancellationToken);
             }
         }
@@ -68,20 +68,22 @@ public class GithubDiscussionWebhook(IServiceScopeFactory scopeFactory) : Webhoo
                 SourceType = SourceType.Github,
                 Type = "discussion",
                 Name = @event.Discussion.Title,
-                Data = new GithubDiscussionData()
-                {
-                    Discussion = @event.Discussion
-                }
+                Entities = [
+                    new GithubDiscussionEntity()
+                    {
+                        Discussion = @event.Discussion
+                    }
+                ]
             }, cancellationToken);
         }
         else
         {
             chat.Name = @event.Discussion.Title;
             chat.Type = "discussion";
-            chat.Data = new GithubDiscussionData()
+            chat.Entities.Put(new GithubDiscussionEntity()
             {
                 Discussion = @event.Discussion
-            };
+            });
 
             chat = await chats.Update(chat, cancellationToken);
         }

@@ -2,6 +2,10 @@ using System.Data;
 
 using Microsoft.Extensions.Logging;
 
+using Npgsql;
+
+using NpgsqlTypes;
+
 using OS.Agent.Storage.Models;
 
 using SqlKata.Execution;
@@ -54,7 +58,28 @@ public class LogStorage(ILogger<ILogStorage> logger, QueryFactory db) : ILogStor
     public async Task<Log> Create(Log value, IDbTransaction? tx = null, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Create");
-        await db.Query("logs").InsertAsync(value, tx, cancellationToken: cancellationToken);
+        using var cmd = new NpgsqlCommand(
+        """
+            INSERT INTO logs
+            (id, tenant_id, level, type, type_id, text, entities, created_at)
+            VALUES
+            ($1, $2, $3, $4, $5, $6, $7, $8)
+        """, (NpgsqlConnection)db.Connection)
+        {
+            Parameters =
+            {
+                new() { Value = value.Id, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.TenantId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.Level.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Type.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.TypeId is null ? DBNull.Value : value.TypeId, NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Text, NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Entities, NpgsqlDbType = NpgsqlDbType.Jsonb },
+                new() { Value = value.CreatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
+            }
+        };
+
+        await cmd.ExecuteNonQueryAsync(cancellationToken);
         return value;
     }
 }

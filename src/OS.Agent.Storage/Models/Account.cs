@@ -1,7 +1,4 @@
-using System.Text.Json;
 using System.Text.Json.Serialization;
-
-using OS.Agent.Json;
 
 using SqlKata;
 
@@ -34,9 +31,9 @@ public class Account : Model
     [JsonPropertyName("name")]
     public string? Name { get; set; }
 
-    [Column("data")]
-    [JsonPropertyName("data")]
-    public AccountData Data { get; set; } = new AccountData();
+    [Column("entities")]
+    [JsonPropertyName("entities")]
+    public Entities Entities { get; set; } = [];
 
     [Column("created_at")]
     [JsonPropertyName("created_at")]
@@ -45,13 +42,4 @@ public class Account : Model
     [Column("updated_at")]
     [JsonPropertyName("updated_at")]
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
-}
-
-[JsonPolymorphic]
-[JsonDerivedFromType(typeof(Data), "account")]
-[JsonDerivedType(typeof(AccountData), "account")]
-public class AccountData : Data
-{
-    [JsonExtensionData]
-    public new IDictionary<string, JsonElement> Properties = new Dictionary<string, JsonElement>();
 }

@@ -40,10 +40,12 @@ public class MessageController(IServiceScopeFactory scopeFactory)
             SourceId = context.Activity.Id,
             SourceType = SourceType.Teams,
             Text = context.Activity.Text,
-            Data = new TeamsMessageData()
-            {
-                Activity = context.Activity
-            }
+            Entities = [
+                new TeamsMessageEntity()
+                {
+                    Activity = context.Activity
+                }
+            ]
         };
 
         if (context.Activity.ReplyToId is not null)

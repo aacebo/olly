@@ -47,22 +47,24 @@ public class ChatController(IServiceScopeFactory scopeFactory)
                 SourceType = SourceType.Teams,
                 Type = context.Activity.Conversation.Type,
                 Name = context.Activity.Conversation.Name,
-                Data = new TeamsChatData()
-                {
-                    Conversation = context.Activity.Conversation,
-                    ServiceUrl = context.Activity.ServiceUrl
-                }
+                Entities = [
+                    new TeamsChatEntity()
+                    {
+                        Conversation = context.Activity.Conversation,
+                        ServiceUrl = context.Activity.ServiceUrl
+                    }
+                ]
             }, context.CancellationToken);
         }
         else
         {
             chat.Name = context.Activity.Conversation.Name;
             chat.Type = context.Activity.Conversation.Type;
-            chat.Data = new TeamsChatData()
+            chat.Entities.Put(new TeamsChatEntity()
             {
                 Conversation = context.Activity.Conversation,
                 ServiceUrl = context.Activity.ServiceUrl
-            };
+            });
 
             await chats.Update(chat, context.CancellationToken);
         }
@@ -84,19 +86,21 @@ public class ChatController(IServiceScopeFactory scopeFactory)
                     SourceId = member.Id,
                     SourceType = SourceType.Teams,
                     Name = member.Name,
-                    Data = new TeamsAccountData()
-                    {
-                        User = member
-                    }
+                    Entities = [
+                        new TeamsAccountEntity()
+                        {
+                            User = member
+                        }
+                    ]
                 }, context.CancellationToken);
             }
             else
             {
                 account.Name = member.Name ?? account.Name;
-                account.Data = new TeamsAccountData()
+                account.Entities.Put(new TeamsAccountEntity()
                 {
                     User = member
-                };
+                });
 
                 await accounts.Update(account, context.CancellationToken);
             }

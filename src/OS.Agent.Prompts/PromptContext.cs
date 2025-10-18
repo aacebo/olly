@@ -93,10 +93,12 @@ public class PromptContext : IPromptContext
                 SourceType = Message.SourceType,
                 SourceId = message.Id,
                 Text = message.Text,
-                Data = new TeamsMessageData()
-                {
-                    Activity = message
-                }
+                Entities = [
+                    new TeamsMessageEntity()
+                    {
+                        Activity = message
+                    }
+                ]
             }, cancellationToken: cancellationToken);
         }
     }

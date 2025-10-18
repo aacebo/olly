@@ -31,8 +31,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
         {
             tenant = await tenants.Create(new()
             {
-                Sources = [Source.Teams(tenantId)],
-                Data = new Data()
+                Sources = [Source.Teams(tenantId)]
             }, context.CancellationToken);
         }
 
@@ -52,22 +51,24 @@ public class InstallController(IServiceScopeFactory scopeFactory)
                 SourceType = SourceType.Teams,
                 Type = context.Activity.Conversation.Type,
                 Name = context.Activity.Conversation.Name,
-                Data = new TeamsChatData()
-                {
-                    Conversation = context.Activity.Conversation,
-                    ServiceUrl = context.Activity.ServiceUrl
-                }
+                Entities = [
+                    new TeamsChatEntity()
+                    {
+                        Conversation = context.Activity.Conversation,
+                        ServiceUrl = context.Activity.ServiceUrl
+                    }
+                ]
             }, context.CancellationToken);
         }
         else
         {
             chat.Name = context.Activity.Conversation.Name;
             chat.Type = context.Activity.Conversation.Type;
-            chat.Data = new TeamsChatData()
+            chat.Entities.Put(new TeamsChatEntity()
             {
                 Conversation = context.Activity.Conversation,
                 ServiceUrl = context.Activity.ServiceUrl
-            };
+            });
 
             await chats.Update(chat, context.CancellationToken);
         }
@@ -82,19 +83,21 @@ public class InstallController(IServiceScopeFactory scopeFactory)
                 Name = context.Activity.From.Name,
                 SourceId = context.Activity.From.Id,
                 SourceType = SourceType.Teams,
-                Data = new TeamsAccountData()
-                {
-                    User = context.Activity.From
-                }
+                Entities = [
+                    new TeamsAccountEntity()
+                    {
+                        User = context.Activity.From
+                    }
+                ]
             }, context.CancellationToken);
         }
         else
         {
             account.Name = context.Activity.From.Name;
-            account.Data = new TeamsAccountData()
+            account.Entities.Put(new TeamsAccountEntity()
             {
                 User = context.Activity.From
-            };
+            });
 
             account = await accounts.Update(account, context.CancellationToken);
         }

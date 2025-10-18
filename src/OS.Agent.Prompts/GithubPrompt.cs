@@ -42,24 +42,19 @@ public class GithubPrompt(IPromptContext context)
     public async Task<string> GetRepositoriesByAccountId([Param] Guid accountId)
     {
         var account = await context.Accounts.GetById(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
-
-        if (account.Data is GithubAccountInstallData data)
+        var entity = account.Entities.GetRequired<GithubAccountInstallEntity>();
+        var adapter = new HttpClientAdapter(() => new GithubTokenRefreshHandler(context.Services, account));
+        var connection = new Octokit.Connection(new Octokit.ProductHeaderValue("TOS-Agent"), adapter)
         {
-            var adapter = new HttpClientAdapter(() => new GithubTokenRefreshHandler(context.Services, account));
-            var connection = new Octokit.Connection(new Octokit.ProductHeaderValue("TOS-Agent"), adapter)
-            {
-                Credentials = new Octokit.Credentials(
-                    data.AccessToken.Token,
-                    Octokit.AuthenticationType.Bearer
-                )
-            };
+            Credentials = new Octokit.Credentials(
+                entity.AccessToken.Token,
+                Octokit.AuthenticationType.Bearer
+            )
+        };
 
-            var client = new Octokit.GitHubClient(connection);
-            var res = await client.GitHubApps.Installation.GetAllRepositoriesForCurrent();
-            return JsonSerializer.Serialize(res.Repositories, SerializationOptions);
-        }
-
-        throw HttpException.UnAuthorized().AddMessage("account must be of type github");
+        var client = new Octokit.GitHubClient(connection);
+        var res = await client.GitHubApps.Installation.GetAllRepositoriesForCurrent();
+        return JsonSerializer.Serialize(res.Repositories, SerializationOptions);
     }
 
     [Function]
@@ -67,17 +62,17 @@ public class GithubPrompt(IPromptContext context)
     public async Task<string> GetRepositoryDiscussions([Param] Guid accountId, [Param] string repositoryName)
     {
         var account = await context.Accounts.GetById(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
-        var data = account.Data.GithubInstall() ?? throw HttpException.UnAuthorized();
+        var entity = account.Entities.GetRequired<GithubAccountInstallEntity>();
 
-        if (data.AccessToken.ExpiresAt >= DateTimeOffset.UtcNow.AddMinutes(-5))
+        if (entity.AccessToken.ExpiresAt >= DateTimeOffset.UtcNow.AddMinutes(-5))
         {
-            data.AccessToken = await context.AppGithub.GitHubApps.CreateInstallationToken(data.Install.Id);
+            entity.AccessToken = await context.AppGithub.GitHubApps.CreateInstallationToken(entity.Install.Id);
             await context.Accounts.Update(account, context.CancellationToken);
         }
 
         var client = new Connection(
             new ProductHeaderValue("TOS-Agent"),
-            data.AccessToken.Token
+            entity.AccessToken.Token
         );
 
         var query = new Query()

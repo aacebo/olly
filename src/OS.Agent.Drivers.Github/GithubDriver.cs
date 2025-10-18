@@ -5,7 +5,6 @@ using Octokit.GraphQL;
 using Octokit.GraphQL.Model;
 
 using OS.Agent.Drivers.Github.Models;
-using OS.Agent.Errors;
 using OS.Agent.Services;
 using OS.Agent.Storage.Models;
 
@@ -30,15 +29,15 @@ public class GithubDriver(IServiceProvider provider) : IChatDriver
             activity.ReplyToId = null;
         }
 
-        var data = account.Data.GithubInstall() ?? throw HttpException.UnAuthorized();
+        var entity = account.Entities.GetRequired<GithubAccountInstallEntity>();
 
-        if (data.AccessToken.ExpiresAt >= DateTimeOffset.UtcNow.AddMinutes(-5))
+        if (entity.AccessToken.ExpiresAt >= DateTimeOffset.UtcNow.AddMinutes(-5))
         {
-            data.AccessToken = await AppClient.GitHubApps.CreateInstallationToken(data.Install.Id);
+            entity.AccessToken = await AppClient.GitHubApps.CreateInstallationToken(entity.Install.Id);
             await Accounts.Update(account, cancellationToken);
         }
 
-        var client = new Connection(new ProductHeaderValue("TOS-Agent"), data.AccessToken.Token);
+        var client = new Connection(new ProductHeaderValue("TOS-Agent"), entity.AccessToken.Token);
         var query = new Mutation()
             .AddDiscussionComment(new AddDiscussionCommentInput()
             {

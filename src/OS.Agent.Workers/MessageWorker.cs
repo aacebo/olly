@@ -51,7 +51,7 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
                         Type = LogType.Message,
                         TypeId = @event.Body.Message.Id.ToString(),
                         Text = "new message",
-                        Data = Data.From(@event.Body)
+                        Entities = [Entity.From(@event.Body)]
                     }, lifetime.ApplicationStopping);
 
                     var context = new PromptContext(@event.Body, scope, lifetime.ApplicationStopping);

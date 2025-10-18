@@ -19,9 +19,9 @@ public class Tenant : Model
     [JsonPropertyName("name")]
     public string? Name { get; set; }
 
-    [Column("data")]
-    [JsonPropertyName("data")]
-    public Data Data { get; set; } = new Data();
+    [Column("entities")]
+    [JsonPropertyName("entities")]
+    public Entities Entities { get; set; } = [];
 
     [Column("created_at")]
     [JsonPropertyName("created_at")]

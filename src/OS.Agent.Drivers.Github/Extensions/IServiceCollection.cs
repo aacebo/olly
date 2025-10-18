@@ -9,9 +9,6 @@ using Microsoft.IdentityModel.Tokens;
 
 using Octokit;
 
-using OS.Agent.Drivers.Github.Models;
-using OS.Agent.Storage.Postgres;
-
 namespace OS.Agent.Drivers.Github.Extensions;
 
 public static class IServiceCollectionExtensions
@@ -25,9 +22,9 @@ public static class IServiceCollectionExtensions
         services.AddScoped<IDriver>(provider => provider.GetRequiredService<GithubDriver>());
         services.AddScoped<IChatDriver>(provider => provider.GetRequiredService<GithubDriver>());
 
-        Dapper.SqlMapper.AddTypeHandler(typeof(GithubAccountData), new JsonObjectTypeHandler(jsonOptions));
-        Dapper.SqlMapper.AddTypeHandler(typeof(GithubAccountInstallData), new JsonObjectTypeHandler(jsonOptions));
-        Dapper.SqlMapper.AddTypeHandler(typeof(GithubDiscussionData), new JsonObjectTypeHandler(jsonOptions));
+        // Dapper.SqlMapper.AddTypeHandler(typeof(GithubAccountEntity), new JsonObjectTypeHandler(jsonOptions));
+        // Dapper.SqlMapper.AddTypeHandler(typeof(GithubAccountInstallEntity), new JsonObjectTypeHandler(jsonOptions));
+        // Dapper.SqlMapper.AddTypeHandler(typeof(GithubDiscussionEntity), new JsonObjectTypeHandler(jsonOptions));
 
         services.AddSingleton(provider =>
         {

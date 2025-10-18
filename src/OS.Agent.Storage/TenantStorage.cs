@@ -38,7 +38,7 @@ public class TenantStorage(ILogger<ITenantStorage> logger, QueryFactory db) : IT
         logger.LogDebug("GetBySourceId");
         return await db
             .Query("tenants")
-            .Select("id", "sources", "name", "data", "created_at", "updated_at")
+            .Select("*")
             .WhereRaw("sources @> ?::JSONB", $"[{{\"type\": \"{type}\", \"id\": \"{sourceId}\"}}]")
             .FirstOrDefaultAsync<Tenant?>(cancellationToken: cancellationToken);
     }
@@ -46,14 +46,14 @@ public class TenantStorage(ILogger<ITenantStorage> logger, QueryFactory db) : IT
     public async Task<Tenant> Create(Tenant value, IDbTransaction? tx = null, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Create");
-        using var cmd = new NpgsqlCommand("INSERT INTO tenants (id, sources, name, data, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)", (NpgsqlConnection)db.Connection)
+        using var cmd = new NpgsqlCommand("INSERT INTO tenants (id, sources, name, entities, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)", (NpgsqlConnection)db.Connection)
         {
             Parameters =
             {
                 new() { Value = value.Id, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.Sources, NpgsqlDbType = NpgsqlDbType.Jsonb },
                 new() { Value = value.Name is null ? DBNull.Value : value.Name, NpgsqlDbType = NpgsqlDbType.Text },
-                new() { Value = value.Data, NpgsqlDbType = NpgsqlDbType.Jsonb },
+                new() { Value = value.Entities, NpgsqlDbType = NpgsqlDbType.Jsonb },
                 new() { Value = value.CreatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
                 new() { Value = value.UpdatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz }
             }
@@ -67,14 +67,14 @@ public class TenantStorage(ILogger<ITenantStorage> logger, QueryFactory db) : IT
     {
         logger.LogDebug("Update");
         value.UpdatedAt = DateTimeOffset.UtcNow;
-        using var cmd = new NpgsqlCommand("UPDATE tenants SET sources = $2, name = $3, data = $4, created_at = $5, updated_at = $6 WHERE id = $1", (NpgsqlConnection)db.Connection)
+        using var cmd = new NpgsqlCommand("UPDATE tenants SET sources = $2, name = $3, entities = $4, created_at = $5, updated_at = $6 WHERE id = $1", (NpgsqlConnection)db.Connection)
         {
             Parameters =
             {
                 new() { Value = value.Id, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.Sources, NpgsqlDbType = NpgsqlDbType.Jsonb },
                 new() { Value = value.Name is null ? DBNull.Value : value.Name, NpgsqlDbType = NpgsqlDbType.Text },
-                new() { Value = value.Data, NpgsqlDbType = NpgsqlDbType.Jsonb },
+                new() { Value = value.Entities, NpgsqlDbType = NpgsqlDbType.Jsonb },
                 new() { Value = value.CreatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
                 new() { Value = value.UpdatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz }
             }
