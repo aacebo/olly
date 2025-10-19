@@ -22,7 +22,6 @@ using OS.Agent.Drivers.Github;
 using OS.Agent.Drivers.Github.Extensions;
 using OS.Agent.Drivers.Teams.Extensions;
 using OS.Agent.Events;
-using OS.Agent.Json;
 using OS.Agent.Services;
 using OS.Agent.Storage;
 using OS.Agent.Storage.Extensions;
@@ -35,8 +34,7 @@ var openAiModel = new OpenAIChatModel(openAiSettings.Model, openAiSettings.ApiKe
 var jsonSerializerOptions = new JsonSerializerOptions()
 {
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    AllowOutOfOrderMetadataProperties = true,
-    TypeInfoResolver = new CustomTypeInfoResolver()
+    AllowOutOfOrderMetadataProperties = true
 };
 
 builder.Services.Configure<GithubSettings>(builder.Configuration.GetSection("Github"));
@@ -44,7 +42,6 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.DefaultIgnoreCondition = jsonSerializerOptions.DefaultIgnoreCondition;
     options.SerializerOptions.AllowOutOfOrderMetadataProperties = jsonSerializerOptions.AllowOutOfOrderMetadataProperties;
-    options.SerializerOptions.TypeInfoResolver = jsonSerializerOptions.TypeInfoResolver;
 });
 
 builder.Services.AddSingleton(provider => jsonSerializerOptions);
