@@ -49,7 +49,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
                 TenantId = tenant.Id,
                 SourceId = context.Activity.Conversation.Id,
                 SourceType = SourceType.Teams,
-                Type = context.Activity.Conversation.Type,
+                Type = context.Activity.Conversation.Type?.ToString(),
                 Name = context.Activity.Conversation.Name,
                 Entities = [
                     new TeamsChatEntity()
@@ -63,7 +63,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
         else
         {
             chat.Name = context.Activity.Conversation.Name;
-            chat.Type = context.Activity.Conversation.Type;
+            chat.Type = context.Activity.Conversation.Type?.ToString();
             chat.Entities.Put(new TeamsChatEntity()
             {
                 Conversation = context.Activity.Conversation,

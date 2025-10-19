@@ -1,13 +1,15 @@
 using System.Collections;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 using Json.More;
 
 namespace OS.Agent.Storage.Models;
 
-[JsonConverter(typeof(EntityJsonConverterFactory))]
+[Entity("any")]
+[JsonConverter(typeof(EntityJsonConverter))]
 public class Entity : IDictionary<string, JsonElement>
 {
     public string Type
@@ -160,39 +162,42 @@ public class Entities : List<Entity>, IList<Entity>
     }
 }
 
-public class EntityJsonConverterFactory : JsonConverterFactory
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
+public class EntityAttribute(string name) : Attribute
 {
-    public override bool CanConvert(Type type)
-    {
-        return type == typeof(Entity) || type.IsSubclassOf(typeof(Entity));
-    }
-
-    public override JsonConverter? CreateConverter(Type type, JsonSerializerOptions options)
-    {
-        var converterType = typeof(EntityJsonConverter<>).MakeGenericType(type);
-        var instance = Activator.CreateInstance(converterType) ?? throw new JsonException();
-        return (JsonConverter)instance;
-    }
+    public string Name { get; } = name;
 }
 
-public class EntityJsonConverter<TEntity> : JsonConverter<TEntity> where TEntity : Entity, new()
+public class EntityJsonConverter : JsonConverter<Entity>
 {
-    public override TEntity? Read(ref Utf8JsonReader reader, Type type, JsonSerializerOptions options)
+    public override Entity? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        var data = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(ref reader, options);
-
-        if (data is null) return null;
-
-        var entity = new TEntity
+        var element = JsonSerializer.Deserialize<JsonObject>(ref reader, options) ?? throw new JsonException();
+        
+        if (!element.TryGetPropertyValue("type", out var type) || type is null)
         {
-            Properties = data
-        };
+            throw new JsonException();
+        }
 
-        return data is null ? null : entity;
+        if (!EntityTypeRegistry.Types.TryGetValue(type.ToString(), out var entityType))
+        {
+            throw new InvalidDataException($"Entity type '{type}' not found in type registry");
+        }
+
+        var entity = element.Deserialize(entityType, options) as Entity;
+        return entity;
     }
 
-    public override void Write(Utf8JsonWriter writer, TEntity value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, Entity value, JsonSerializerOptions options)
     {
         JsonSerializer.Serialize(writer, value.ToDictionary(), options);
     }
+}
+
+internal static class EntityTypeRegistry
+{
+    public static Dictionary<string, Type> Types = new()
+    {
+        { "any", typeof(Entity) }
+    };
 }

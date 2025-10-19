@@ -4,6 +4,7 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github.Models;
 
+[Entity("github.account")]
 public class GithubAccountEntity : Entity
 {
     public Octokit.Webhooks.Models.User User

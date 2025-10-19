@@ -2,6 +2,7 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github.Models;
 
+[Entity("github.discussion")]
 public class GithubDiscussionEntity : Entity
 {
     public Octokit.Webhooks.Models.Discussion Discussion

@@ -116,5 +116,8 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Local"))
 app.Services.GetRequiredService<IMigrationRunner>().MigrateUp();
 app.UseMiddleware<ErrorMiddleware>();
 app.MapGitHubWebhooks();
+app.MapEntityTypes();
+app.MapTeamsEntityTypes();
+app.MapGithubEntityTypes();
 app.UseTeams();
 app.Run();

@@ -4,6 +4,7 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Teams.Models;
 
+[Entity("teams.chat")]
 public class TeamsChatEntity : Entity
 {
     public Microsoft.Teams.Api.Conversation Conversation

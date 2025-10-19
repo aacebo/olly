@@ -24,7 +24,7 @@ public class GithubDriver(IServiceProvider provider) : IChatDriver
             return activity;
         }
 
-        if (activity.ReplyToId is not null && activity.Conversation.Type == "discussion")
+        if (activity.ReplyToId is not null && activity.Conversation.Type is not null && activity.Conversation.Type == "discussion")
         {
             activity.ReplyToId = null;
         }
@@ -37,7 +37,7 @@ public class GithubDriver(IServiceProvider provider) : IChatDriver
             await Accounts.Update(account, cancellationToken);
         }
 
-        var client = new Connection(new ProductHeaderValue("TOS-Agent"), entity.AccessToken.Token);
+        var client = new Connection(new("TOS-Agent"), entity.AccessToken.Token);
         var query = new Mutation()
             .AddDiscussionComment(new AddDiscussionCommentInput()
             {

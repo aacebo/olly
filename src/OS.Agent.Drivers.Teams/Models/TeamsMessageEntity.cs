@@ -6,6 +6,7 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Teams.Models;
 
+[Entity("teams.message")]
 public class TeamsMessageEntity : Entity
 {
     public MessageActivity Activity

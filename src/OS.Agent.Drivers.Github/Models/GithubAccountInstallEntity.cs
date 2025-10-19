@@ -2,23 +2,24 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github.Models;
 
+[Entity("github.account.install")]
 public class GithubAccountInstallEntity : Entity
 {
     public Octokit.User User
     {
-        get => GetRequired<Octokit.User>("user");
+        get => GithubJsonSerializer.Deserialize<Octokit.User>(Get("user").GetRawText());
         set => Properties["user"] = GithubJsonSerializer.SerializeToElement(value);
     }
 
     public Octokit.Installation Install
     {
-        get => GetRequired<Octokit.Installation>("install");
+        get => GithubJsonSerializer.Deserialize<Octokit.Installation>(Get("install").GetRawText());
         set => Properties["install"] = GithubJsonSerializer.SerializeToElement(value);
     }
 
     public Octokit.AccessToken AccessToken
     {
-        get => GetRequired<Octokit.AccessToken>("access_token");
+        get => GithubJsonSerializer.Deserialize<Octokit.AccessToken>(Get("access_token").GetRawText());
         set => Properties["access_token"] = GithubJsonSerializer.SerializeToElement(value);
     }
 
