@@ -1,43 +1,21 @@
+using System.Text.Json.Serialization;
+
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github.Models;
 
 [Entity("github.account.install")]
-public class GithubAccountInstallEntity : Entity
+public class GithubAccountInstallEntity() : Entity("github.account.install")
 {
-    public Octokit.User User
-    {
-        get => GithubJsonSerializer.Deserialize<Octokit.User>(Get("user").GetRawText());
-        set => Properties["user"] = GithubJsonSerializer.SerializeToElement(value);
-    }
+    [JsonPropertyName("user")]
+    [JsonConverter(typeof(GithubJsonConverter<Octokit.User>))]
+    public required Octokit.User User { get; set; }
 
-    public Octokit.Installation Install
-    {
-        get => GithubJsonSerializer.Deserialize<Octokit.Installation>(Get("install").GetRawText());
-        set => Properties["install"] = GithubJsonSerializer.SerializeToElement(value);
-    }
+    [JsonPropertyName("install")]
+    [JsonConverter(typeof(GithubJsonConverter<Octokit.Installation>))]
+    public required Octokit.Installation Install { get; set; }
 
-    public Octokit.AccessToken AccessToken
-    {
-        get => GithubJsonSerializer.Deserialize<Octokit.AccessToken>(Get("access_token").GetRawText());
-        set => Properties["access_token"] = GithubJsonSerializer.SerializeToElement(value);
-    }
-
-    public GithubAccountInstallEntity() : base("github.account.install")
-    {
-
-    }
-
-    public GithubAccountInstallEntity(Entity entity) : base(entity)
-    {
-        Type = "github.account.install";
-    }
-}
-
-public static partial class EntityExtensions
-{
-    public static GithubAccountInstallEntity AsGithubAccountInstall(this Entity entity)
-    {
-        return new(entity);
-    }
+    [JsonPropertyName("access_token")]
+    [JsonConverter(typeof(GithubJsonConverter<Octokit.AccessToken>))]
+    public required Octokit.AccessToken AccessToken { get; set; }
 }

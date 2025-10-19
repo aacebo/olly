@@ -1,9 +1,10 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
+
+using Json.More;
 
 namespace OS.Agent.Drivers.Github;
 
-public class GithubJsonConverter<T> : JsonConverter<T>
+public class GithubJsonConverter<T> : WeaklyTypedJsonConverter<T>
 {
     private Octokit.Internal.SimpleJsonSerializer Serializer { get; init; } = new();
 

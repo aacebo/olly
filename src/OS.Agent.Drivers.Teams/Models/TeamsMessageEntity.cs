@@ -1,4 +1,4 @@
-using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Microsoft.Teams.Api.Activities;
 
@@ -7,29 +7,8 @@ using OS.Agent.Storage.Models;
 namespace OS.Agent.Drivers.Teams.Models;
 
 [Entity("teams.message")]
-public class TeamsMessageEntity : Entity
+public class TeamsMessageEntity() : Entity("teams.message")
 {
-    public MessageActivity Activity
-    {
-        get => GetRequired<MessageActivity>("activity");
-        set => Properties["activity"] = JsonSerializer.SerializeToElement(value);
-    }
-
-    public TeamsMessageEntity() : base("teams.message")
-    {
-
-    }
-
-    public TeamsMessageEntity(Entity entity) : base(entity)
-    {
-        Type = "teams.message";
-    }
-}
-
-public static partial class EntityExtensions
-{
-    public static TeamsMessageEntity AsTeamsMessage(this Entity entity)
-    {
-        return new(entity);
-    }
+    [JsonPropertyName("activity")]
+    public required MessageActivity Activity { get; set; }
 }

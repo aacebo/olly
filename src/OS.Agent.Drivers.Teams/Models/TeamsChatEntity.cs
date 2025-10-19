@@ -1,39 +1,15 @@
-using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Teams.Models;
 
 [Entity("teams.chat")]
-public class TeamsChatEntity : Entity
+public class TeamsChatEntity() : Entity("teams.chat")
 {
-    public Microsoft.Teams.Api.Conversation Conversation
-    {
-        get => GetRequired<Microsoft.Teams.Api.Conversation>("conversation");
-        set => Properties["conversation"] = JsonSerializer.SerializeToElement(value);
-    }
+    [JsonPropertyName("conversation")]
+    public required Microsoft.Teams.Api.Conversation Conversation { get; set; }
 
-    public string? ServiceUrl
-    {
-        get => Get<string>("service_url");
-        set => Properties["service_url"] = JsonSerializer.SerializeToElement(value);
-    }
-
-    public TeamsChatEntity() : base("teams.chat")
-    {
-
-    }
-
-    public TeamsChatEntity(Entity entity) : base(entity)
-    {
-        Type = "teams.chat";
-    }
-}
-
-public static partial class EntityExtensions
-{
-    public static TeamsChatEntity AsTeamsChat(this Entity entity)
-    {
-        return new(entity);
-    }
+    [JsonPropertyName("service_url")]
+    public string? ServiceUrl { get; set; }
 }

@@ -1,33 +1,12 @@
-using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github.Models;
 
 [Entity("github.account")]
-public class GithubAccountEntity : Entity
+public class GithubAccountEntity() : Entity("github.account")
 {
-    public Octokit.Webhooks.Models.User User
-    {
-        get => GetRequired<Octokit.Webhooks.Models.User>("user");
-        set => Properties["user"] = JsonSerializer.SerializeToElement(value);
-    }
-
-    public GithubAccountEntity() : base("github.account")
-    {
-
-    }
-
-    public GithubAccountEntity(Entity entity) : base(entity)
-    {
-        Type = "github.account";
-    }
-}
-
-public static partial class EntityExtensions
-{
-    public static GithubAccountEntity AsGithubAccount(this Entity entity)
-    {
-        return new(entity);
-    }
+    [JsonPropertyName("user")]
+    public required Octokit.Webhooks.Models.User User { get; set; }
 }

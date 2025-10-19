@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -8,15 +7,11 @@ using Json.More;
 
 namespace OS.Agent.Storage.Models;
 
-[Entity("any")]
 [JsonConverter(typeof(EntityJsonConverter))]
-public class Entity : IDictionary<string, JsonElement>
+public class Entity
 {
-    public string Type
-    {
-        get => GetRequired<string>("type");
-        set => this["type"] = JsonSerializer.SerializeToElement(value);
-    }
+    [JsonPropertyName("type")]
+    public string Type { get; set; }
 
     [JsonIgnore]
     public ICollection<string> Keys => Properties.Keys;
@@ -110,20 +105,6 @@ public class Entity : IDictionary<string, JsonElement>
 
         return data;
     }
-
-    public JsonElement? GetOrDefault(string key) => Properties.TryGetValue(key, out var value) ? value : null;
-    public T? GetOrDefault<T>(string key) => Properties.TryGetValue(key, out var value) ? value.Deserialize<T>() : default;
-    public void Add(string key, JsonElement value) => Properties.Add(key, value);
-    public bool ContainsKey(string key) => Properties.ContainsKey(key);
-    public bool Remove(string key) => Properties.Remove(key);
-    public bool TryGetValue(string key, out JsonElement value) => Properties.TryGetValue(key, out value);
-    public void Add(KeyValuePair<string, JsonElement> item) => Properties.Add(item);
-    public void Clear() => Properties.Clear();
-    public bool Contains(KeyValuePair<string, JsonElement> item) => Properties.Contains(item);
-    public void CopyTo(KeyValuePair<string, JsonElement>[] array, int arrayIndex) => Properties.CopyTo(array, arrayIndex);
-    public bool Remove(KeyValuePair<string, JsonElement> item) => Properties.Remove(item);
-    public IEnumerator<KeyValuePair<string, JsonElement>> GetEnumerator() => Properties.GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }
 
 public class Entities : List<Entity>, IList<Entity>
@@ -179,25 +160,34 @@ public class EntityJsonConverter : JsonConverter<Entity>
             throw new JsonException();
         }
 
+        // default to base Entity
         if (!EntityTypeRegistry.Types.TryGetValue(type.ToString(), out var entityType))
         {
-            throw new InvalidDataException($"Entity type '{type}' not found in type registry");
+            return new(type.ToString())
+            {
+                Properties = element.Deserialize<Dictionary<string, JsonElement>>(options) ?? throw new JsonException()
+            };
         }
 
-        var entity = element.Deserialize(entityType, options) as Entity;
+        var entity = JsonSerializer.Deserialize(element.AsJsonString(options), entityType, options) as Entity;
         return entity;
     }
 
     public override void Write(Utf8JsonWriter writer, Entity value, JsonSerializerOptions options)
     {
-        JsonSerializer.Serialize(writer, value.ToDictionary(), options);
+        if (EntityTypeRegistry.Types.TryGetValue(value.Type, out var entityType))
+        {
+            JsonSerializer.Serialize(writer, value, options.GetTypeInfo(entityType));
+            return;
+        }
+
+        JsonSerializer.Serialize(writer, value.Properties.Union(new Dictionary<string, JsonElement>() {
+            { "type", JsonSerializer.SerializeToElement(value.Type, options) }
+        }), options);
     }
 }
 
 internal static class EntityTypeRegistry
 {
-    public static Dictionary<string, Type> Types = new()
-    {
-        { "any", typeof(Entity) }
-    };
+    public static Dictionary<string, Type> Types = [];
 }
