@@ -173,7 +173,7 @@ public class EntityJsonConverter : JsonConverter<Entity>
     public override Entity? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         var element = JsonSerializer.Deserialize<JsonObject>(ref reader, options) ?? throw new JsonException();
-        
+
         if (!element.TryGetPropertyValue("type", out var type) || type is null)
         {
             throw new JsonException();

@@ -18,7 +18,6 @@ public sealed class JsonArrayTypeHandler(JsonSerializerOptions? options = null) 
         var p = (NpgsqlParameter)parameter;
         p.NpgsqlDbType = NpgsqlDbType.Jsonb;
         p.Value = value is null ? "[]" : JsonSerializer.Serialize(isEnumerable ? value : new[] { value }, options);
-        Console.WriteLine(p.Value);
     }
 
     public object? Parse(Type type, object value) => value switch
