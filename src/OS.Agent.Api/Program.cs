@@ -73,7 +73,7 @@ builder.Services.AddSingleton<NetMQQueue<Event<UserEvent>>>(); // users.(create 
 builder.Services.AddSingleton<NetMQQueue<Event<TenantEvent>>>(); // tenants.(create | update | delete)
 builder.Services.AddSingleton<NetMQQueue<Event<AccountEvent>>>(); // accounts.(create | update | delete)
 builder.Services.AddSingleton<NetMQQueue<Event<ChatEvent>>>(); // chats.(create | update | delete)
-builder.Services.AddSingleton<NetMQQueue<Event<MessageEvent>>>(); // messages.(create | update | delete)
+builder.Services.AddSingleton<NetMQQueue<Event<MessageEvent>>>(); // messages.(create | update | delete | resume)
 builder.Services.AddSingleton<NetMQQueue<Event<TokenEvent>>>(); // tokens.(create | update | delete)
 builder.Services.AddSingleton<NetMQQueue<Event<LogEvent>>>(); // logs.create
 

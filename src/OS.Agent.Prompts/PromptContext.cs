@@ -30,6 +30,7 @@ public interface IPromptContext
     IServiceProvider Services { get; }
 
     Task Send<TActivity>(Account account, TActivity activity, CancellationToken cancellationToken = default) where TActivity : IActivity;
+    Task Reply(Account account, MessageActivity replyTo, MessageActivity message, CancellationToken cancellationToken = default);
 }
 
 public class PromptContext : IPromptContext
@@ -101,5 +102,35 @@ public class PromptContext : IPromptContext
                 ]
             }, cancellationToken: cancellationToken);
         }
+    }
+
+    public async Task Reply(Account account, MessageActivity replyTo, MessageActivity message, CancellationToken cancellationToken = default)
+    {
+        message.ReplyToId = Message.SourceId;
+        message.Conversation = new()
+        {
+            Id = Chat.SourceId,
+            Type = Chat.Type is not null ? new(Chat.Type) : new("personal"),
+            Name = Chat.Name
+        };
+
+        await Driver.Reply(account, replyTo, message, cancellationToken);
+
+        if (string.IsNullOrEmpty(message.Id)) return;
+
+        await Storage.Messages.Create(new()
+        {
+            ChatId = Chat.Id,
+            ReplyToId = Message.Id,
+            SourceType = Message.SourceType,
+            SourceId = message.Id,
+            Text = message.Text,
+            Entities = [
+                new TeamsMessageEntity()
+                {
+                    Activity = message
+                }
+            ]
+        }, cancellationToken: cancellationToken);
     }
 }

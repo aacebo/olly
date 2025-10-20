@@ -22,4 +22,20 @@ public class TeamsDriver(IServiceProvider provider) : IChatDriver
             cancellationToken
         );
     }
+
+    public async Task<MessageActivity> Reply(Account account, MessageActivity replyTo, MessageActivity message, CancellationToken cancellationToken = default)
+    {
+        message.Text = string.Join("\n", [
+            replyTo.ToQuoteReply(),
+            message.Text != string.Empty ? $"<p>{message.Text}</p>" : string.Empty
+        ]);
+
+        return await Teams.Send(
+            message.Conversation.Id,
+            message,
+            message.Conversation.Type,
+            message.ServiceUrl,
+            cancellationToken
+        );
+    }
 }

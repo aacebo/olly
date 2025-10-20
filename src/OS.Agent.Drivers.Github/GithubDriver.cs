@@ -64,4 +64,9 @@ public class GithubDriver(IServiceProvider provider) : IChatDriver
         activity.ChannelData.Properties["github"] = comment;
         return activity;
     }
+
+    public async Task<MessageActivity> Reply(Account account, MessageActivity replyTo, MessageActivity message, CancellationToken cancellationToken = default)
+    {
+        return await Send(account, message, cancellationToken);
+    }
 }

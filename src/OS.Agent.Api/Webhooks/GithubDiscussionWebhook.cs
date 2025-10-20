@@ -73,7 +73,7 @@ public class GithubDiscussionWebhook(IServiceScopeFactory scopeFactory) : Webhoo
                     Url = @event.Discussion.User.Url,
                     AvatarUrl = @event.Discussion.User.AvatarUrl
                 };
-                
+
                 account = await accounts.Update(account, cancellationToken);
             }
         }

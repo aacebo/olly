@@ -20,6 +20,7 @@ public interface IMessageService
     Task<Message> Create(Message value, CancellationToken cancellationToken = default);
     Task<Message> Update(Message value, CancellationToken cancellationToken = default);
     Task Delete(Guid id, CancellationToken cancellationToken = default);
+    Task Resume(Guid id, CancellationToken cancellationToken = default);
 }
 
 public class MessageService(IServiceProvider provider) : IMessageService
@@ -125,6 +126,25 @@ public class MessageService(IServiceProvider provider) : IMessageService
         await Storage.Delete(message.Id, cancellationToken: cancellationToken);
 
         Events.Enqueue(new("messages.delete", new()
+        {
+            Tenant = tenant,
+            Account = account,
+            Chat = chat,
+            Message = message
+        }));
+    }
+
+    public async Task Resume(Guid id, CancellationToken cancellationToken = default)
+    {
+        var message = await GetById(id, cancellationToken) ?? throw new Exception("message not found");
+
+        if (message.AccountId is null) throw new UnauthorizedAccessException();
+
+        var account = await Accounts.GetById(message.AccountId.Value, cancellationToken) ?? throw new Exception("account not found");
+        var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
+        var chat = await Chats.GetById(message.ChatId, cancellationToken) ?? throw new Exception("chat not found");
+
+        Events.Enqueue(new("messages.resume", new()
         {
             Tenant = tenant,
             Account = account,

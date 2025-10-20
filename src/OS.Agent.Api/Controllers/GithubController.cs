@@ -19,6 +19,7 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
     private GithubSettings Settings => accessor.HttpContext!.RequestServices.GetRequiredService<IOptions<GithubSettings>>().Value;
     private ITenantService Tenants => accessor.HttpContext!.RequestServices.GetRequiredService<ITenantService>();
     private IAccountService Accounts => accessor.HttpContext!.RequestServices.GetRequiredService<IAccountService>();
+    private IChatService Chats => accessor.HttpContext!.RequestServices.GetRequiredService<IChatService>();
     private IMessageService Messages => accessor.HttpContext!.RequestServices.GetRequiredService<IMessageService>();
     private ITokenService Tokens => accessor.HttpContext!.RequestServices.GetRequiredService<ITokenService>();
 
@@ -48,7 +49,8 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
         var app = await AppClient.GitHubApps.GetCurrent();
         var user = await client.User.Current();
         var account = await Accounts.GetBySourceId(tenant.Id, SourceType.Github, user.NodeId, cancellationToken);
-        var message = await Messages.GetById(tokenState.MessageId, cancellationToken);
+        var message = await Messages.GetById(tokenState.MessageId, cancellationToken) ?? throw HttpException.NotFound();
+        var chat = await Chats.GetById(message.ChatId, cancellationToken) ?? throw HttpException.NotFound();
         var install = await AppClient.GitHubApps.GetInstallationForCurrent(installationId);
         var accessToken = await AppClient.GitHubApps.CreateInstallationToken(installationId);
 
@@ -120,6 +122,7 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
             await Tenants.Update(tenant, cancellationToken);
         }
 
+        await Messages.Resume(message.Id, cancellationToken);
         return Results.Ok();
     }
 }

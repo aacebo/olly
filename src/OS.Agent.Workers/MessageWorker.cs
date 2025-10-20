@@ -11,6 +11,7 @@ using Microsoft.Teams.Apps;
 
 using NetMQ;
 
+using OS.Agent.Drivers.Teams.Models;
 using OS.Agent.Events;
 using OS.Agent.Prompts;
 using OS.Agent.Services;
@@ -61,7 +62,12 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
                         Logger = app.Logger
                     });
 
-                    var ok = await OnEvent(context, prompt, lifetime.ApplicationStopping);
+                    var ok = @event.Name switch
+                    {
+                        "messages.create" => await OnCreateEvent(@event, context, prompt, cancellationToken),
+                        "messages.resume" => await OnResumeEvent(@event, context, prompt, cancellationToken),
+                        _ => throw new NotImplementedException($"Event '{@event.Name}' is not implemented")
+                    };
 
                     if (!ok)
                     {
@@ -89,7 +95,7 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
         return Task.CompletedTask;
     }
 
-    private async Task<bool> OnEvent(IPromptContext context, OpenAIChatPrompt prompt, CancellationToken cancellationToken = default)
+    private async Task<bool> OnCreateEvent(Event<MessageEvent> _, IPromptContext context, OpenAIChatPrompt prompt, CancellationToken cancellationToken = default)
     {
         await context.Send(context.Account, new TypingActivity(), cancellationToken);
 
@@ -107,8 +113,6 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
             )
             .ToList();
 
-        Logger.LogDebug("{}", JsonSerializer.Serialize(memory));
-
         var res = await prompt.Send(context.Message.Text, new()
         {
             Messages = memory
@@ -116,6 +120,35 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
 
         var message = new MessageActivity(res.Content);
         await context.Send(context.Account, message, cancellationToken);
+        return true;
+    }
+
+    private async Task<bool> OnResumeEvent(Event<MessageEvent> @event, IPromptContext context, OpenAIChatPrompt prompt, CancellationToken cancellationToken = default)
+    {
+        await context.Send(context.Account, new TypingActivity(), cancellationToken);
+
+        var messages = await context.Messages.GetByChatId(
+            context.Chat.Id,
+            Page.Create().Sort(SortDirection.Desc, "created_at").Build(),
+            cancellationToken
+        );
+
+        var memory = messages.List
+            .Select(m =>
+                m.AccountId is null
+                    ? new ModelMessage<string>(m.Text) as IMessage
+                    : new UserMessage<string>(m.Text)
+            )
+            .ToList();
+
+        var res = await prompt.Send($"Resume from ", new()
+        {
+            Messages = memory
+        }, null, cancellationToken);
+
+        var message = new MessageActivity(res.Content);
+        var replyTo = @event.Body.Message.Entities.GetRequired<TeamsMessageEntity>();
+        await context.Reply(context.Account, replyTo.Activity, message, cancellationToken);
         return true;
     }
 }
