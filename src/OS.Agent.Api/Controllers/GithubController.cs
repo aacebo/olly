@@ -19,6 +19,7 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
     private GithubSettings Settings => accessor.HttpContext!.RequestServices.GetRequiredService<IOptions<GithubSettings>>().Value;
     private ITenantService Tenants => accessor.HttpContext!.RequestServices.GetRequiredService<ITenantService>();
     private IAccountService Accounts => accessor.HttpContext!.RequestServices.GetRequiredService<IAccountService>();
+    private IMessageService Messages => accessor.HttpContext!.RequestServices.GetRequiredService<IMessageService>();
     private ITokenService Tokens => accessor.HttpContext!.RequestServices.GetRequiredService<ITokenService>();
 
     [HttpGet("redirect")]
@@ -47,6 +48,7 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
         var app = await AppClient.GitHubApps.GetCurrent();
         var user = await client.User.Current();
         var account = await Accounts.GetBySourceId(tenant.Id, SourceType.Github, user.NodeId, cancellationToken);
+        var message = await Messages.GetById(tokenState.MessageId, cancellationToken);
         var install = await AppClient.GitHubApps.GetInstallationForCurrent(installationId);
         var accessToken = await AppClient.GitHubApps.CreateInstallationToken(installationId);
 
@@ -60,10 +62,23 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
                 SourceId = user.NodeId,
                 Name = user.Login,
                 Entities = [
-                    new GithubAccountInstallEntity()
+                    new GithubUserEntity()
+                    {
+                        User = new()
+                        {
+                            Id = install.Account.Id,
+                            NodeId = install.Account.NodeId,
+                            Type = install.Account.Type?.ToString(),
+                            Login = install.Account.Login,
+                            Name = install.Account.Name,
+                            Email = install.Account.Email,
+                            Url = install.Account.Url,
+                            AvatarUrl = install.Account.AvatarUrl
+                        }
+                    },
+                    new GithubInstallEntity()
                     {
                         Install = install,
-                        User = install.Account,
                         AccessToken = accessToken
                     }
                 ]

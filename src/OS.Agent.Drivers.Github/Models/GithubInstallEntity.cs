@@ -4,13 +4,9 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github.Models;
 
-[Entity("github.account.install")]
-public class GithubAccountInstallEntity() : Entity("github.account.install")
+[Entity("github.install")]
+public class GithubInstallEntity() : Entity("github.install")
 {
-    [JsonPropertyName("user")]
-    [JsonConverter(typeof(GithubJsonConverter<Octokit.User>))]
-    public required Octokit.User User { get; set; }
-
     [JsonPropertyName("install")]
     [JsonConverter(typeof(GithubJsonConverter<Octokit.Installation>))]
     public required Octokit.Installation Install { get; set; }

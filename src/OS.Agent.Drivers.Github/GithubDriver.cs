@@ -29,7 +29,7 @@ public class GithubDriver(IServiceProvider provider) : IChatDriver
             activity.ReplyToId = null;
         }
 
-        var entity = account.Entities.GetRequired<GithubAccountInstallEntity>();
+        var entity = account.Entities.GetRequired<GithubInstallEntity>();
 
         if (entity.AccessToken.ExpiresAt >= DateTimeOffset.UtcNow.AddMinutes(-5))
         {

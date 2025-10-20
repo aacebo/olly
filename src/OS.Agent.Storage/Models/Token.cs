@@ -61,6 +61,9 @@ public class Token : Model
         [JsonPropertyName("user_id")]
         public required Guid UserId { get; set; }
 
+        [JsonPropertyName("message_id")]
+        public required Guid MessageId { get; set; }
+
         public override string ToString()
         {
             return JsonSerializer.Serialize(this);

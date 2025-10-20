@@ -79,7 +79,8 @@ public class MainPrompt(IPromptContext context)
             var state = new Token.State()
             {
                 TenantId = context.Tenant.Id,
-                UserId = context.UserId
+                UserId = context.UserId,
+                MessageId = context.Message.Id
             };
 
             await context.Send(

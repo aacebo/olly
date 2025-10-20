@@ -42,7 +42,7 @@ public class GithubPrompt(IPromptContext context)
     public async Task<string> GetRepositoriesByAccountId([Param] Guid accountId)
     {
         var account = await context.Accounts.GetById(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
-        var entity = account.Entities.GetRequired<GithubAccountInstallEntity>();
+        var entity = account.Entities.GetRequired<GithubInstallEntity>();
         var adapter = new HttpClientAdapter(() => new GithubTokenRefreshHandler(context.Services, account));
         var connection = new Octokit.Connection(new Octokit.ProductHeaderValue("TOS-Agent"), adapter)
         {
@@ -62,7 +62,7 @@ public class GithubPrompt(IPromptContext context)
     public async Task<string> GetRepositoryDiscussions([Param] Guid accountId, [Param] string repositoryName)
     {
         var account = await context.Accounts.GetById(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
-        var entity = account.Entities.GetRequired<GithubAccountInstallEntity>();
+        var entity = account.Entities.GetRequired<GithubInstallEntity>();
 
         if (entity.AccessToken.ExpiresAt >= DateTimeOffset.UtcNow.AddMinutes(-5))
         {

@@ -39,20 +39,41 @@ public class GithubDiscussionWebhook(IServiceScopeFactory scopeFactory) : Webhoo
                 SourceType = SourceType.Github,
                 Name = @event.Discussion.User.Login,
                 Entities = [
-                    new GithubAccountEntity()
+                    new GithubUserEntity()
                     {
-                        User = @event.Discussion.User
+                        User = new()
+                        {
+                            Id = @event.Discussion.User.Id,
+                            NodeId = @event.Discussion.User.NodeId,
+                            Type = @event.Discussion.User.Type.ToString(),
+                            Login = @event.Discussion.User.Login,
+                            Name = @event.Discussion.User.Name,
+                            Email = @event.Discussion.User.Email,
+                            Url = @event.Discussion.User.Url,
+                            AvatarUrl = @event.Discussion.User.AvatarUrl
+                        }
                     }
                 ]
             }, cancellationToken);
         }
         else
         {
-            var entity = account.Entities.Get<GithubAccountEntity>();
+            var entity = account.Entities.Get<GithubUserEntity>();
 
             if (entity is not null)
             {
-                entity.User = @event.Discussion.User;
+                entity.User = new()
+                {
+                    Id = @event.Discussion.User.Id,
+                    NodeId = @event.Discussion.User.NodeId,
+                    Type = @event.Discussion.User.Type.ToString(),
+                    Login = @event.Discussion.User.Login,
+                    Name = @event.Discussion.User.Name,
+                    Email = @event.Discussion.User.Email,
+                    Url = @event.Discussion.User.Url,
+                    AvatarUrl = @event.Discussion.User.AvatarUrl
+                };
+                
                 account = await accounts.Update(account, cancellationToken);
             }
         }

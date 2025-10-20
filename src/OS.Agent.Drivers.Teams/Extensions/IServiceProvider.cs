@@ -14,10 +14,6 @@ public static class IServiceProviderExtensions
         services.AddScoped<TeamsDriver>();
         services.AddScoped<IDriver>(provider => provider.GetRequiredService<TeamsDriver>());
         services.AddScoped<IChatDriver>(provider => provider.GetRequiredService<TeamsDriver>());
-
-        // Dapper.SqlMapper.AddTypeHandler(typeof(TeamsAccountEntity), new JsonObjectTypeHandler(jsonOptions));
-        // Dapper.SqlMapper.AddTypeHandler(typeof(TeamsChatEntity), new JsonObjectTypeHandler(jsonOptions));
-        // Dapper.SqlMapper.AddTypeHandler(typeof(TeamsMessageEntity), new JsonObjectTypeHandler(jsonOptions));
         return services;
     }
 }

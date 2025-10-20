@@ -21,11 +21,6 @@ public static class IServiceCollectionExtensions
         services.AddScoped<GithubDriver>();
         services.AddScoped<IDriver>(provider => provider.GetRequiredService<GithubDriver>());
         services.AddScoped<IChatDriver>(provider => provider.GetRequiredService<GithubDriver>());
-
-        // Dapper.SqlMapper.AddTypeHandler(typeof(GithubAccountEntity), new JsonObjectTypeHandler(jsonOptions));
-        // Dapper.SqlMapper.AddTypeHandler(typeof(GithubAccountInstallEntity), new JsonObjectTypeHandler(jsonOptions));
-        // Dapper.SqlMapper.AddTypeHandler(typeof(GithubDiscussionEntity), new JsonObjectTypeHandler(jsonOptions));
-
         services.AddSingleton(provider =>
         {
             var settings = provider.GetRequiredService<IOptions<GithubSettings>>();

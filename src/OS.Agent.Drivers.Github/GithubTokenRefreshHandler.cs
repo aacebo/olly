@@ -24,7 +24,7 @@ public class GithubTokenRefreshHandler(IServiceProvider provider, Account accoun
         }
         catch (Octokit.AuthorizationException ex)
         {
-            var entity = account.Entities.Get<GithubAccountInstallEntity>();
+            var entity = account.Entities.Get<GithubInstallEntity>();
 
             if (entity is not null)
             {

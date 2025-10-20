@@ -41,10 +41,23 @@ public class GithubInstallWebhook(IServiceScopeFactory scopeFactory) : WebhookEv
                 SourceId = @event.Installation.Account.NodeId,
                 Name = @event.Installation.Account.Login,
                 Entities = [
-                    new GithubAccountInstallEntity()
+                    new GithubUserEntity()
+                    {
+                        User = new()
+                        {
+                            Id = install.Account.Id,
+                            NodeId = install.Account.NodeId,
+                            Type = install.Account.Type?.ToString(),
+                            Login = install.Account.Login,
+                            Name = install.Account.Name,
+                            Email = install.Account.Email,
+                            Url = install.Account.Url,
+                            AvatarUrl = install.Account.AvatarUrl
+                        }
+                    },
+                    new GithubInstallEntity()
                     {
                         Install = install,
-                        User = install.Account,
                         AccessToken = accessToken
                     }
                 ]
@@ -53,10 +66,24 @@ public class GithubInstallWebhook(IServiceScopeFactory scopeFactory) : WebhookEv
         else
         {
             account.Name = @event.Installation.Account.Login;
-            account.Entities.Put(new GithubAccountInstallEntity()
+            account.Entities.Put(new GithubUserEntity()
+            {
+                User = new()
+                {
+                    Id = install.Account.Id,
+                    NodeId = install.Account.NodeId,
+                    Type = install.Account.Type?.ToString(),
+                    Login = install.Account.Login,
+                    Name = install.Account.Name,
+                    Email = install.Account.Email,
+                    Url = install.Account.Url,
+                    AvatarUrl = install.Account.AvatarUrl
+                }
+            });
+
+            account.Entities.Put(new GithubInstallEntity()
             {
                 Install = install,
-                User = install.Account,
                 AccessToken = accessToken
             });
 
