@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Teams.AI.Models.OpenAI;
 using Microsoft.Teams.Api.Activities;
@@ -94,6 +96,13 @@ public class PromptContext : IPromptContext
                 SourceType = Message.SourceType,
                 SourceId = message.Id,
                 Text = message.Text,
+                Attachments = (message.Attachments ?? []).Select(attachment => new Attachment()
+                {
+                    Id = attachment.Id,
+                    Name = attachment.Name,
+                    ContentType = attachment.ContentType,
+                    Content = attachment.ContentUrl ?? JsonSerializer.Serialize(attachment.Content)
+                }).ToList(),
                 Entities = [
                     new TeamsMessageEntity()
                     {
@@ -125,6 +134,13 @@ public class PromptContext : IPromptContext
             SourceType = Message.SourceType,
             SourceId = message.Id,
             Text = message.Text,
+            Attachments = (message.Attachments ?? []).Select(attachment => new Attachment()
+            {
+                Id = attachment.Id,
+                Name = attachment.Name,
+                ContentType = attachment.ContentType,
+                Content = attachment.ContentUrl ?? JsonSerializer.Serialize(attachment.Content)
+            }).ToList(),
             Entities = [
                 new TeamsMessageEntity()
                 {

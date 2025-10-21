@@ -35,6 +35,10 @@ public class Message : Model
     [JsonPropertyName("text")]
     public required string Text { get; set; }
 
+    [Column("attachments")]
+    [JsonPropertyName("attachments")]
+    public List<Attachment> Attachments { get; set; } = [];
+
     [Column("entities")]
     [JsonPropertyName("entities")]
     public Entities Entities { get; set; } = [];

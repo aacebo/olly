@@ -14,6 +14,9 @@ public class MessageSchema(Storage.Models.Message message)
     [GraphQLName("text")]
     public string Text { get; set; } = message.Text;
 
+    [GraphQLName("attachments")]
+    public IEnumerable<AttachmentSchema> Attachments { get; set; } = message.Attachments.Select(attachment => new AttachmentSchema(attachment));
+
     [GraphQLName("entities")]
     public IEnumerable<EntitySchema> Entities { get; set; } = message.Entities.Select(entity => new EntitySchema(entity));
 

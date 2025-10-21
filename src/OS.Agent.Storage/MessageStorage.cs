@@ -77,9 +77,9 @@ public class MessageStorage(ILogger<IMessageStorage> logger, QueryFactory db) : 
         using var cmd = new NpgsqlCommand(
         """
             INSERT INTO messages
-            (id, chat_id, account_id, reply_to_id, source_id, source_type, text, entities, created_at, updated_at)
+            (id, chat_id, account_id, reply_to_id, source_id, source_type, text, attachments, entities, created_at, updated_at)
             VALUES
-            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         """, (NpgsqlConnection)db.Connection)
         {
             Parameters =
@@ -91,6 +91,7 @@ public class MessageStorage(ILogger<IMessageStorage> logger, QueryFactory db) : 
                 new() { Value = value.SourceId, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Text, NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Attachments, NpgsqlDbType = NpgsqlDbType.Jsonb },
                 new() { Value = value.Entities, NpgsqlDbType = NpgsqlDbType.Jsonb },
                 new() { Value = value.CreatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
                 new() { Value = value.UpdatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz }
@@ -114,9 +115,10 @@ public class MessageStorage(ILogger<IMessageStorage> logger, QueryFactory db) : 
                 source_id = $5,
                 source_type = $6,
                 text = $7,
-                entities = $8,
-                created_at = $9,
-                updated_at = $10
+                attachments = $8,
+                entities = $9,
+                created_at = $10,
+                updated_at = $11
             WHERE id = $1
         """, (NpgsqlConnection)db.Connection)
         {
@@ -129,6 +131,7 @@ public class MessageStorage(ILogger<IMessageStorage> logger, QueryFactory db) : 
                 new() { Value = value.SourceId, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Text, NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Attachments, NpgsqlDbType = NpgsqlDbType.Jsonb },
                 new() { Value = value.Entities, NpgsqlDbType = NpgsqlDbType.Jsonb },
                 new() { Value = value.CreatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
                 new() { Value = value.UpdatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz }

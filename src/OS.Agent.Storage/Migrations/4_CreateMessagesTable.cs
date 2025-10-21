@@ -15,6 +15,7 @@ public class CreateMessagesTable : Migration
             .WithColumn("source_id").AsString().NotNullable()
             .WithColumn("source_type").AsString().NotNullable()
             .WithColumn("text").AsString().NotNullable()
+            .WithColumn("attachments").AsCustom("JSONB").NotNullable()
             .WithColumn("entities").AsCustom("JSONB").NotNullable()
             .WithColumn("created_at").AsDateTimeOffset().NotNullable()
             .WithColumn("updated_at").AsDateTimeOffset().NotNullable();
