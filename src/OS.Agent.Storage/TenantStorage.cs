@@ -31,7 +31,7 @@ public class TenantStorage(ILogger<ITenantStorage> logger, QueryFactory db) : IT
         var query = db.Query("tenants").Select("*");
         return await page.Invoke<Tenant>(query, cancellationToken);
     }
-    
+
     public async Task<Tenant?> GetById(Guid id, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("GetById");
