@@ -52,7 +52,9 @@ builder.Services.AddHttpLogging();
 builder.Services.AddPostgres();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddGraphQLServer().AddQueryType<Schema.Query>();
+builder.Services.AddGraphQLServer()
+    .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = !builder.Environment.IsProduction())
+    .AddQueryType<Schema.Query>();
 
 // Teams
 builder.AddTeams();

@@ -14,6 +14,7 @@ namespace OS.Agent.Storage;
 
 public interface ITenantStorage
 {
+    Task<PaginationResult<Tenant>> Get(Page? page = null, CancellationToken cancellationToken = default);
     Task<Tenant?> GetById(Guid id, CancellationToken cancellationToken = default);
     Task<Tenant?> GetBySourceId(SourceType type, string sourceId, CancellationToken cancellationToken = default);
     Task<Tenant> Create(Tenant value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
@@ -23,6 +24,14 @@ public interface ITenantStorage
 
 public class TenantStorage(ILogger<ITenantStorage> logger, QueryFactory db) : ITenantStorage
 {
+    public async Task<PaginationResult<Tenant>> Get(Page? page = null, CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("Get");
+        page ??= new();
+        var query = db.Query("tenants").Select("*");
+        return await page.Invoke<Tenant>(query, cancellationToken);
+    }
+    
     public async Task<Tenant?> GetById(Guid id, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("GetById");

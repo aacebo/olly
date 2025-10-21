@@ -7,10 +7,13 @@ using OS.Agent.Events;
 using OS.Agent.Storage;
 using OS.Agent.Storage.Models;
 
+using SqlKata.Execution;
+
 namespace OS.Agent.Services;
 
 public interface ITenantService
 {
+    Task<PaginationResult<Tenant>> Get(Page? page = null, CancellationToken cancellationToken = default);
     Task<Tenant?> GetById(Guid id, CancellationToken cancellationToken = default);
     Task<Tenant?> GetBySourceId(SourceType type, string sourceId, CancellationToken cancellationToken = default);
     Task<Tenant> Create(Tenant value, CancellationToken cancellationToken = default);
@@ -23,6 +26,11 @@ public class TenantService(IServiceProvider provider) : ITenantService
     private IMemoryCache Cache { get; init; } = provider.GetRequiredService<IMemoryCache>();
     private NetMQQueue<Event<TenantEvent>> Events { get; init; } = provider.GetRequiredService<NetMQQueue<Event<TenantEvent>>>();
     private ITenantStorage Storage { get; init; } = provider.GetRequiredService<ITenantStorage>();
+
+    public async Task<PaginationResult<Tenant>> Get(Page? page = null, CancellationToken cancellationToken = default)
+    {
+        return await Storage.Get(page, cancellationToken);
+    }
 
     public async Task<Tenant?> GetById(Guid id, CancellationToken cancellationToken = default)
     {
