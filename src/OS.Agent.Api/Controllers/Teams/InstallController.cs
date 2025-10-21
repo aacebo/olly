@@ -31,7 +31,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
         {
             tenant = await tenants.Create(new()
             {
-                Sources = [Source.Teams(tenantId)]
+                Sources = [Source.Teams(tenantId, context.Activity.ServiceUrl)]
             }, context.CancellationToken);
         }
 
