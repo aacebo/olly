@@ -116,7 +116,7 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
             Messages = memory
         }, null, cancellationToken);
 
-        await context.Reply(res.Content);
+        await context.Send(res.Content);
         return true;
     }
 

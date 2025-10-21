@@ -28,7 +28,7 @@ public class GithubDriver(IServiceProvider provider) : IChatDriver
 
     public Task Typing(TypingRequest request, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask;
     }
 
     public async Task<Message> Send(MessageRequest request, CancellationToken cancellationToken = default)
