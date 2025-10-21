@@ -11,8 +11,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\OS.Agent.Events\OS.Agent.Events.csproj" />
     <ProjectReference Include="..\OS.Agent.Storage\OS.Agent.Storage.csproj" />
-    <ProjectReference Include="..\OS.Agent.Services\OS.Agent.Services.csproj" />
   </ItemGroup>
 </Project>

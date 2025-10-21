@@ -16,5 +16,6 @@
     <ProjectReference Include="..\OS.Agent.Storage\OS.Agent.Storage.csproj" />
     <ProjectReference Include="..\OS.Agent.Drivers\OS.Agent.Drivers.csproj" />
     <ProjectReference Include="..\OS.Agent.Errors\OS.Agent.Errors.csproj" />
+    <ProjectReference Include="..\OS.Agent.Services\OS.Agent.Services.csproj" />
   </ItemGroup>
 </Project>
