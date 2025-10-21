@@ -1,7 +1,3 @@
-using System.Text.Json;
-
-using Json.More;
-
 using Microsoft.Extensions.DependencyInjection;
 
 using Octokit.GraphQL;
@@ -72,9 +68,9 @@ public class GithubDriver(IServiceProvider provider) : IChatDriver
             Url = comment.Url,
             Text = comment.Body,
             Entities = [
-                new Entity("github.discussion.comment")
+                new GithubDiscussionCommentEntity()
                 {
-                    Properties = comment.ToJsonDocument().Deserialize<Dictionary<string, JsonElement>>() ?? []
+                    Comment = comment
                 }
             ]
         };
