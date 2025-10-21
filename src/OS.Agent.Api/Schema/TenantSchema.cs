@@ -15,7 +15,7 @@ public class TenantSchema(Storage.Models.Tenant tenant)
     public string? Name { get; set; } = tenant.Name;
 
     [GraphQLName("entities")]
-    public IEnumerable<EntitySchema> Entities { get; set; } = tenant.Entities.Select(account => new EntitySchema(account));
+    public IEnumerable<EntitySchema> Entities { get; set; } = tenant.Entities.Select(entity => new EntitySchema(entity));
 
     [GraphQLName("created_at")]
     public DateTimeOffset CreatedAt { get; init; } = tenant.CreatedAt;

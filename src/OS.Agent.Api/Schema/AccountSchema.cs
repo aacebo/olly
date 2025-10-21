@@ -8,17 +8,14 @@ public class AccountSchema(Storage.Models.Account account)
     [GraphQLName("id")]
     public Guid Id { get; init; } = account.Id;
 
-    [GraphQLName("source_type")]
-    public string SourceType { get; set; } = account.SourceType;
-
-    [GraphQLName("source_id")]
-    public string SourceId { get; set; } = account.SourceId;
+    [GraphQLName("source")]
+    public SourceSchema Source { get; set; } = new(account.SourceId, account.SourceType);
 
     [GraphQLName("name")]
     public string? Name { get; set; } = account.Name;
 
     [GraphQLName("entities")]
-    public IEnumerable<EntitySchema> Entities { get; set; } = account.Entities.Select(account => new EntitySchema(account));
+    public IEnumerable<EntitySchema> Entities { get; set; } = account.Entities.Select(entity => new EntitySchema(entity));
 
     [GraphQLName("created_at")]
     public DateTimeOffset CreatedAt { get; init; } = account.CreatedAt;

@@ -8,11 +8,8 @@ public class ChatSchema(Storage.Models.Chat chat)
     [GraphQLName("id")]
     public Guid Id { get; init; } = chat.Id;
 
-    [GraphQLName("source_type")]
-    public string SourceType { get; set; } = chat.SourceType;
-
-    [GraphQLName("source_id")]
-    public string SourceId { get; set; } = chat.SourceId;
+    [GraphQLName("source")]
+    public SourceSchema Source { get; set; } = new(chat.SourceId, chat.SourceType);
 
     [GraphQLName("type")]
     public string? Type { get; set; } = chat.Type;
@@ -21,7 +18,7 @@ public class ChatSchema(Storage.Models.Chat chat)
     public string? Name { get; set; } = chat.Name;
 
     [GraphQLName("entities")]
-    public IEnumerable<EntitySchema> Entities { get; set; } = chat.Entities.Select(account => new EntitySchema(account));
+    public IEnumerable<EntitySchema> Entities { get; set; } = chat.Entities.Select(entity => new EntitySchema(entity));
 
     [GraphQLName("created_at")]
     public DateTimeOffset CreatedAt { get; init; } = chat.CreatedAt;
@@ -55,5 +52,12 @@ public class ChatSchema(Storage.Models.Chat chat)
     {
         var chats = await chatService.GetByParentId(Id, cancellationToken);
         return chats.Select(chat => new ChatSchema(chat));
+    }
+
+    [GraphQLName("messages")]
+    public async Task<IEnumerable<MessageSchema>> GetChats([Service] IMessageService messageService, CancellationToken cancellationToken = default)
+    {
+        var messages = await messageService.GetByChatId(Id, cancellationToken: cancellationToken);
+        return messages.List.Select(message => new MessageSchema(message));
     }
 }
