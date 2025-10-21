@@ -28,6 +28,8 @@ using OS.Agent.Storage.Extensions;
 using OS.Agent.Storage.Models;
 using OS.Agent.Workers;
 
+using Schema = OS.Agent.Api.Schema;
+
 var builder = WebApplication.CreateBuilder(args);
 var openAiSettings = builder.Configuration.GetOpenAI();
 var openAiModel = new OpenAIChatModel(openAiSettings.Model, openAiSettings.ApiKey);
@@ -50,6 +52,7 @@ builder.Services.AddHttpLogging();
 builder.Services.AddPostgres();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddGraphQLServer().AddQueryType<Schema.Query>();
 
 // Teams
 builder.AddTeams();
@@ -116,5 +119,6 @@ app.MapGitHubWebhooks();
 app.MapEntityTypes();
 app.MapTeamsEntityTypes();
 app.MapGithubEntityTypes();
+app.MapGraphQL();
 app.UseTeams();
 app.Run();
