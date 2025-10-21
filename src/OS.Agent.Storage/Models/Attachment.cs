@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace OS.Agent.Storage.Models;
 
-public class Attachment
+public class Attachment : Model
 {
     [JsonPropertyName("id")]
     public string? Id { get; set; }
@@ -14,5 +14,5 @@ public class Attachment
     public required string ContentType { get; set; }
 
     [JsonPropertyName("content")]
-    public required string Content { get; set; }
+    public required object Content { get; set; }
 }

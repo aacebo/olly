@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 
 using FluentMigrator.Runner;
 
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Teams.AI.Models.OpenAI;
 using Microsoft.Teams.AI.Models.OpenAI.Extensions;
 using Microsoft.Teams.Apps.Extensions;
@@ -114,6 +115,15 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Local"))
 {
     app.MapOpenApi();
 }
+
+app.UseStaticFiles(new StaticFileOptions()
+{
+    RequestPath = "/static",
+    FileProvider = new PhysicalFileProvider(System.IO.Path.Combine(
+        Directory.GetCurrentDirectory(),
+        "Static"
+    ))
+});
 
 app.Services.GetRequiredService<IMigrationRunner>().MigrateUp();
 app.UseMiddleware<ErrorMiddleware>();

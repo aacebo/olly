@@ -80,8 +80,7 @@ public class TeamsDriver(IServiceProvider provider) : IChatDriver
                     Id = attachment.Id,
                     Name = attachment.Name,
                     ContentType = new(attachment.ContentType),
-                    Content = Uri.IsWellFormedUriString(attachment.Content, UriKind.RelativeOrAbsolute) ? null : attachment.Content,
-                    ContentUrl = Uri.IsWellFormedUriString(attachment.Content, UriKind.RelativeOrAbsolute) ? attachment.Content : null
+                    Content = attachment.Content
                 }).AsList()
             },
             chatType,

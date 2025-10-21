@@ -20,14 +20,29 @@ namespace OS.Agent.Prompts;
     "You are an old british man, make sure you speek like one.",
     "**DO NOT** use the say function to send the same message you conclude your response with!"
 )]
-public class MainPrompt(IPromptContext context)
+public class MainPrompt
 {
-    public readonly IOptions<GithubSettings> GithubSettings = context.Services.GetRequiredService<IOptions<GithubSettings>>();
-    public readonly JsonSerializerOptions SerializationOptions = context.Services.GetRequiredService<JsonSerializerOptions>();
-    public readonly OpenAIChatPrompt GithubPrompt = OpenAIChatPrompt.From(context.Model, new GithubPrompt(context), new()
+    public readonly IPromptContext Context;
+    public readonly IOptions<GithubSettings> GithubSettings;
+    public readonly JsonSerializerOptions SerializationOptions;
+    public readonly OpenAIChatPrompt GithubPrompt;
+    public readonly OpenAIChatPrompt AdaptiveCardsPrompt;
+
+    public MainPrompt(IPromptContext context)
     {
-        Logger = context.Services.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>()
-    });
+        Context = context;
+        GithubSettings = context.Services.GetRequiredService<IOptions<GithubSettings>>();
+        SerializationOptions = context.Services.GetRequiredService<JsonSerializerOptions>();
+        GithubPrompt = OpenAIChatPrompt.From(context.Model, new GithubPrompt(context), new()
+        {
+            Logger = context.Services.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>()
+        });
+
+        AdaptiveCardsPrompt = OpenAIChatPrompt.From(context.Model, new AdaptiveCardsPrompt(context), new()
+        {
+            Logger = context.Services.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>()
+        });
+    }
 
     [Function]
     [Function.Description(
@@ -37,21 +52,22 @@ public class MainPrompt(IPromptContext context)
     )]
     public async Task Say([Param] string message)
     {
-        await context.Typing(message);
+        await Context.Send(message);
+        await Context.Typing();
     }
 
     [Function]
     [Function.Description("get the current users chat information")]
     public Task<string> GetCurrentChat()
     {
-        return Task.FromResult(JsonSerializer.Serialize(context.Chat, SerializationOptions));
+        return Task.FromResult(JsonSerializer.Serialize(Context.Chat, SerializationOptions));
     }
 
     [Function]
     [Function.Description("get the current users account information")]
     public Task<string> GetCurrentAccount()
     {
-        return Task.FromResult(JsonSerializer.Serialize(context.Account, SerializationOptions));
+        return Task.FromResult(JsonSerializer.Serialize(Context.Account, SerializationOptions));
     }
 
     [Function]
@@ -61,29 +77,40 @@ public class MainPrompt(IPromptContext context)
     )]
     public async Task<string> Github([Param] string message)
     {
-        var account = (await context.Accounts.GetByUserId(
-            context.UserId,
-            context.CancellationToken
+        var account = (await Context.Accounts.GetByUserId(
+            Context.UserId,
+            Context.CancellationToken
         )).FirstOrDefault(a => a.SourceType == SourceType.Github);
 
         var token = account is not null
-            ? await context.Tokens.GetByAccountId(account.Id, context.CancellationToken)
+            ? await Context.Tokens.GetByAccountId(account.Id, Context.CancellationToken)
             : null;
 
         if (account is null || token is null)
         {
             var state = new Token.State()
             {
-                TenantId = context.Tenant.Id,
-                UserId = context.UserId,
-                MessageId = context.Message.Id
+                TenantId = Context.Tenant.Id,
+                UserId = Context.UserId,
+                MessageId = Context.Message.Id
             };
 
-            await context.SignIn(GithubSettings.Value.InstallUrl, state.Encode());
+            await Context.SignIn(GithubSettings.Value.InstallUrl, state.Encode());
             return "<user was prompted to login to Github>";
         }
 
-        var res = await GithubPrompt.Send(message, null, context.CancellationToken);
+        var res = await GithubPrompt.Send(message, null, Context.CancellationToken);
+        return res.Content;
+    }
+
+    [Function]
+    [Function.Description(
+        "delegate a task/question to the Adaptive Cards Agent ",
+        "who specializes in Microsoft Adaptive Cards and all their subject matter."
+    )]
+    public async Task<string> AdaptiveCards([Param] string message)
+    {
+        var res = await AdaptiveCardsPrompt.Send(message, null, Context.CancellationToken);
         return res.Content;
     }
 }

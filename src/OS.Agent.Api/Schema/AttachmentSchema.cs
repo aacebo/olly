@@ -13,5 +13,6 @@ public class AttachmentSchema(Storage.Models.Attachment attachment)
     public string ContentType { get; set; } = attachment.ContentType;
 
     [GraphQLName("content")]
-    public string Content { get; set; } = attachment.Content;
+    [GraphQLType(typeof(AnyType))]
+    public object Content { get; set; } = attachment.Content;
 }
