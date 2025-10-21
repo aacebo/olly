@@ -4,12 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Teams.AI.Annotations;
 using Microsoft.Teams.AI.Models.OpenAI;
-using Microsoft.Teams.Api.Activities;
 
 using OS.Agent.Drivers.Github;
 using OS.Agent.Storage.Models;
-
-using Api = Microsoft.Teams.Api;
 
 namespace OS.Agent.Prompts;
 
@@ -40,8 +37,7 @@ public class MainPrompt(IPromptContext context)
     )]
     public async Task Say([Param] string message)
     {
-        await context.Send(context.Account, new MessageActivity(message));
-        await context.Send(context.Account, new TypingActivity());
+        await context.Typing(message);
     }
 
     [Function]
@@ -83,21 +79,7 @@ public class MainPrompt(IPromptContext context)
                 MessageId = context.Message.Id
             };
 
-            await context.Send(
-                context.Account,
-                new MessageActivity()
-                {
-                    InputHint = Api.InputHint.AcceptingInput,
-                    Conversation = new()
-                    {
-                        Id = context.Chat.SourceId,
-                        Type = Api.ConversationType.Personal
-                    }
-                }.AddAttachment(
-                    Cards.Auth.SignIn($"{GithubSettings.Value.InstallUrl}&state={state.Encode()}")
-                )
-            );
-
+            await context.SignIn(GithubSettings.Value.InstallUrl, state.Encode());
             return "<user was prompted to login to Github>";
         }
 

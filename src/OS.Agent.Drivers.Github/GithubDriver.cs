@@ -1,10 +1,14 @@
+using System.Text.Json;
+
+using Json.More;
+
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Teams.Api.Activities;
 
 using Octokit.GraphQL;
 using Octokit.GraphQL.Model;
 
 using OS.Agent.Drivers.Github.Models;
+using OS.Agent.Drivers.Models;
 using OS.Agent.Services;
 using OS.Agent.Storage.Models;
 
@@ -17,33 +21,33 @@ public class GithubDriver(IServiceProvider provider) : IChatDriver
     private Octokit.GitHubClient AppClient => provider.GetRequiredService<Octokit.GitHubClient>();
     private IAccountService Accounts => provider.GetRequiredService<IAccountService>();
 
-    public async Task<TActivity> Send<TActivity>(Account account, TActivity activity, CancellationToken cancellationToken = default) where TActivity : IActivity
+    public Task SignIn(SignInRequest request, CancellationToken cancellationToken = default)
     {
-        if (activity is not MessageActivity)
-        {
-            return activity;
-        }
+        throw new NotImplementedException();
+    }
 
-        if (activity.ReplyToId is not null && activity.Conversation.Type is not null && activity.Conversation.Type == "discussion")
-        {
-            activity.ReplyToId = null;
-        }
+    public Task Typing(TypingRequest request, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
+    }
 
-        var entity = account.Entities.GetRequired<GithubInstallEntity>();
+    public async Task<Message> Send(MessageRequest request, CancellationToken cancellationToken = default)
+    {
+        var entity = request.From.Entities.GetRequired<GithubInstallEntity>();
 
         if (entity.AccessToken.ExpiresAt >= DateTimeOffset.UtcNow.AddMinutes(-5))
         {
             entity.AccessToken = await AppClient.GitHubApps.CreateInstallationToken(entity.Install.Id);
-            await Accounts.Update(account, cancellationToken);
+            await Accounts.Update(request.From, cancellationToken);
         }
 
         var client = new Connection(new("TOS-Agent"), entity.AccessToken.Token);
         var query = new Mutation()
             .AddDiscussionComment(new AddDiscussionCommentInput()
             {
-                DiscussionId = new ID(activity.Conversation.Id),
-                ReplyToId = activity.ReplyToId is not null ? new(activity.ReplyToId) : null,
-                Body = activity is MessageActivity message ? message.Text : string.Empty
+                DiscussionId = new ID(request.Chat.SourceId),
+                ReplyToId = request is MessageReplyRequest reply ? new(reply.ReplyTo.SourceId) : null,
+                Body = request.Text
             })
             .Select(res => new GithubDiscussionComment()
             {
@@ -59,14 +63,29 @@ public class GithubDriver(IServiceProvider provider) : IChatDriver
             cancellationToken: cancellationToken
         );
 
-        activity.Id = comment.Id.ToString();
-        activity.ChannelData ??= new();
-        activity.ChannelData.Properties["github"] = comment;
-        return activity;
+        var message = new Message()
+        {
+            ChatId = request.Chat.Id,
+            AccountId = request.From.Id,
+            SourceId = comment.Id.ToString(),
+            SourceType = SourceType.Github,
+            Url = comment.Url,
+            Text = comment.Body,
+            Entities = [
+                new Entity("github.discussion.comment")
+                {
+                    Properties = comment.ToJsonDocument().Deserialize<Dictionary<string, JsonElement>>() ?? []
+                }
+            ]
+        };
+
+        return message;
     }
 
-    public async Task<MessageActivity> Reply(Account account, MessageActivity replyTo, MessageActivity message, CancellationToken cancellationToken = default)
+    public async Task<Message> Reply(MessageReplyRequest request, CancellationToken cancellationToken = default)
     {
-        return await Send(account, message, cancellationToken);
+        var message = await Send(request, cancellationToken);
+        message.ReplyToId = request.ReplyTo.Id;
+        return message;
     }
 }

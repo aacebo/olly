@@ -1,5 +1,4 @@
-using Microsoft.Teams.Api.Activities;
-
+using OS.Agent.Drivers.Models;
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers;
@@ -7,10 +6,13 @@ namespace OS.Agent.Drivers;
 public interface IDriver
 {
     SourceType Type { get; }
+
+    Task SignIn(SignInRequest request, CancellationToken cancellationToken = default);
 }
 
 public interface IChatDriver : IDriver
 {
-    Task<TActivity> Send<TActivity>(Account account, TActivity activity, CancellationToken cancellationToken = default) where TActivity : IActivity;
-    Task<MessageActivity> Reply(Account account, MessageActivity replyTo, MessageActivity message, CancellationToken cancellationToken = default);
+    Task Typing(TypingRequest request, CancellationToken cancellationToken = default);
+    Task<Message> Send(MessageRequest request, CancellationToken cancellationToken = default);
+    Task<Message> Reply(MessageReplyRequest request, CancellationToken cancellationToken = default);
 }

@@ -1,11 +1,8 @@
-using System.Text.Json;
-
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Teams.AI.Models.OpenAI;
-using Microsoft.Teams.Api.Activities;
 
 using OS.Agent.Drivers;
-using OS.Agent.Drivers.Teams.Models;
+using OS.Agent.Drivers.Models;
 using OS.Agent.Events;
 using OS.Agent.Services;
 using OS.Agent.Storage;
@@ -31,8 +28,10 @@ public interface IPromptContext
     CancellationToken CancellationToken { get; }
     IServiceProvider Services { get; }
 
-    Task Send<TActivity>(Account account, TActivity activity, CancellationToken cancellationToken = default) where TActivity : IActivity;
-    Task Reply(Account account, MessageActivity replyTo, MessageActivity message, CancellationToken cancellationToken = default);
+    Task SignIn(string url, string state);
+    Task Typing(string? text = null);
+    Task<Message> Send(string text, params Attachment[] attachments);
+    Task<Message> Reply(string text, params Attachment[] attachments);
 }
 
 public class PromptContext : IPromptContext
@@ -73,80 +72,58 @@ public class PromptContext : IPromptContext
         Services = scope.ServiceProvider;
     }
 
-    public async Task Send<TActivity>(Account account, TActivity activity, CancellationToken cancellationToken = default) where TActivity : IActivity
+    public async Task SignIn(string url, string state)
     {
-        activity.ReplyToId = Message.SourceId;
-        activity.Conversation = new()
+        await Driver.SignIn(new()
         {
-            Id = Chat.SourceId,
-            Type = Chat.Type is not null ? new(Chat.Type) : new("personal"),
-            Name = Chat.Name
-        };
-
-        var res = await Driver.Send(account, activity, cancellationToken);
-
-        if (res is MessageActivity message)
-        {
-            if (string.IsNullOrEmpty(message.Id)) return;
-
-            await Storage.Messages.Create(new()
-            {
-                ChatId = Chat.Id,
-                ReplyToId = Message.Id,
-                SourceType = Message.SourceType,
-                SourceId = message.Id,
-                Text = message.Text,
-                Attachments = (message.Attachments ?? []).Select(attachment => new Attachment()
-                {
-                    Id = attachment.Id,
-                    Name = attachment.Name,
-                    ContentType = attachment.ContentType,
-                    Content = attachment.ContentUrl ?? JsonSerializer.Serialize(attachment.Content)
-                }).ToList(),
-                Entities = [
-                    new TeamsMessageEntity()
-                    {
-                        Activity = message
-                    }
-                ]
-            }, cancellationToken: cancellationToken);
-        }
+            Chat = Chat,
+            From = Account,
+            Url = url,
+            State = state
+        }, CancellationToken);
     }
 
-    public async Task Reply(Account account, MessageActivity replyTo, MessageActivity message, CancellationToken cancellationToken = default)
+    public async Task Typing(string? text = null)
     {
-        message.ReplyToId = Message.SourceId;
-        message.Conversation = new()
+        var request = new TypingRequest()
         {
-            Id = Chat.SourceId,
-            Type = Chat.Type is not null ? new(Chat.Type) : new("personal"),
-            Name = Chat.Name
+            Text = text,
+            Chat = Chat,
+            From = Account
         };
 
-        await Driver.Reply(account, replyTo, message, cancellationToken);
+        await Driver.Typing(request, CancellationToken);
+    }
 
-        if (string.IsNullOrEmpty(message.Id)) return;
-
-        await Storage.Messages.Create(new()
+    public async Task<Message> Send(string text, params Attachment[] attachments)
+    {
+        var request = new MessageRequest()
         {
-            ChatId = Chat.Id,
-            ReplyToId = Message.Id,
-            SourceType = Message.SourceType,
-            SourceId = message.Id,
-            Text = message.Text,
-            Attachments = (message.Attachments ?? []).Select(attachment => new Attachment()
-            {
-                Id = attachment.Id,
-                Name = attachment.Name,
-                ContentType = attachment.ContentType,
-                Content = attachment.ContentUrl ?? JsonSerializer.Serialize(attachment.Content)
-            }).ToList(),
-            Entities = [
-                new TeamsMessageEntity()
-                {
-                    Activity = message
-                }
-            ]
-        }, cancellationToken: cancellationToken);
+            Text = text,
+            Attachments = attachments,
+            Chat = Chat,
+            From = Account
+        };
+
+        var message = await Driver.Send(request, CancellationToken);
+        if (string.IsNullOrEmpty(message.SourceId)) return message;
+        return await Storage.Messages.Create(message, cancellationToken: CancellationToken);
+    }
+
+    public async Task<Message> Reply(string text, params Attachment[] attachments)
+    {
+        var request = new MessageReplyRequest()
+        {
+            Text = text,
+            Attachments = attachments,
+            Chat = Chat,
+            From = Account,
+            ReplyTo = Message,
+            ReplyToAccount = Account
+        };
+
+        var message = await Driver.Reply(request, CancellationToken);
+        if (string.IsNullOrEmpty(message.SourceId)) return message;
+        return await Storage.Messages.Create(message, cancellationToken: CancellationToken);
     }
 }

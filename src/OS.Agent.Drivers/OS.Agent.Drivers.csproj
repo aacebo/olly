@@ -4,10 +4,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Teams.Api" Version="2.*" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\OS.Agent.Storage\OS.Agent.Storage.csproj" />
   </ItemGroup>
 </Project>

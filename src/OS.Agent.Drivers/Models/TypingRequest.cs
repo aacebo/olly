@@ -4,13 +4,10 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Models;
 
-public class MessageRequest
+public class TypingRequest
 {
     [JsonPropertyName("text")]
-    public required string Text { get; set; }
-
-    [JsonPropertyName("attachments")]
-    public IList<Attachment> Attachments { get; set; } = [];
+    public string? Text { get; set; }
 
     [JsonPropertyName("from")]
     public required Account From { get; set; }

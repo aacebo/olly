@@ -6,12 +6,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Teams.AI;
 using Microsoft.Teams.AI.Messages;
 using Microsoft.Teams.AI.Models.OpenAI;
-using Microsoft.Teams.Api.Activities;
 using Microsoft.Teams.Apps;
 
 using NetMQ;
 
-using OS.Agent.Drivers.Teams.Models;
 using OS.Agent.Events;
 using OS.Agent.Prompts;
 using OS.Agent.Services;
@@ -97,7 +95,7 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
 
     private async Task<bool> OnCreateEvent(Event<MessageEvent> _, IPromptContext context, OpenAIChatPrompt prompt, CancellationToken cancellationToken = default)
     {
-        await context.Send(context.Account, new TypingActivity(), cancellationToken);
+        await context.Typing();
 
         var messages = await context.Messages.GetByChatId(
             context.Chat.Id,
@@ -118,14 +116,13 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
             Messages = memory
         }, null, cancellationToken);
 
-        var message = new MessageActivity(res.Content);
-        await context.Send(context.Account, message, cancellationToken);
+        await context.Reply(res.Content);
         return true;
     }
 
-    private async Task<bool> OnResumeEvent(Event<MessageEvent> @event, IPromptContext context, OpenAIChatPrompt prompt, CancellationToken cancellationToken = default)
+    private async Task<bool> OnResumeEvent(Event<MessageEvent> _, IPromptContext context, OpenAIChatPrompt prompt, CancellationToken cancellationToken = default)
     {
-        await context.Send(context.Account, new TypingActivity(), cancellationToken);
+        await context.Typing();
 
         var messages = await context.Messages.GetByChatId(
             context.Chat.Id,
@@ -146,9 +143,7 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
             Messages = memory
         }, null, cancellationToken);
 
-        var message = new MessageActivity(res.Content);
-        var replyTo = @event.Body.Message.Entities.GetRequired<TeamsMessageEntity>();
-        await context.Reply(context.Account, replyTo.Activity, message, cancellationToken);
+        await context.Reply(res.Content);
         return true;
     }
 }
