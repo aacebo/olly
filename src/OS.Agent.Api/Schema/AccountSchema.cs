@@ -9,7 +9,7 @@ public class AccountSchema(Storage.Models.Account account)
     public Guid Id { get; init; } = account.Id;
 
     [GraphQLName("source")]
-    public SourceSchema Source { get; set; } = new(account.SourceId, account.SourceType);
+    public SourceSchema Source { get; set; } = new(account.SourceId, account.SourceType, account.Url);
 
     [GraphQLName("name")]
     public string? Name { get; set; } = account.Name;

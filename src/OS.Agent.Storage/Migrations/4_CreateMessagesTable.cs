@@ -14,6 +14,7 @@ public class CreateMessagesTable : Migration
             .WithColumn("reply_to_id").AsGuid().ForeignKey("messages", "id").Nullable()
             .WithColumn("source_id").AsString().NotNullable()
             .WithColumn("source_type").AsString().NotNullable()
+            .WithColumn("url").AsString().Nullable()
             .WithColumn("text").AsString().NotNullable()
             .WithColumn("attachments").AsCustom("JSONB").NotNullable()
             .WithColumn("entities").AsCustom("JSONB").NotNullable()

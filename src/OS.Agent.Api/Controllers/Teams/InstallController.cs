@@ -49,6 +49,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
                 TenantId = tenant.Id,
                 SourceId = context.Activity.Conversation.Id,
                 SourceType = SourceType.Teams,
+                Url = context.Activity.ServiceUrl,
                 Type = context.Activity.Conversation.Type?.ToString(),
                 Name = context.Activity.Conversation.Name,
                 Entities = [
@@ -64,6 +65,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
         {
             chat.Name = context.Activity.Conversation.Name;
             chat.Type = context.Activity.Conversation.Type?.ToString();
+            chat.Url = context.Activity.ServiceUrl;
             chat.Entities.Put(new TeamsChatEntity()
             {
                 Conversation = context.Activity.Conversation,

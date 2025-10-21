@@ -39,6 +39,7 @@ public class MessageController(IServiceScopeFactory scopeFactory)
             ChatId = chat.Id,
             SourceId = context.Activity.Id,
             SourceType = SourceType.Teams,
+            Url = $"{context.Activity.ServiceUrl}v3/conversations/{context.Activity.Conversation.Id}/activities/{context.Activity.Id}",
             Text = context.Activity.Text,
             Entities = [
                 new TeamsMessageEntity()

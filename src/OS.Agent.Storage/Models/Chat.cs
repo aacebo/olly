@@ -27,6 +27,10 @@ public class Chat : Model
     [JsonPropertyName("source_type")]
     public required SourceType SourceType { get; init; }
 
+    [Column("url")]
+    [JsonPropertyName("url")]
+    public string? Url { get; set; }
+
     [Column("type")]
     [JsonPropertyName("type")]
     public string? Type { get; set; }

@@ -77,9 +77,9 @@ public class MessageStorage(ILogger<IMessageStorage> logger, QueryFactory db) : 
         using var cmd = new NpgsqlCommand(
         """
             INSERT INTO messages
-            (id, chat_id, account_id, reply_to_id, source_id, source_type, text, attachments, entities, created_at, updated_at)
+            (id, chat_id, account_id, reply_to_id, source_id, source_type, url, text, attachments, entities, created_at, updated_at)
             VALUES
-            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         """, (NpgsqlConnection)db.Connection)
         {
             Parameters =
@@ -90,6 +90,7 @@ public class MessageStorage(ILogger<IMessageStorage> logger, QueryFactory db) : 
                 new() { Value = value.ReplyToId is null ? DBNull.Value : value.ReplyToId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.SourceId, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Url is null ? DBNull.Value : value.Url, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Text, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Attachments, NpgsqlDbType = NpgsqlDbType.Jsonb },
                 new() { Value = value.Entities, NpgsqlDbType = NpgsqlDbType.Jsonb },
@@ -114,11 +115,12 @@ public class MessageStorage(ILogger<IMessageStorage> logger, QueryFactory db) : 
                 reply_to_id = $4,
                 source_id = $5,
                 source_type = $6,
-                text = $7,
-                attachments = $8,
-                entities = $9,
-                created_at = $10,
-                updated_at = $11
+                url = $7,
+                text = $8,
+                attachments = $9,
+                entities = $10,
+                created_at = $11,
+                updated_at = $12
             WHERE id = $1
         """, (NpgsqlConnection)db.Connection)
         {
@@ -130,6 +132,7 @@ public class MessageStorage(ILogger<IMessageStorage> logger, QueryFactory db) : 
                 new() { Value = value.ReplyToId is null ? DBNull.Value : value.ReplyToId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.SourceId, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Url is null ? DBNull.Value : value.Url, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Text, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Attachments, NpgsqlDbType = NpgsqlDbType.Jsonb },
                 new() { Value = value.Entities, NpgsqlDbType = NpgsqlDbType.Jsonb },

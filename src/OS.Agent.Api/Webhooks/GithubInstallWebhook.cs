@@ -39,6 +39,7 @@ public class GithubInstallWebhook(IServiceScopeFactory scopeFactory) : WebhookEv
                 TenantId = tenant.Id,
                 SourceType = SourceType.Github,
                 SourceId = @event.Installation.Account.NodeId,
+                Url = @event.Installation.Account.Url,
                 Name = @event.Installation.Account.Login,
                 Entities = [
                     new GithubUserEntity()
@@ -66,6 +67,7 @@ public class GithubInstallWebhook(IServiceScopeFactory scopeFactory) : WebhookEv
         else
         {
             account.Name = @event.Installation.Account.Login;
+            account.Url = @event.Installation.Account.Url;
             account.Entities.Put(new GithubUserEntity()
             {
                 User = new()
@@ -95,7 +97,8 @@ public class GithubInstallWebhook(IServiceScopeFactory scopeFactory) : WebhookEv
             tenant.Sources.Add(new()
             {
                 Type = SourceType.Github,
-                Id = @event.Installation.Id.ToString()
+                Id = @event.Installation.Id.ToString(),
+                Url = @event.Installation.HtmlUrl
             });
 
             await tenants.Update(tenant, cancellationToken);

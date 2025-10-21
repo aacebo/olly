@@ -9,15 +9,20 @@ public class SourceSchema
     [GraphQLName("type")]
     public string Type { get; set; }
 
+    [GraphQLName("url")]
+    public string? Url { get; set; }
+
     public SourceSchema(Storage.Models.Source source)
     {
         Id = source.Id;
         Type = source.Type;
+        Url = source.Url;
     }
 
-    public SourceSchema(string id, string type)
+    public SourceSchema(string id, string type, string? url = null)
     {
         Id = id;
         Type = type;
+        Url = url;
     }
 }

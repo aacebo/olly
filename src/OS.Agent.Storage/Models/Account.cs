@@ -27,6 +27,10 @@ public class Account : Model
     [JsonPropertyName("source_type")]
     public required SourceType SourceType { get; init; }
 
+    [Column("url")]
+    [JsonPropertyName("url")]
+    public string? Url { get; set; }
+
     [Column("name")]
     [JsonPropertyName("name")]
     public string? Name { get; set; }

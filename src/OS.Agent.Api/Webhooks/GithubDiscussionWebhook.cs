@@ -37,6 +37,7 @@ public class GithubDiscussionWebhook(IServiceScopeFactory scopeFactory) : Webhoo
                 TenantId = tenant.Id,
                 SourceId = @event.Discussion.User.NodeId,
                 SourceType = SourceType.Github,
+                Url = @event.Discussion.User.Url,
                 Name = @event.Discussion.User.Login,
                 Entities = [
                     new GithubUserEntity()
@@ -74,6 +75,7 @@ public class GithubDiscussionWebhook(IServiceScopeFactory scopeFactory) : Webhoo
                     AvatarUrl = @event.Discussion.User.AvatarUrl
                 };
 
+                account.Url = @event.Discussion.User.Url;
                 account = await accounts.Update(account, cancellationToken);
             }
         }
@@ -87,6 +89,7 @@ public class GithubDiscussionWebhook(IServiceScopeFactory scopeFactory) : Webhoo
                 TenantId = tenant.Id,
                 SourceId = @event.Discussion.NodeId,
                 SourceType = SourceType.Github,
+                Url = @event.Discussion.HtmlUrl,
                 Type = "discussion",
                 Name = @event.Discussion.Title,
                 Entities = [
@@ -101,6 +104,7 @@ public class GithubDiscussionWebhook(IServiceScopeFactory scopeFactory) : Webhoo
         {
             chat.Name = @event.Discussion.Title;
             chat.Type = "discussion";
+            chat.Url = @event.Discussion.HtmlUrl;
             chat.Entities.Put(new GithubDiscussionEntity()
             {
                 Discussion = @event.Discussion
@@ -119,12 +123,14 @@ public class GithubDiscussionWebhook(IServiceScopeFactory scopeFactory) : Webhoo
                 ChatId = chat.Id,
                 SourceId = @event.Discussion.NodeId,
                 SourceType = SourceType.Github,
+                Url = @event.Discussion.HtmlUrl,
                 Text = @event.Discussion.Body
             }, cancellationToken);
         }
         else
         {
             message.Text = @event.Discussion.Body;
+            message.Url = @event.Discussion.HtmlUrl;
             await messages.Update(message, cancellationToken);
         }
     }

@@ -13,6 +13,7 @@ public class CreateAccountsTable : Migration
             .WithColumn("tenant_id").AsGuid().ForeignKey("tenants", "id").NotNullable()
             .WithColumn("source_id").AsString().NotNullable()
             .WithColumn("source_type").AsString().NotNullable()
+            .WithColumn("url").AsString().Nullable()
             .WithColumn("name").AsString().Nullable()
             .WithColumn("entities").AsCustom("JSONB").NotNullable()
             .WithColumn("created_at").AsDateTimeOffset().NotNullable()

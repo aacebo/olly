@@ -9,7 +9,7 @@ public class MessageSchema(Storage.Models.Message message)
     public Guid Id { get; init; } = message.Id;
 
     [GraphQLName("source")]
-    public SourceSchema Source { get; set; } = new(message.SourceId, message.SourceType);
+    public SourceSchema Source { get; set; } = new(message.SourceId, message.SourceType, message.Url);
 
     [GraphQLName("text")]
     public string Text { get; set; } = message.Text;

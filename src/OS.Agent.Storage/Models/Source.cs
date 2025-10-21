@@ -11,16 +11,21 @@ public class Source : Model, IEquatable<Source>
     [JsonPropertyName("type")]
     public required SourceType Type { get; set; }
 
-    public static Source Teams(string id) => new()
+    [JsonPropertyName("url")]
+    public string? Url { get; set; }
+
+    public static Source Teams(string id, string? url = null) => new()
     {
         Type = SourceType.Teams,
-        Id = id
+        Id = id,
+        Url = url
     };
 
-    public static Source Github(string id) => new()
+    public static Source Github(string id, string? url = null) => new()
     {
         Type = SourceType.Github,
-        Id = id
+        Id = id,
+        Url = url
     };
 
     public override bool Equals(object? other) => Equals(other as Source);

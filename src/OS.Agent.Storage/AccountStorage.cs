@@ -94,9 +94,9 @@ public class AccountStorage(ILogger<IAccountStorage> logger, QueryFactory db) : 
         using var cmd = new NpgsqlCommand(
         """
             INSERT INTO accounts
-            (id, user_id, tenant_id, source_id, source_type, name, entities, created_at, updated_at)
+            (id, user_id, tenant_id, source_id, source_type, url, name, entities, created_at, updated_at)
             VALUES
-            ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         """, (NpgsqlConnection)db.Connection)
         {
             Parameters =
@@ -106,6 +106,7 @@ public class AccountStorage(ILogger<IAccountStorage> logger, QueryFactory db) : 
                 new() { Value = value.TenantId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.SourceId, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Url is null ? DBNull.Value : value.Url, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Name is null ? DBNull.Value : value.Name, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Entities, NpgsqlDbType = NpgsqlDbType.Jsonb },
                 new() { Value = value.CreatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
@@ -128,10 +129,11 @@ public class AccountStorage(ILogger<IAccountStorage> logger, QueryFactory db) : 
                 tenant_id = $3,
                 source_id = $4,
                 source_type = $5,
-                name = $6,
-                entities = $7,
-                created_at = $8,
-                updated_at = $9
+                url = $6,
+                name = $7,
+                entities = $8,
+                created_at = $9,
+                updated_at = $10
             WHERE id = $1
         """, (NpgsqlConnection)db.Connection)
         {
@@ -142,6 +144,7 @@ public class AccountStorage(ILogger<IAccountStorage> logger, QueryFactory db) : 
                 new() { Value = value.TenantId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.SourceId, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Url is null ? DBNull.Value : value.Url, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Name is null ? DBNull.Value : value.Name, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Entities, NpgsqlDbType = NpgsqlDbType.Jsonb },
                 new() { Value = value.CreatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },

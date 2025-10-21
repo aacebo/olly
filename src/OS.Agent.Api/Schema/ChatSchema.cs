@@ -9,7 +9,7 @@ public class ChatSchema(Storage.Models.Chat chat)
     public Guid Id { get; init; } = chat.Id;
 
     [GraphQLName("source")]
-    public SourceSchema Source { get; set; } = new(chat.SourceId, chat.SourceType);
+    public SourceSchema Source { get; set; } = new(chat.SourceId, chat.SourceType, chat.Url);
 
     [GraphQLName("type")]
     public string? Type { get; set; } = chat.Type;

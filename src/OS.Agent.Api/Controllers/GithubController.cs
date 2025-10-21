@@ -62,6 +62,7 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
                 TenantId = tenant.Id,
                 SourceType = SourceType.Github,
                 SourceId = user.NodeId,
+                Url = user.Url,
                 Name = user.Login,
                 Entities = [
                     new GithubUserEntity()
@@ -116,7 +117,8 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
             tenant.Sources.Add(new()
             {
                 Id = installationId.ToString(),
-                Type = SourceType.Github
+                Type = SourceType.Github,
+                Url = install.HtmlUrl
             });
 
             await Tenants.Update(tenant, cancellationToken);

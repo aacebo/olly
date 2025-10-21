@@ -26,10 +26,7 @@ public class ChatController(IServiceScopeFactory scopeFactory)
             context.CancellationToken
         );
 
-        if (tenant is null)
-        {
-            return;
-        }
+        if (tenant is null) return;
 
         var chat = await chats.GetBySourceId(
             tenant.Id,
@@ -45,6 +42,7 @@ public class ChatController(IServiceScopeFactory scopeFactory)
                 TenantId = tenant.Id,
                 SourceId = context.Activity.Conversation.Id,
                 SourceType = SourceType.Teams,
+                Url = context.Activity.ServiceUrl,
                 Type = context.Activity.Conversation.Type?.ToString(),
                 Name = context.Activity.Conversation.Name,
                 Entities = [
@@ -60,6 +58,7 @@ public class ChatController(IServiceScopeFactory scopeFactory)
         {
             chat.Name = context.Activity.Conversation.Name;
             chat.Type = context.Activity.Conversation.Type?.ToString();
+            chat.Url = context.Activity.ServiceUrl;
             chat.Entities.Put(new TeamsChatEntity()
             {
                 Conversation = context.Activity.Conversation,

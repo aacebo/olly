@@ -31,6 +31,10 @@ public class Message : Model
     [JsonPropertyName("source_type")]
     public required SourceType SourceType { get; init; }
 
+    [Column("url")]
+    [JsonPropertyName("url")]
+    public string? Url { get; set; }
+
     [Column("text")]
     [JsonPropertyName("text")]
     public required string Text { get; set; }

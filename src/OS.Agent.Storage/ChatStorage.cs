@@ -76,9 +76,9 @@ public class ChatStorage(ILogger<IChatStorage> logger, QueryFactory db) : IChatS
         using var cmd = new NpgsqlCommand(
         """
             INSERT INTO chats
-            (id, tenant_id, parent_id, source_id, source_type, type, name, entities, created_at, updated_at)
+            (id, tenant_id, parent_id, source_id, source_type, url, type, name, entities, created_at, updated_at)
             VALUES
-            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         """, (NpgsqlConnection)db.Connection)
         {
             Parameters =
@@ -88,6 +88,7 @@ public class ChatStorage(ILogger<IChatStorage> logger, QueryFactory db) : IChatS
                 new() { Value = value.ParentId is null ? DBNull.Value : value.ParentId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.SourceId, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Url is null ? DBNull.Value : value.Url, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Type is null ? DBNull.Value : value.Type, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Name is null ? DBNull.Value : value.Name, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Entities, NpgsqlDbType = NpgsqlDbType.Jsonb },
@@ -111,11 +112,12 @@ public class ChatStorage(ILogger<IChatStorage> logger, QueryFactory db) : IChatS
                 parent_id = $3,
                 source_id = $4,
                 source_type = $5,
-                type = $6,
-                name = $7,
-                entities = $8,
-                created_at = $9,
-                updated_at = $10
+                url = $6,
+                type = $7,
+                name = $8,
+                entities = $9,
+                created_at = $10,
+                updated_at = $11
             WHERE id = $1
         """, (NpgsqlConnection)db.Connection)
         {
@@ -126,6 +128,7 @@ public class ChatStorage(ILogger<IChatStorage> logger, QueryFactory db) : IChatS
                 new() { Value = value.ParentId is null ? DBNull.Value : value.ParentId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.SourceId, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Url is null ? DBNull.Value : value.Url, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Type is null ? DBNull.Value : value.Type, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Name is null ? DBNull.Value : value.Name, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Entities, NpgsqlDbType = NpgsqlDbType.Jsonb },
