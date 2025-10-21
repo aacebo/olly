@@ -15,6 +15,7 @@ namespace OS.Agent.Storage;
 public interface IChatStorage
 {
     Task<Chat?> GetById(Guid id, CancellationToken cancellationToken = default);
+    Task<PaginationResult<Chat>> GetByTenantId(Guid tenantId, Page? page = null, CancellationToken cancellationToken = default);
     Task<Chat?> GetBySourceId(Guid tenantId, SourceType type, string sourceId, CancellationToken cancellationToken = default);
     Task<IEnumerable<Chat>> GetByParentId(Guid parentId, CancellationToken cancellationToken = default);
     Task<Chat> Create(Chat value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
@@ -32,6 +33,19 @@ public class ChatStorage(ILogger<IChatStorage> logger, QueryFactory db) : IChatS
             .Select("*")
             .Where("id", "=", id)
             .FirstOrDefaultAsync<Chat?>(cancellationToken: cancellationToken);
+    }
+
+    public async Task<PaginationResult<Chat>> GetByTenantId(Guid tenantId, Page? page = null, CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("GetByTenantId");
+        page ??= new();
+        var query = db
+            .Query()
+            .Select("*")
+            .From("chats")
+            .Where("tenant_id", "=", tenantId);
+
+        return await page.Invoke<Chat>(query, cancellationToken);
     }
 
     public async Task<Chat?> GetBySourceId(Guid tenantId, SourceType type, string sourceId, CancellationToken cancellationToken = default)

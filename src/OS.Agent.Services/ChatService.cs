@@ -7,11 +7,14 @@ using OS.Agent.Events;
 using OS.Agent.Storage;
 using OS.Agent.Storage.Models;
 
+using SqlKata.Execution;
+
 namespace OS.Agent.Services;
 
 public interface IChatService
 {
     Task<Chat?> GetById(Guid id, CancellationToken cancellationToken = default);
+    Task<PaginationResult<Chat>> GetByTenantId(Guid tenantId, Page? page = null, CancellationToken cancellationToken = default);
     Task<Chat?> GetBySourceId(Guid tenantId, SourceType type, string sourceId, CancellationToken cancellationToken = default);
     Task<IEnumerable<Chat>> GetByParentId(Guid parentId, CancellationToken cancellationToken = default);
     Task<Chat> Create(Chat value, CancellationToken cancellationToken = default);
@@ -43,6 +46,11 @@ public class ChatService(IServiceProvider provider) : IChatService
         }
 
         return chat;
+    }
+
+    public async Task<PaginationResult<Chat>> GetByTenantId(Guid tenantId, Page? page = null, CancellationToken cancellationToken = default)
+    {
+        return await Storage.GetByTenantId(tenantId, page, cancellationToken);
     }
 
     public async Task<Chat?> GetBySourceId(Guid tenantId, SourceType type, string sourceId, CancellationToken cancellationToken = default)

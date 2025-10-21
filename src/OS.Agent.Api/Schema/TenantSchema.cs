@@ -9,7 +9,7 @@ public class TenantSchema(Storage.Models.Tenant tenant)
     public Guid Id { get; init; } = tenant.Id;
 
     [GraphQLName("sources")]
-    public IList<Storage.Models.Source> Sources { get; set; } = tenant.Sources;
+    public IEnumerable<SourceSchema> Sources { get; set; } = tenant.Sources.Select(src => new SourceSchema(src));
 
     [GraphQLName("name")]
     public string? Name { get; set; } = tenant.Name;
@@ -28,5 +28,12 @@ public class TenantSchema(Storage.Models.Tenant tenant)
     {
         var accounts = await accountService.GetByTenantId(Id, cancellationToken);
         return accounts.Select(account => new AccountSchema(account));
+    }
+
+    [GraphQLName("chats")]
+    public async Task<IEnumerable<ChatSchema>> GetChats([Service] IChatService chatService, CancellationToken cancellationToken = default)
+    {
+        var chats = await chatService.GetByTenantId(Id, cancellationToken: cancellationToken);
+        return chats.List.Select(chat => new ChatSchema(chat));
     }
 }

@@ -9,8 +9,7 @@ public class AccountSchema(Storage.Models.Account account)
     public Guid Id { get; init; } = account.Id;
 
     [GraphQLName("source_type")]
-    [GraphQLType(typeof(EnumSchema<Storage.Models.SourceType>))]
-    public Storage.Models.SourceType SourceType { get; set; } = account.SourceType;
+    public string SourceType { get; set; } = account.SourceType;
 
     [GraphQLName("source_id")]
     public string SourceId { get; set; } = account.SourceId;
