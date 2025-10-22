@@ -60,4 +60,11 @@ public class ChatSchema(Storage.Models.Chat chat) : ModelSchema
         var messages = await messageService.GetByChatId(Id, cancellationToken: cancellationToken);
         return messages.List.Select(message => new MessageSchema(message));
     }
+
+    [GraphQLName("records")]
+    public async Task<IEnumerable<RecordSchema>> GetRecords([Service] IRecordService recordService, CancellationToken cancellationToken = default)
+    {
+        var records = await recordService.GetByChatId(Id, cancellationToken: cancellationToken);
+        return records.List.Select(record => new RecordSchema(record));
+    }
 }

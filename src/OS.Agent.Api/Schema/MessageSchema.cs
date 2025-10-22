@@ -54,4 +54,11 @@ public class MessageSchema(Storage.Models.Message message) : ModelSchema
         var replyTo = await messageService.GetById(message.ReplyToId.Value, cancellationToken);
         return replyTo is null ? null : new(replyTo);
     }
+
+    [GraphQLName("records")]
+    public async Task<IEnumerable<RecordSchema>> GetRecords([Service] IRecordService recordService, CancellationToken cancellationToken = default)
+    {
+        var records = await recordService.GetByMessageId(Id, cancellationToken: cancellationToken);
+        return records.List.Select(record => new RecordSchema(record));
+    }
 }

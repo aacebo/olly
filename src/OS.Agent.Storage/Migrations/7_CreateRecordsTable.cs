@@ -9,7 +9,6 @@ public class CreateRecordsTable : Migration
     {
         Create.Table("records")
             .WithColumn("id").AsGuid().PrimaryKey()
-            .WithColumn("tenant_id").AsGuid().ForeignKey("tenants", "id").NotNullable()
             .WithColumn("parent_id").AsGuid().ForeignKey("records", "id").Nullable()
             .WithColumn("source_id").AsString().NotNullable()
             .WithColumn("source_type").AsString().NotNullable()
@@ -22,7 +21,43 @@ public class CreateRecordsTable : Migration
 
         Create.UniqueConstraint()
             .OnTable("records")
-            .Columns("tenant_id", "source_id", "source_type");
+            .Columns("source_id", "source_type");
+
+        Create.Table("tenants_records")
+            .WithColumn("tenant_id").AsGuid().ForeignKey("tenants", "id").NotNullable()
+            .WithColumn("record_id").AsGuid().ForeignKey("records", "id").NotNullable()
+            .WithColumn("created_at").AsDateTimeOffset().NotNullable();
+
+        Create.PrimaryKey()
+            .OnTable("tenants_records")
+            .Columns("tenant_id", "record_id");
+
+        Create.Table("accounts_records")
+            .WithColumn("account_id").AsGuid().ForeignKey("accounts", "id").NotNullable()
+            .WithColumn("record_id").AsGuid().ForeignKey("records", "id").NotNullable()
+            .WithColumn("created_at").AsDateTimeOffset().NotNullable();
+
+        Create.PrimaryKey()
+            .OnTable("accounts_records")
+            .Columns("account_id", "record_id");
+
+        Create.Table("chats_records")
+            .WithColumn("chat_id").AsGuid().ForeignKey("chats", "id").NotNullable()
+            .WithColumn("record_id").AsGuid().ForeignKey("records", "id").NotNullable()
+            .WithColumn("created_at").AsDateTimeOffset().NotNullable();
+
+        Create.PrimaryKey()
+            .OnTable("chats_records")
+            .Columns("chat_id", "record_id");
+
+        Create.Table("messages_records")
+            .WithColumn("message_id").AsGuid().ForeignKey("messages", "id").NotNullable()
+            .WithColumn("record_id").AsGuid().ForeignKey("records", "id").NotNullable()
+            .WithColumn("created_at").AsDateTimeOffset().NotNullable();
+
+        Create.PrimaryKey()
+            .OnTable("messages_records")
+            .Columns("message_id", "record_id");
     }
 
     public override void Down()

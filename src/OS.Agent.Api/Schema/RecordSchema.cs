@@ -26,19 +26,6 @@ public class RecordSchema(Storage.Models.Record record) : ModelSchema
     [GraphQLName("updated_at")]
     public DateTimeOffset UpdatedAt { get; set; } = record.UpdatedAt;
 
-    [GraphQLName("tenant")]
-    public async Task<TenantSchema> GetTenant([Service] ITenantService tenantService, CancellationToken cancellationToken = default)
-    {
-        var tenant = await tenantService.GetById(record.TenantId, cancellationToken);
-
-        if (tenant is null)
-        {
-            throw new InvalidDataException();
-        }
-
-        return new(tenant);
-    }
-
     [GraphQLName("parent")]
     public async Task<RecordSchema?> GetParent([Service] IRecordService recordService, CancellationToken cancellationToken = default)
     {

@@ -11,10 +11,6 @@ public class Record : Model
     [JsonPropertyName("id")]
     public Guid Id { get; init; } = Guid.NewGuid();
 
-    [Column("tenant_id")]
-    [JsonPropertyName("tenant_id")]
-    public required Guid TenantId { get; init; }
-
     [Column("parent_id")]
     [JsonPropertyName("parent_id")]
     public Guid? ParentId { get; set; }
