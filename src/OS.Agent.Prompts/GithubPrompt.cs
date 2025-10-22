@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Teams.AI.Annotations;
 
 using Octokit.GraphQL;
-using Octokit.Internal;
 
 using OS.Agent.Drivers.Github;
 using OS.Agent.Errors;
@@ -40,27 +39,9 @@ public class GithubPrompt(IPromptContext context)
     [Function.Description("get a list of the users Github repositories")]
     public async Task<string> GetRepositoriesByAccountId([Param] Guid accountId)
     {
-        var account = await context.Accounts.GetById(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
         var install = await context.Installs.GetByAccountId(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account install not found");
-
-        if (install.ExpiresAt is null || install.ExpiresAt <= DateTimeOffset.UtcNow.AddMinutes(5))
-        {
-            var accessToken = await context.AppGithub.GitHubApps.CreateInstallationToken(long.Parse(install.SourceId));
-            install.AccessToken = accessToken.Token;
-            install.ExpiresAt = accessToken.ExpiresAt;
-            install = await context.Installs.Update(install, context.CancellationToken);
-        }
-
-        var adapter = new HttpClientAdapter(() => new GithubTokenRefreshHandler(context.Services, install));
-        var connection = new Octokit.Connection(new Octokit.ProductHeaderValue("TOS-Agent"), adapter)
-        {
-            Credentials = new Octokit.Credentials(
-                install.AccessToken,
-                Octokit.AuthenticationType.Bearer
-            )
-        };
-
-        var client = new Octokit.GitHubClient(connection);
+        var github = context.Services.GetRequiredService<GithubService>();
+        var client = new Octokit.GitHubClient(await github.GetRestConnection(install, context.CancellationToken));
         var res = await client.GitHubApps.Installation.GetAllRepositoriesForCurrent();
         return JsonSerializer.Serialize(res.Repositories, SerializationOptions);
     }
@@ -71,20 +52,8 @@ public class GithubPrompt(IPromptContext context)
     {
         var account = await context.Accounts.GetById(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
         var install = await context.Installs.GetByAccountId(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account install not found");
-
-        if (install.ExpiresAt is null || install.ExpiresAt <= DateTimeOffset.UtcNow.AddMinutes(5))
-        {
-            var accessToken = await context.AppGithub.GitHubApps.CreateInstallationToken(long.Parse(install.SourceId));
-            install.AccessToken = accessToken.Token;
-            install.ExpiresAt = accessToken.ExpiresAt;
-            install = await context.Installs.Update(install, context.CancellationToken);
-        }
-
-        var client = new Connection(
-            new ProductHeaderValue("TOS-Agent"),
-            install.AccessToken
-        );
-
+        var github = context.Services.GetRequiredService<GithubService>();
+        var client = await github.GetGraphConnection(install, context.CancellationToken);
         var query = new Query()
             .RepositoryOwner(account.Name)
             .Repository(repositoryName)

@@ -16,15 +16,7 @@ public partial class GithubDriver
 
     public async Task<Message> Send(MessageRequest request, CancellationToken cancellationToken = default)
     {
-        if (request.Install.ExpiresAt is null || request.Install.ExpiresAt >= DateTimeOffset.UtcNow.AddMinutes(-5))
-        {
-            var accessToken = await AppClient.GitHubApps.CreateInstallationToken(long.Parse(request.Install.SourceId));
-            request.Install.AccessToken = accessToken.Token;
-            request.Install.ExpiresAt = accessToken.ExpiresAt;
-            await Installs.Update(request.Install, cancellationToken);
-        }
-
-        var client = new Connection(new("TOS-Agent"), request.Install.AccessToken);
+        var client = await Github.GetGraphConnection(request.Install, cancellationToken);
         var query = new Mutation()
             .AddDiscussionComment(new AddDiscussionCommentInput()
             {

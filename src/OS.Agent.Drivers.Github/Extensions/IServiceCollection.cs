@@ -19,6 +19,7 @@ public static class IServiceCollectionExtensions
         var jsonOptions = provider.GetRequiredService<JsonSerializerOptions>();
 
         services.AddScoped<GithubDriver>();
+        services.AddScoped<GithubService>();
         services.AddScoped<IDriver>(provider => provider.GetRequiredService<GithubDriver>());
         services.AddScoped<IChatDriver>(provider => provider.GetRequiredService<GithubDriver>());
         services.AddSingleton(provider =>

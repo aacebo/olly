@@ -1,6 +1,5 @@
-using System.Text.Json;
-
-using Json.More;
+using System.Reflection;
+using System.Text.Json.Serialization;
 
 namespace OS.Agent.Api.Schema;
 
@@ -10,19 +9,26 @@ public class EntitySchema
     [GraphQLName("type")]
     public string Type { get; set; }
 
+    [GraphQLType(typeof(AnyType))]
     [GraphQLName("properties")]
-    public IDictionary<string, JsonElement> Properties { get; set; }
+    public IDictionary<string, object?> Properties { get; set; }
 
     public EntitySchema(Storage.Models.Entity entity)
     {
         Type = entity.Type;
-        Properties = new Dictionary<string, JsonElement>();
+        Properties = new Dictionary<string, object?>();
 
-        foreach (var property in entity.ToJsonDocument().RootElement.EnumerateObject())
+        foreach (var property in entity.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty))
         {
-            if (property.Name != "type")
+            if (property.Name != "Type")
             {
-                Properties[property.Name] = property.Value;
+                if (property.GetCustomAttribute<JsonIgnoreAttribute>() is not null)
+                {
+                    continue;
+                }
+
+                var name = property.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? property.Name;
+                Properties[name] = property.GetValue(entity);
             }
         }
     }

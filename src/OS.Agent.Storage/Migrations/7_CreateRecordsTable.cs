@@ -9,7 +9,7 @@ public class CreateRecordsTable : Migration
     {
         Create.Table("records")
             .WithColumn("id").AsGuid().PrimaryKey()
-            .WithColumn("parent_id").AsGuid().ForeignKey("records", "id").Nullable()
+            .WithColumn("parent_id").AsGuid().ForeignKey("records", "id").OnDelete(System.Data.Rule.Cascade).Nullable()
             .WithColumn("source_id").AsString().NotNullable()
             .WithColumn("source_type").AsString().NotNullable()
             .WithColumn("url").AsString().Nullable()
@@ -24,8 +24,8 @@ public class CreateRecordsTable : Migration
             .Columns("source_id", "source_type");
 
         Create.Table("tenants_records")
-            .WithColumn("tenant_id").AsGuid().ForeignKey("tenants", "id").NotNullable()
-            .WithColumn("record_id").AsGuid().ForeignKey("records", "id").NotNullable()
+            .WithColumn("tenant_id").AsGuid().ForeignKey("tenants", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
+            .WithColumn("record_id").AsGuid().ForeignKey("records", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
             .WithColumn("created_at").AsDateTimeOffset().NotNullable();
 
         Create.PrimaryKey()
@@ -33,8 +33,8 @@ public class CreateRecordsTable : Migration
             .Columns("tenant_id", "record_id");
 
         Create.Table("accounts_records")
-            .WithColumn("account_id").AsGuid().ForeignKey("accounts", "id").NotNullable()
-            .WithColumn("record_id").AsGuid().ForeignKey("records", "id").NotNullable()
+            .WithColumn("account_id").AsGuid().ForeignKey("accounts", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
+            .WithColumn("record_id").AsGuid().ForeignKey("records", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
             .WithColumn("created_at").AsDateTimeOffset().NotNullable();
 
         Create.PrimaryKey()
@@ -42,8 +42,8 @@ public class CreateRecordsTable : Migration
             .Columns("account_id", "record_id");
 
         Create.Table("chats_records")
-            .WithColumn("chat_id").AsGuid().ForeignKey("chats", "id").NotNullable()
-            .WithColumn("record_id").AsGuid().ForeignKey("records", "id").NotNullable()
+            .WithColumn("chat_id").AsGuid().ForeignKey("chats", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
+            .WithColumn("record_id").AsGuid().ForeignKey("records", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
             .WithColumn("created_at").AsDateTimeOffset().NotNullable();
 
         Create.PrimaryKey()
@@ -51,8 +51,8 @@ public class CreateRecordsTable : Migration
             .Columns("chat_id", "record_id");
 
         Create.Table("messages_records")
-            .WithColumn("message_id").AsGuid().ForeignKey("messages", "id").NotNullable()
-            .WithColumn("record_id").AsGuid().ForeignKey("records", "id").NotNullable()
+            .WithColumn("message_id").AsGuid().ForeignKey("messages", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
+            .WithColumn("record_id").AsGuid().ForeignKey("records", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
             .WithColumn("created_at").AsDateTimeOffset().NotNullable();
 
         Create.PrimaryKey()
