@@ -11,7 +11,6 @@ public partial class GithubDriver(IServiceProvider provider) : IChatDriver
     public SourceType Type => SourceType.Github;
 
     private Octokit.GitHubClient AppClient => provider.GetRequiredService<Octokit.GitHubClient>();
-    private IAccountService Accounts => provider.GetRequiredService<IAccountService>();
     private IInstallService Installs => provider.GetRequiredService<IInstallService>();
 
     public Task Install(InstallRequest request, CancellationToken cancellationToken = default)
