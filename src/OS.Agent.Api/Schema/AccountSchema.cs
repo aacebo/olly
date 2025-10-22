@@ -44,10 +44,10 @@ public class AccountSchema(Storage.Models.Account account) : ModelSchema
         return user is null ? null : new(user);
     }
 
-    [GraphQLName("installs")]
-    public async Task<IEnumerable<InstallSchema>> GetInstalls([Service] IInstallService installService, CancellationToken cancellationToken = default)
+    [GraphQLName("install")]
+    public async Task<InstallSchema?> GetInstall([Service] IInstallService installService, CancellationToken cancellationToken = default)
     {
-        var installs = await installService.GetByAccountId(Id, cancellationToken);
-        return installs.Select(install => new InstallSchema(install));
+        var install = await installService.GetByAccountId(Id, cancellationToken);
+        return install is null ? null : new(install);
     }
 }

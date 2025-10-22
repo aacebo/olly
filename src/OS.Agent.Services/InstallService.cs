@@ -14,7 +14,7 @@ namespace OS.Agent.Services;
 public interface IInstallService
 {
     Task<Install?> GetById(Guid id, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Install>> GetByAccountId(Guid accountId, CancellationToken cancellationToken = default);
+    Task<Install?> GetByAccountId(Guid accountId, CancellationToken cancellationToken = default);
     Task<Install?> GetBySourceId(SourceType type, string sourceId, CancellationToken cancellationToken = default);
     Task<Install> Create(Install value, CancellationToken cancellationToken = default);
     Task<Install> Update(Install value, CancellationToken cancellationToken = default);
@@ -48,7 +48,7 @@ public class InstallService(IServiceProvider provider) : IInstallService
         return install;
     }
 
-    public async Task<IEnumerable<Install>> GetByAccountId(Guid accountId, CancellationToken cancellationToken = default)
+    public async Task<Install?> GetByAccountId(Guid accountId, CancellationToken cancellationToken = default)
     {
         return await Storage.GetByAccountId(accountId, cancellationToken);
     }

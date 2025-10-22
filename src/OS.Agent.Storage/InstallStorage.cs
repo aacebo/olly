@@ -15,7 +15,7 @@ namespace OS.Agent.Storage;
 public interface IInstallStorage
 {
     Task<Install?> GetById(Guid id, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Install>> GetByAccountId(Guid accountId, CancellationToken cancellationToken = default);
+    Task<Install?> GetByAccountId(Guid accountId, CancellationToken cancellationToken = default);
     Task<Install?> GetBySourceId(SourceType type, string sourceId, CancellationToken cancellationToken = default);
     Task<Install> Create(Install value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
     Task<Install> Update(Install value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
@@ -34,7 +34,7 @@ public class InstallStorage(ILogger<IInstallStorage> logger, QueryFactory db) : 
             .FirstOrDefaultAsync<Install?>(cancellationToken: cancellationToken);
     }
 
-    public async Task<IEnumerable<Install>> GetByAccountId(Guid accountId, CancellationToken cancellationToken = default)
+    public async Task<Install?> GetByAccountId(Guid accountId, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("GetByAccountId");
         return await db
@@ -42,7 +42,7 @@ public class InstallStorage(ILogger<IInstallStorage> logger, QueryFactory db) : 
             .Select("*")
             .From("installs")
             .Where("account_id", "=", accountId)
-            .GetAsync<Install>(cancellationToken: cancellationToken);
+            .FirstOrDefaultAsync<Install?>(cancellationToken: cancellationToken);
     }
 
     public async Task<Install?> GetBySourceId(SourceType type, string sourceId, CancellationToken cancellationToken = default)

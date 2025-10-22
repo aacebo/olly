@@ -14,4 +14,7 @@ public class TypingRequest
 
     [JsonPropertyName("chat")]
     public required Chat Chat { get; set; }
+
+    [JsonPropertyName("install")]
+    public required Install Install { get; set; }
 }

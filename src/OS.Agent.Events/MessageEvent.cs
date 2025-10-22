@@ -12,6 +12,9 @@ public class MessageEvent
     [JsonPropertyName("account")]
     public required Account Account { get; init; }
 
+    [JsonPropertyName("install")]
+    public required Install Install { get; init; }
+
     [JsonPropertyName("chat")]
     public required Chat Chat { get; init; }
 

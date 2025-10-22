@@ -3,17 +3,16 @@ using Microsoft.Extensions.Logging;
 
 using Octokit.Internal;
 
-using OS.Agent.Drivers.Github.Models;
 using OS.Agent.Errors;
 using OS.Agent.Services;
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github;
 
-public class GithubTokenRefreshHandler(IServiceProvider provider, Account account) : DelegatingHandler(HttpMessageHandlerFactory.CreateDefault())
+public class GithubTokenRefreshHandler(IServiceProvider provider, Install? install = null) : DelegatingHandler(HttpMessageHandlerFactory.CreateDefault())
 {
     private Octokit.GitHubClient AppClient { get; init; } = provider.GetRequiredService<Octokit.GitHubClient>();
-    private IAccountService Accounts { get; init; } = provider.GetRequiredService<IAccountService>();
+    private IInstallService Installs { get; init; } = provider.GetRequiredService<IInstallService>();
     private ILogger<GithubTokenRefreshHandler> Logger { get; init; } = provider.GetRequiredService<ILogger<GithubTokenRefreshHandler>>();
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -24,13 +23,12 @@ public class GithubTokenRefreshHandler(IServiceProvider provider, Account accoun
         }
         catch (Octokit.AuthorizationException ex)
         {
-            var entity = account.Entities.Get<GithubInstallEntity>();
-
-            if (entity is not null)
+            if (install is not null)
             {
-                var accessToken = await AppClient.GitHubApps.CreateInstallationToken(entity.Install.Id);
-                entity.AccessToken = accessToken;
-                account = await Accounts.Update(account, cancellationToken);
+                var accessToken = await AppClient.GitHubApps.CreateInstallationToken(long.Parse(install.SourceId));
+                install.AccessToken = accessToken.Token;
+                install.ExpiresAt = accessToken.ExpiresAt;
+                install = await Installs.Update(install, cancellationToken);
                 request.Headers.Authorization = new("Bearer", accessToken.Token);
                 return await SendAsync(request, cancellationToken);
             }

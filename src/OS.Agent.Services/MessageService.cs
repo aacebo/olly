@@ -30,6 +30,7 @@ public class MessageService(IServiceProvider provider) : IMessageService
     private IMessageStorage Storage { get; init; } = provider.GetRequiredService<IMessageStorage>();
     private ITenantService Tenants { get; init; } = provider.GetRequiredService<ITenantService>();
     private IAccountService Accounts { get; init; } = provider.GetRequiredService<IAccountService>();
+    private IInstallService Installs { get; init; } = provider.GetRequiredService<IInstallService>();
     private IChatService Chats { get; init; } = provider.GetRequiredService<IChatService>();
 
     public async Task<Message?> GetById(Guid id, CancellationToken cancellationToken = default)
@@ -78,6 +79,7 @@ public class MessageService(IServiceProvider provider) : IMessageService
         if (value.AccountId is null) throw new UnauthorizedAccessException();
 
         var account = await Accounts.GetById(value.AccountId.Value, cancellationToken) ?? throw new Exception("account not found");
+        var install = await Installs.GetByAccountId(account.Id, cancellationToken) ?? throw new Exception("install not found");
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var chat = await Chats.GetById(value.ChatId, cancellationToken) ?? throw new Exception("chat not found");
         var message = await Storage.Create(value, cancellationToken: cancellationToken);
@@ -86,6 +88,7 @@ public class MessageService(IServiceProvider provider) : IMessageService
         {
             Tenant = tenant,
             Account = account,
+            Install = install,
             Chat = chat,
             Message = message
         }));
@@ -98,6 +101,7 @@ public class MessageService(IServiceProvider provider) : IMessageService
         if (value.AccountId is null) throw new UnauthorizedAccessException();
 
         var account = await Accounts.GetById(value.AccountId.Value, cancellationToken) ?? throw new Exception("account not found");
+        var install = await Installs.GetByAccountId(account.Id, cancellationToken) ?? throw new Exception("install not found");
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var chat = await Chats.GetById(value.ChatId, cancellationToken) ?? throw new Exception("chat not found");
         var message = await Storage.Update(value, cancellationToken: cancellationToken);
@@ -106,6 +110,7 @@ public class MessageService(IServiceProvider provider) : IMessageService
         {
             Tenant = tenant,
             Account = account,
+            Install = install,
             Chat = chat,
             Message = message
         }));
@@ -120,6 +125,7 @@ public class MessageService(IServiceProvider provider) : IMessageService
         if (message.AccountId is null) throw new UnauthorizedAccessException();
 
         var account = await Accounts.GetById(message.AccountId.Value, cancellationToken) ?? throw new Exception("account not found");
+        var install = await Installs.GetByAccountId(account.Id, cancellationToken) ?? throw new Exception("install not found");
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var chat = await Chats.GetById(message.ChatId, cancellationToken) ?? throw new Exception("chat not found");
 
@@ -129,6 +135,7 @@ public class MessageService(IServiceProvider provider) : IMessageService
         {
             Tenant = tenant,
             Account = account,
+            Install = install,
             Chat = chat,
             Message = message
         }));
@@ -141,6 +148,7 @@ public class MessageService(IServiceProvider provider) : IMessageService
         if (message.AccountId is null) throw new UnauthorizedAccessException();
 
         var account = await Accounts.GetById(message.AccountId.Value, cancellationToken) ?? throw new Exception("account not found");
+        var install = await Installs.GetByAccountId(account.Id, cancellationToken) ?? throw new Exception("install not found");
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var chat = await Chats.GetById(message.ChatId, cancellationToken) ?? throw new Exception("chat not found");
 
@@ -148,6 +156,7 @@ public class MessageService(IServiceProvider provider) : IMessageService
         {
             Tenant = tenant,
             Account = account,
+            Install = install,
             Chat = chat,
             Message = message
         }));

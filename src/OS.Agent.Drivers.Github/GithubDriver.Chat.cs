@@ -16,15 +16,15 @@ public partial class GithubDriver
 
     public async Task<Message> Send(MessageRequest request, CancellationToken cancellationToken = default)
     {
-        var entity = request.From.Entities.GetRequired<GithubInstallEntity>();
-
-        if (entity.AccessToken.ExpiresAt >= DateTimeOffset.UtcNow.AddMinutes(-5))
+        if (request.Install.ExpiresAt is null || request.Install.ExpiresAt >= DateTimeOffset.UtcNow.AddMinutes(-5))
         {
-            entity.AccessToken = await AppClient.GitHubApps.CreateInstallationToken(entity.Install.Id);
-            await Accounts.Update(request.From, cancellationToken);
+            var accessToken = await AppClient.GitHubApps.CreateInstallationToken(long.Parse(request.Install.SourceId));
+            request.Install.AccessToken = accessToken.Token;
+            request.Install.ExpiresAt = accessToken.ExpiresAt;
+            await Installs.Update(request.Install, cancellationToken);
         }
 
-        var client = new Connection(new("TOS-Agent"), entity.AccessToken.Token);
+        var client = new Connection(new("TOS-Agent"), request.Install.AccessToken);
         var query = new Mutation()
             .AddDiscussionComment(new AddDiscussionCommentInput()
             {
