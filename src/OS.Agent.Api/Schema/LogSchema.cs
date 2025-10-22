@@ -34,10 +34,15 @@ public class LogSchema(Storage.Models.Log log)
     }
 
     [GraphQLName("subject")]
-    public async Task<ModelSchema?> GetSubject([Service] IAccountService accountService, [Service] IChatService chatService, [Service] IMessageService messageService, CancellationToken cancellationToken = default)
+    public async Task<ModelSchema?> GetSubject([Service] ITenantService tenantService, [Service] IAccountService accountService, [Service] IChatService chatService, [Service] IMessageService messageService, [Service] IInstallService installService, CancellationToken cancellationToken = default)
     {
         if (log.TypeId is null) return null;
-        if (log.Type == Storage.Models.LogType.Account)
+        if (log.Type == Storage.Models.LogType.Tenant)
+        {
+            var value = await tenantService.GetById(Guid.Parse(log.TypeId), cancellationToken);
+            return value is null ? null : new TenantSchema(value);
+        }
+        else if (log.Type == Storage.Models.LogType.Account)
         {
             var value = await accountService.GetById(Guid.Parse(log.TypeId), cancellationToken);
             return value is null ? null : new AccountSchema(value);
@@ -51,6 +56,11 @@ public class LogSchema(Storage.Models.Log log)
         {
             var value = await messageService.GetById(Guid.Parse(log.TypeId), cancellationToken);
             return value is null ? null : new MessageSchema(value);
+        }
+        else if (log.Type == Storage.Models.LogType.Install)
+        {
+            var value = await installService.GetById(Guid.Parse(log.TypeId), cancellationToken);
+            return value is null ? null : new InstallSchema(value);
         }
 
         return null;

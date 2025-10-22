@@ -3,7 +3,7 @@ using OS.Agent.Services;
 namespace OS.Agent.Api.Schema;
 
 [GraphQLName("Install")]
-public class InstallSchema(Storage.Models.Install install)
+public class InstallSchema(Storage.Models.Install install) : ModelSchema
 {
     [GraphQLName("id")]
     public Guid Id { get; init; } = install.Id;
