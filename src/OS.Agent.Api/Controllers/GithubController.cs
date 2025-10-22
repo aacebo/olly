@@ -80,11 +80,6 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
                             Url = githubInstall.Account.Url,
                             AvatarUrl = githubInstall.Account.AvatarUrl
                         }
-                    },
-                    new GithubInstallEntity()
-                    {
-                        Install = githubInstall,
-                        AccessToken = githubAccessToken
                     }
                 ]
             }, cancellationToken);
@@ -116,13 +111,11 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
             install.AccessToken = githubAccessToken.Token;
             install.ExpiresAt = githubAccessToken.ExpiresAt;
             install.Url = githubInstall.HtmlUrl;
-            install.Entities = [
-                new GithubInstallEntity()
-                {
-                    Install = githubInstall,
-                    AccessToken = githubAccessToken
-                }
-            ];
+            install.Entities.Put(new GithubInstallEntity()
+            {
+                Install = githubInstall,
+                AccessToken = githubAccessToken
+            });
 
             install = await Installs.Update(install, cancellationToken);
         }

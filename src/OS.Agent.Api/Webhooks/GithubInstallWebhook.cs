@@ -59,11 +59,6 @@ public class GithubInstallWebhook(IServiceScopeFactory scopeFactory) : WebhookEv
                             Url = githubInstall.Account.Url,
                             AvatarUrl = githubInstall.Account.AvatarUrl
                         }
-                    },
-                    new GithubInstallEntity()
-                    {
-                        Install = githubInstall,
-                        AccessToken = githubAccessToken
                     }
                 ]
             }, cancellationToken);
@@ -85,12 +80,6 @@ public class GithubInstallWebhook(IServiceScopeFactory scopeFactory) : WebhookEv
                     Url = githubInstall.Account.Url,
                     AvatarUrl = githubInstall.Account.AvatarUrl
                 }
-            });
-
-            account.Entities.Put(new GithubInstallEntity()
-            {
-                Install = githubInstall,
-                AccessToken = githubAccessToken
             });
 
             account = await accounts.Update(account, cancellationToken);
@@ -120,13 +109,11 @@ public class GithubInstallWebhook(IServiceScopeFactory scopeFactory) : WebhookEv
             install.Url = @event.Installation.HtmlUrl;
             install.AccessToken = githubAccessToken.Token;
             install.ExpiresAt = githubAccessToken.ExpiresAt;
-            install.Entities = [
-                new GithubInstallEntity()
-                {
-                    Install = githubInstall,
-                    AccessToken = githubAccessToken
-                }
-            ];
+            install.Entities.Put(new GithubInstallEntity()
+            {
+                Install = githubInstall,
+                AccessToken = githubAccessToken
+            });
 
             await installs.Update(install, cancellationToken);
         }
