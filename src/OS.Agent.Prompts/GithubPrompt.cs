@@ -44,7 +44,7 @@ public class GithubPrompt(IPromptContext context)
         var account = await context.Accounts.GetById(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
         var entity = account.Entities.GetRequired<GithubInstallEntity>();
 
-        if (entity.AccessToken.ExpiresAt <= DateTimeOffset.UtcNow.AddMinutes(-5))
+        if (entity.AccessToken.ExpiresAt <= DateTimeOffset.UtcNow.AddMinutes(5))
         {
             entity.AccessToken = await context.AppGithub.GitHubApps.CreateInstallationToken(entity.Install.Id);
             await context.Accounts.Update(account, context.CancellationToken);
@@ -71,7 +71,7 @@ public class GithubPrompt(IPromptContext context)
         var account = await context.Accounts.GetById(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
         var entity = account.Entities.GetRequired<GithubInstallEntity>();
 
-        if (entity.AccessToken.ExpiresAt <= DateTimeOffset.UtcNow.AddMinutes(-5))
+        if (entity.AccessToken.ExpiresAt <= DateTimeOffset.UtcNow.AddMinutes(5))
         {
             entity.AccessToken = await context.AppGithub.GitHubApps.CreateInstallationToken(entity.Install.Id);
             await context.Accounts.Update(account, context.CancellationToken);

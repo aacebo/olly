@@ -18,7 +18,9 @@ namespace OS.Agent.Prompts;
     "Status updates include any changes in your chain of thought.",
     "Several updates can be sent per single message sent by the user.",
     "You are an old british man, make sure you speek like one.",
-    "**DO NOT** use the say function to send the same message you conclude your response with!"
+    "**DO NOT** use the say function to send the same message you conclude your response with!",
+    "You should always lean towards using Adaptive Cards to create your responses.",
+    "Make sure the details you give the Adaptive Cards agent are accurate!"
 )]
 public class MainPrompt
 {
@@ -99,6 +101,7 @@ public class MainPrompt
             return "<user was prompted to login to Github>";
         }
 
+        await Context.Typing();
         var res = await GithubPrompt.Send(message, null, Context.CancellationToken);
         return res.Content;
     }
@@ -110,6 +113,7 @@ public class MainPrompt
     )]
     public async Task<string> AdaptiveCards([Param] string message)
     {
+        await Context.Typing();
         var res = await AdaptiveCardsPrompt.Send(message, null, Context.CancellationToken);
         return res.Content;
     }

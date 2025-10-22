@@ -63,30 +63,49 @@ public class TeamsDriver(IServiceProvider provider) : IChatDriver
     public async Task<Message> Send(MessageRequest request, CancellationToken cancellationToken = default)
     {
         var chatType = request.Chat.Type is null ? Microsoft.Teams.Api.ConversationType.Personal : new(request.Chat.Type);
-        var activity = await Teams.Send(
-            request.Chat.SourceId,
-            new MessageActivity()
+        var activity = new MessageActivity()
+        {
+            Text = request.Text,
+            ReplyToId = request is MessageReplyRequest reply ? reply.ReplyTo.SourceId : null,
+            Conversation = new()
             {
-                Text = request.Text,
-                ReplyToId = request is MessageReplyRequest reply ? reply.ReplyTo.SourceId : null,
-                Conversation = new()
-                {
-                    Id = request.Chat.SourceId,
-                    Type = chatType,
-                    Name = request.Chat.Name
-                },
-                Attachments = request.Attachments.Select(attachment => new Microsoft.Teams.Api.Attachment()
-                {
-                    Id = attachment.Id,
-                    Name = attachment.Name,
-                    ContentType = new(attachment.ContentType),
-                    Content = attachment.Content
-                }).AsList()
-            },
+                Id = request.Chat.SourceId,
+                Type = chatType,
+                Name = request.Chat.Name
+            }
+        };
+
+        activity = await Teams.Send(
+            request.Chat.SourceId,
+            activity,
             chatType,
             request.Chat.Url,
             cancellationToken
         );
+
+        if (request.Attachments.Any())
+        {
+            var attachmentActivity = await Teams.Send(
+                request.Chat.SourceId,
+                new MessageActivity()
+                {
+                    ReplyToId = activity.ReplyToId,
+                    Conversation = activity.Conversation,
+                    Attachments = request.Attachments.Select(attachment => new Microsoft.Teams.Api.Attachment()
+                    {
+                        Id = attachment.Id,
+                        Name = attachment.Name,
+                        ContentType = new(attachment.ContentType),
+                        Content = attachment.Content
+                    }).AsList()
+                },
+                chatType,
+                request.Chat.Url,
+                cancellationToken
+            );
+
+            activity.Attachments = attachmentActivity.Attachments;
+        }
 
         return new Message()
         {
