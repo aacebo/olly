@@ -176,9 +176,13 @@ public class EntityJsonConverter : JsonConverter<Entity>
             return;
         }
 
-        JsonSerializer.Serialize(writer, value.Properties.Union(new Dictionary<string, JsonElement>() {
-            { "type", JsonSerializer.SerializeToElement(value.Type, options) }
-        }), options);
+        var properties = value.Properties.ToDictionary(
+            pair => pair.Key,
+            pair => pair.Value
+        );
+
+        properties["type"] = JsonSerializer.SerializeToElement(value.Type);
+        JsonSerializer.Serialize(writer, properties, options);
     }
 }
 
