@@ -13,10 +13,10 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Workers;
 
-public class AccountWorker(IServiceProvider provider, IServiceScopeFactory scopeFactory) : IHostedService
+public class InstallWorker(IServiceProvider provider, IServiceScopeFactory scopeFactory) : IHostedService
 {
-    private ILogger<AccountWorker> Logger { get; init; } = provider.GetRequiredService<ILogger<AccountWorker>>();
-    private NetMQQueue<Event<AccountEvent>> Events { get; init; } = provider.GetRequiredService<NetMQQueue<Event<AccountEvent>>>();
+    private ILogger<InstallWorker> Logger { get; init; } = provider.GetRequiredService<ILogger<InstallWorker>>();
+    private NetMQQueue<Event<InstallEvent>> Events { get; init; } = provider.GetRequiredService<NetMQQueue<Event<InstallEvent>>>();
     private JsonSerializerOptions JsonOptions { get; init; } = provider.GetRequiredService<JsonSerializerOptions>();
     private NetMQPoller Poller { get; init; } = [];
 
@@ -35,31 +35,31 @@ public class AccountWorker(IServiceProvider provider, IServiceScopeFactory scope
                 try
                 {
                     Logger.LogDebug("{}", JsonSerializer.Serialize(@event, JsonOptions));
-                    var driver = scope.ServiceProvider.GetServices<IDriver>().FirstOrDefault(driver => driver.Type == @event.Body.Account.SourceType);
+                    var driver = scope.ServiceProvider.GetServices<IDriver>().FirstOrDefault(driver => driver.Type == @event.Body.Install.SourceType);
 
                     if (driver is null)
                     {
-                        throw new NotImplementedException($"no driver implemented for account source type '{@event.Body.Account.SourceType}'");
+                        throw new NotImplementedException($"no driver implemented for source type '{@event.Body.Install.SourceType}'");
                     }
 
                     await logs.Create(new()
                     {
                         TenantId = @event.Body.Tenant.Id,
-                        Type = LogType.Account,
-                        TypeId = @event.Body.Account.Id.ToString(),
+                        Type = LogType.Install,
+                        TypeId = @event.Body.Install.Id.ToString(),
                         Text = @event.Name,
                         Entities = [Entity.From(@event.Body)]
                     }, lifetime.ApplicationStopping);
 
-                    if (@event.Name == "accounts.create")
+                    if (@event.Name == "installs.create")
                     {
                         await OnCreateEvent(@event, driver, lifetime.ApplicationStopping);
                     }
-                    else if (@event.Name == "accounts.update")
+                    else if (@event.Name == "installs.update")
                     {
                         await OnUpdateEvent(@event, driver, lifetime.ApplicationStopping);
                     }
-                    else if (@event.Name == "accounts.delete")
+                    else if (@event.Name == "installs.delete")
                     {
                         await OnDeleteEvent(@event, driver, lifetime.ApplicationStopping);
                     }
@@ -67,7 +67,7 @@ public class AccountWorker(IServiceProvider provider, IServiceScopeFactory scope
                 catch (Exception ex)
                 {
                     Logger.LogError("{}", ex);
-                    throw new Exception("AccountWorker", ex);
+                    throw new Exception("InstallWorker", ex);
                 }
             }
         };
@@ -85,18 +85,33 @@ public class AccountWorker(IServiceProvider provider, IServiceScopeFactory scope
         return Task.CompletedTask;
     }
 
-    private Task OnCreateEvent(Event<AccountEvent> @event, IDriver driver, CancellationToken cancellationToken = default)
+    private async Task OnCreateEvent(Event<InstallEvent> @event, IDriver driver, CancellationToken cancellationToken = default)
     {
-        return Task.CompletedTask;
+        await driver.Install(new()
+        {
+            Tenant = @event.Body.Tenant,
+            Account = @event.Body.Account,
+            Install = @event.Body.Install
+        }, cancellationToken);
     }
 
-    private Task OnUpdateEvent(Event<AccountEvent> @event, IDriver driver, CancellationToken cancellationToken = default)
+    private async Task OnUpdateEvent(Event<InstallEvent> @event, IDriver driver, CancellationToken cancellationToken = default)
     {
-        return Task.CompletedTask;
+        await driver.Install(new()
+        {
+            Tenant = @event.Body.Tenant,
+            Account = @event.Body.Account,
+            Install = @event.Body.Install
+        }, cancellationToken);
     }
 
-    private Task OnDeleteEvent(Event<AccountEvent> @event, IDriver driver, CancellationToken cancellationToken = default)
+    private async Task OnDeleteEvent(Event<InstallEvent> @event, IDriver driver, CancellationToken cancellationToken = default)
     {
-        return Task.CompletedTask;
+        await driver.UnInstall(new()
+        {
+            Tenant = @event.Body.Tenant,
+            Account = @event.Body.Account,
+            Install = @event.Body.Install
+        }, cancellationToken);
     }
 }

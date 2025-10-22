@@ -82,6 +82,7 @@ builder.Services.AddSingleton<NetMQQueue<Event<ChatEvent>>>(); // chats.(create 
 builder.Services.AddSingleton<NetMQQueue<Event<MessageEvent>>>(); // messages.(create | update | delete | resume)
 builder.Services.AddSingleton<NetMQQueue<Event<TokenEvent>>>(); // tokens.(create | update | delete)
 builder.Services.AddSingleton<NetMQQueue<Event<RecordEvent>>>(); // records.(create | update | delete)
+builder.Services.AddSingleton<NetMQQueue<Event<InstallEvent>>>(); // installs.(create | update | delete)
 builder.Services.AddSingleton<NetMQQueue<Event<LogEvent>>>(); // logs.create
 
 // Webhooks
@@ -91,6 +92,7 @@ builder.Services.AddSingleton<WebhookEventProcessor, GithubDiscussionWebhook>();
 // Workers
 builder.Services.AddHostedService<MessageWorker>();
 builder.Services.AddHostedService<AccountWorker>();
+builder.Services.AddHostedService<InstallWorker>();
 
 // Storage
 builder.Services.AddScoped<IStorage, Storage>();
@@ -102,6 +104,7 @@ builder.Services.AddScoped<IMessageStorage, MessageStorage>();
 builder.Services.AddScoped<ITokenStorage, TokenStorage>();
 builder.Services.AddScoped<ILogStorage, LogStorage>();
 builder.Services.AddScoped<IRecordStorage, RecordStorage>();
+builder.Services.AddScoped<IInstallStorage, InstallStorage>();
 
 // Services
 builder.Services.AddScoped<IUserService, UserService>();
@@ -112,6 +115,7 @@ builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ILogService, LogService>();
 builder.Services.AddScoped<IRecordService, RecordService>();
+builder.Services.AddScoped<IInstallService, InstallService>();
 
 var app = builder.Build();
 

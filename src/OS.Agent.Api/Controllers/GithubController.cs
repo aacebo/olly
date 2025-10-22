@@ -21,6 +21,7 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
     private IAccountService Accounts => accessor.HttpContext!.RequestServices.GetRequiredService<IAccountService>();
     private IChatService Chats => accessor.HttpContext!.RequestServices.GetRequiredService<IChatService>();
     private IMessageService Messages => accessor.HttpContext!.RequestServices.GetRequiredService<IMessageService>();
+    private IInstallService Installs => accessor.HttpContext!.RequestServices.GetRequiredService<IInstallService>();
     private ITokenService Tokens => accessor.HttpContext!.RequestServices.GetRequiredService<ITokenService>();
 
     [HttpGet("redirect")]
@@ -51,8 +52,9 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
         var account = await Accounts.GetBySourceId(tenant.Id, SourceType.Github, user.NodeId, cancellationToken);
         var message = await Messages.GetById(tokenState.MessageId, cancellationToken) ?? throw HttpException.NotFound();
         var chat = await Chats.GetById(message.ChatId, cancellationToken) ?? throw HttpException.NotFound();
-        var install = await AppClient.GitHubApps.GetInstallationForCurrent(installationId);
-        var accessToken = await AppClient.GitHubApps.CreateInstallationToken(installationId);
+
+        var githubInstall = await AppClient.GitHubApps.GetInstallationForCurrent(installationId);
+        var githubAccessToken = await AppClient.GitHubApps.CreateInstallationToken(installationId);
 
         if (account is null)
         {
@@ -69,23 +71,60 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
                     {
                         User = new()
                         {
-                            Id = install.Account.Id,
-                            NodeId = install.Account.NodeId,
-                            Type = install.Account.Type?.ToString(),
-                            Login = install.Account.Login,
-                            Name = install.Account.Name,
-                            Email = install.Account.Email,
-                            Url = install.Account.Url,
-                            AvatarUrl = install.Account.AvatarUrl
+                            Id = githubInstall.Account.Id,
+                            NodeId = githubInstall.Account.NodeId,
+                            Type = githubInstall.Account.Type?.ToString(),
+                            Login = githubInstall.Account.Login,
+                            Name = githubInstall.Account.Name,
+                            Email = githubInstall.Account.Email,
+                            Url = githubInstall.Account.Url,
+                            AvatarUrl = githubInstall.Account.AvatarUrl
                         }
                     },
                     new GithubInstallEntity()
                     {
-                        Install = install,
-                        AccessToken = accessToken
+                        Install = githubInstall,
+                        AccessToken = githubAccessToken
                     }
                 ]
             }, cancellationToken);
+        }
+
+        var install = await Installs.GetBySourceId(SourceType.Github, installationId.ToString(), cancellationToken);
+
+        if (install is null)
+        {
+            install = await Installs.Create(new()
+            {
+                AccountId = account.Id,
+                SourceType = SourceType.Github,
+                SourceId = installationId.ToString(),
+                Url = githubInstall.HtmlUrl,
+                AccessToken = githubAccessToken.Token,
+                ExpiresAt = githubAccessToken.ExpiresAt,
+                Entities = [
+                    new GithubInstallEntity()
+                    {
+                        Install = githubInstall,
+                        AccessToken = githubAccessToken
+                    }
+                ]
+            }, cancellationToken);
+        }
+        else
+        {
+            install.AccessToken = githubAccessToken.Token;
+            install.ExpiresAt = githubAccessToken.ExpiresAt;
+            install.Url = githubInstall.HtmlUrl;
+            install.Entities = [
+                new GithubInstallEntity()
+                {
+                    Install = githubInstall,
+                    AccessToken = githubAccessToken
+                }
+            ];
+
+            install = await Installs.Update(install, cancellationToken);
         }
 
         var token = await Tokens.GetByAccountId(account.Id, cancellationToken);
@@ -118,7 +157,7 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
             {
                 Id = installationId.ToString(),
                 Type = SourceType.Github,
-                Url = install.HtmlUrl
+                Url = githubInstall.HtmlUrl
             });
 
             await Tenants.Update(tenant, cancellationToken);

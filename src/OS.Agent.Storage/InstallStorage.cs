@@ -62,9 +62,9 @@ public class InstallStorage(ILogger<IInstallStorage> logger, QueryFactory db) : 
         using var cmd = new NpgsqlCommand(
         """
             INSERT INTO installs
-            (id, account_id, source_id, source_type, access_token, expires_at, entities, created_at, updated_at)
+            (id, account_id, source_id, source_type, url, access_token, expires_at, entities, created_at, updated_at)
             VALUES
-            ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         """, (NpgsqlConnection)db.Connection)
         {
             Parameters =
@@ -73,8 +73,9 @@ public class InstallStorage(ILogger<IInstallStorage> logger, QueryFactory db) : 
                 new() { Value = value.AccountId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.SourceId, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Url is null ? DBNull.Value : value.Url, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.AccessToken is null ? DBNull.Value : value.AccessToken, NpgsqlDbType = NpgsqlDbType.Text },
-                new() { Value = value.ExpiresAt is null ? DBNull.Value : value.ExpiresAt, NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.ExpiresAt is null ? DBNull.Value : value.ExpiresAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
                 new() { Value = value.Entities, NpgsqlDbType = NpgsqlDbType.Jsonb },
                 new() { Value = value.CreatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
                 new() { Value = value.UpdatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz }
@@ -95,11 +96,12 @@ public class InstallStorage(ILogger<IInstallStorage> logger, QueryFactory db) : 
                 account_id = $2,
                 source_id = $3,
                 source_type = $4,
-                access_token = $5,
-                expires_at = $6,
-                entities = $7,
-                created_at = $8,
-                updated_at = $9
+                url = $5,
+                access_token = $6,
+                expires_at = $7,
+                entities = $8,
+                created_at = $9,
+                updated_at = $10
             WHERE id = $1
         """, (NpgsqlConnection)db.Connection)
         {
@@ -109,8 +111,9 @@ public class InstallStorage(ILogger<IInstallStorage> logger, QueryFactory db) : 
                 new() { Value = value.AccountId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.SourceId, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Url is null ? DBNull.Value : value.Url, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.AccessToken is null ? DBNull.Value : value.AccessToken, NpgsqlDbType = NpgsqlDbType.Text },
-                new() { Value = value.ExpiresAt is null ? DBNull.Value : value.ExpiresAt, NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.ExpiresAt is null ? DBNull.Value : value.ExpiresAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
                 new() { Value = value.Entities, NpgsqlDbType = NpgsqlDbType.Jsonb },
                 new() { Value = value.CreatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
                 new() { Value = value.UpdatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz }

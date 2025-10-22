@@ -15,12 +15,12 @@ public partial class TeamsDriver(IServiceProvider provider) : IChatDriver
 
     public Task Install(InstallRequest request, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask;
     }
 
     public Task UnInstall(UnInstallRequest request, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask;
     }
 
     public async Task SignIn(SignInRequest request, CancellationToken cancellationToken = default)

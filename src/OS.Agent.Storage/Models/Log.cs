@@ -79,4 +79,7 @@ public class LogType(string value) : StringEnum(value)
 
     public static readonly LogType Agent = new("agent");
     public bool IsAgent => Agent.Equals(Value);
+
+    public static readonly LogType Install = new("install");
+    public bool IsInstall => Install.Equals(Value);
 }

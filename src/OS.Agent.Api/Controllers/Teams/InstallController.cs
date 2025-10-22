@@ -20,6 +20,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
         var tenants = scope.ServiceProvider.GetRequiredService<ITenantService>();
         var accounts = scope.ServiceProvider.GetRequiredService<IAccountService>();
         var chats = scope.ServiceProvider.GetRequiredService<IChatService>();
+        var installs = scope.ServiceProvider.GetRequiredService<IInstallService>();
         var tenantId = context.Activity.Conversation.TenantId ?? context.TenantId;
         var tenant = await tenants.GetBySourceId(
             SourceType.Teams,
@@ -33,46 +34,6 @@ public class InstallController(IServiceScopeFactory scopeFactory)
             {
                 Sources = [Source.Teams(tenantId, context.Activity.ServiceUrl)]
             }, context.CancellationToken);
-        }
-
-        var chat = await chats.GetBySourceId(
-            tenant.Id,
-            SourceType.Teams,
-            context.Activity.Conversation.Id,
-            context.CancellationToken
-        );
-
-        if (chat is null)
-        {
-            await chats.Create(new()
-            {
-                TenantId = tenant.Id,
-                SourceId = context.Activity.Conversation.Id,
-                SourceType = SourceType.Teams,
-                Url = context.Activity.ServiceUrl,
-                Type = context.Activity.Conversation.Type?.ToString(),
-                Name = context.Activity.Conversation.Name,
-                Entities = [
-                    new TeamsChatEntity()
-                    {
-                        Conversation = context.Activity.Conversation,
-                        ServiceUrl = context.Activity.ServiceUrl
-                    }
-                ]
-            }, context.CancellationToken);
-        }
-        else
-        {
-            chat.Name = context.Activity.Conversation.Name;
-            chat.Type = context.Activity.Conversation.Type?.ToString();
-            chat.Url = context.Activity.ServiceUrl;
-            chat.Entities.Put(new TeamsChatEntity()
-            {
-                Conversation = context.Activity.Conversation,
-                ServiceUrl = context.Activity.ServiceUrl
-            });
-
-            await chats.Update(chat, context.CancellationToken);
         }
 
         var account = await accounts.GetBySourceId(tenant.Id, SourceType.Teams, context.Activity.From.Id, context.CancellationToken);
@@ -113,6 +74,64 @@ public class InstallController(IServiceScopeFactory scopeFactory)
 
             account.UserId = user.Id;
             await accounts.Update(account, context.CancellationToken);
+        }
+
+        var install = await installs.GetBySourceId(SourceType.Teams, account.SourceId);
+
+        if (install is null)
+        {
+            await installs.Create(new()
+            {
+                AccountId = account.Id,
+                SourceType = SourceType.Teams,
+                SourceId = account.SourceId,
+                Url = context.Activity.ServiceUrl
+            }, context.CancellationToken);
+        }
+        else
+        {
+            install.Url = context.Activity.ServiceUrl;
+            await installs.Update(install, context.CancellationToken);
+        }
+
+        var chat = await chats.GetBySourceId(
+            tenant.Id,
+            SourceType.Teams,
+            context.Activity.Conversation.Id,
+            context.CancellationToken
+        );
+
+        if (chat is null)
+        {
+            await chats.Create(new()
+            {
+                TenantId = tenant.Id,
+                SourceId = context.Activity.Conversation.Id,
+                SourceType = SourceType.Teams,
+                Url = context.Activity.ServiceUrl,
+                Type = context.Activity.Conversation.Type?.ToString(),
+                Name = context.Activity.Conversation.Name,
+                Entities = [
+                    new TeamsChatEntity()
+                    {
+                        Conversation = context.Activity.Conversation,
+                        ServiceUrl = context.Activity.ServiceUrl
+                    }
+                ]
+            }, context.CancellationToken);
+        }
+        else
+        {
+            chat.Name = context.Activity.Conversation.Name;
+            chat.Type = context.Activity.Conversation.Type?.ToString();
+            chat.Url = context.Activity.ServiceUrl;
+            chat.Entities.Put(new TeamsChatEntity()
+            {
+                Conversation = context.Activity.Conversation,
+                ServiceUrl = context.Activity.ServiceUrl
+            });
+
+            await chats.Update(chat, context.CancellationToken);
         }
 
         await context.Send("Hello! Is there anything I can help you with?");

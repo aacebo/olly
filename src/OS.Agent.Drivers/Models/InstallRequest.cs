@@ -11,4 +11,7 @@ public class InstallRequest
 
     [JsonPropertyName("account")]
     public required Account Account { get; set; }
+
+    [JsonPropertyName("install")]
+    public required Install Install { get; set; }
 }
