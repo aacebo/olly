@@ -11,6 +11,7 @@ public interface IStorage
     IUserStorage Users { get; }
     ITokenStorage Tokens { get; }
     ILogStorage Logs { get; }
+    IRecordStorage Records { get; }
 }
 
 public class Storage : IStorage
@@ -22,6 +23,7 @@ public class Storage : IStorage
     public IUserStorage Users => _users;
     public ITokenStorage Tokens => _tokens;
     public ILogStorage Logs => _logs;
+    public IRecordStorage Records => _records;
 
     private readonly IAccountStorage _accounts;
     private readonly IChatStorage _chats;
@@ -30,6 +32,7 @@ public class Storage : IStorage
     private readonly IUserStorage _users;
     private readonly ITokenStorage _tokens;
     private readonly ILogStorage _logs;
+    private readonly IRecordStorage _records;
 
     public Storage(IServiceScopeFactory factory) : this(factory.CreateScope())
     {
@@ -45,5 +48,6 @@ public class Storage : IStorage
         _users = scope.ServiceProvider.GetRequiredService<IUserStorage>();
         _tokens = scope.ServiceProvider.GetRequiredService<ITokenStorage>();
         _logs = scope.ServiceProvider.GetRequiredService<ILogStorage>();
+        _records = scope.ServiceProvider.GetRequiredService<IRecordStorage>();
     }
 }

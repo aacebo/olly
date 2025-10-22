@@ -36,4 +36,11 @@ public class TenantSchema(Storage.Models.Tenant tenant)
         var chats = await chatService.GetByTenantId(Id, cancellationToken: cancellationToken);
         return chats.List.Select(chat => new ChatSchema(chat));
     }
+
+    [GraphQLName("records")]
+    public async Task<IEnumerable<RecordSchema>> GetRecords([Service] IRecordService recordService, CancellationToken cancellationToken = default)
+    {
+        var records = await recordService.GetByTenantId(Id, cancellationToken: cancellationToken);
+        return records.List.Select(record => new RecordSchema(record));
+    }
 }
