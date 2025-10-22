@@ -35,16 +35,34 @@ public class AccountWorker(IServiceProvider provider, IServiceScopeFactory scope
                 try
                 {
                     Logger.LogDebug("{}", JsonSerializer.Serialize(@event, JsonOptions));
-                    var driver = scope.ServiceProvider.GetServices<IDriver>().First(driver => driver.Type == @event.Body.Account.SourceType);
+                    var driver = scope.ServiceProvider.GetServices<IDriver>().FirstOrDefault(driver => driver.Type == @event.Body.Account.SourceType);
+
+                    if (driver is null)
+                    {
+                        throw new NotImplementedException($"no driver implemented for account source type '{@event.Body.Account.SourceType}'");
+                    }
 
                     await logs.Create(new()
                     {
                         TenantId = @event.Body.Tenant.Id,
                         Type = LogType.Account,
                         TypeId = @event.Body.Account.Id.ToString(),
-                        Text = "new account",
+                        Text = @event.Name,
                         Entities = [Entity.From(@event.Body)]
                     }, lifetime.ApplicationStopping);
+
+                    if (@event.Name == "accounts.create")
+                    {
+                        await OnCreateEvent(@event, driver, lifetime.ApplicationStopping);
+                    }
+                    else if (@event.Name == "accounts.update")
+                    {
+                        await OnUpdateEvent(@event, driver, lifetime.ApplicationStopping);
+                    }
+                    else if (@event.Name == "accounts.delete")
+                    {
+                        await OnDeleteEvent(@event, driver, lifetime.ApplicationStopping);
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -65,5 +83,20 @@ public class AccountWorker(IServiceProvider provider, IServiceScopeFactory scope
         Poller.StopAsync();
         Logger.LogInformation("stopped");
         return Task.CompletedTask;
+    }
+
+    private Task OnCreateEvent(Event<AccountEvent> @event, IDriver driver, CancellationToken cancellationToken = default)
+    {
+
+    }
+
+    private Task OnUpdateEvent(Event<AccountEvent> @event, IDriver driver, CancellationToken cancellationToken = default)
+    {
+
+    }
+
+    private Task OnDeleteEvent(Event<AccountEvent> @event, IDriver driver, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
     }
 }

@@ -49,7 +49,7 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
                         TenantId = @event.Body.Tenant.Id,
                         Type = LogType.Message,
                         TypeId = @event.Body.Message.Id.ToString(),
-                        Text = "new message",
+                        Text = @event.Name,
                         Entities = [Entity.From(@event.Body)]
                     }, lifetime.ApplicationStopping);
 
