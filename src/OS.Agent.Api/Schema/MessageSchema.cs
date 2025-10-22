@@ -3,7 +3,7 @@ using OS.Agent.Services;
 namespace OS.Agent.Api.Schema;
 
 [GraphQLName("Message")]
-public class MessageSchema(Storage.Models.Message message)
+public class MessageSchema(Storage.Models.Message message) : ModelSchema
 {
     [GraphQLName("id")]
     public Guid Id { get; init; } = message.Id;

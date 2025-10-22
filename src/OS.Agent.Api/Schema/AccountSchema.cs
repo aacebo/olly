@@ -3,7 +3,7 @@ using OS.Agent.Services;
 namespace OS.Agent.Api.Schema;
 
 [GraphQLName("Account")]
-public class AccountSchema(Storage.Models.Account account)
+public class AccountSchema(Storage.Models.Account account) : ModelSchema
 {
     [GraphQLName("id")]
     public Guid Id { get; init; } = account.Id;

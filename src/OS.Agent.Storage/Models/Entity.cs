@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
@@ -94,16 +93,12 @@ public class Entity
 
     public static Entity From<T>(T value) where T : class
     {
-        var data = new Entity();
+        var properties = JsonSerializer.SerializeToDocument(value).Deserialize<Dictionary<string, JsonElement>>();
 
-        foreach (var field in value.GetType().GetFields())
+        return new()
         {
-            var attr = field.GetCustomAttribute<JsonPropertyNameAttribute>();
-            var name = attr?.Name ?? field.Name;
-            data.Properties.Add(name, JsonSerializer.SerializeToElement(field.GetValue(value), field.FieldType));
-        }
-
-        return data;
+            Properties = properties ?? []
+        };
     }
 }
 

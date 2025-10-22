@@ -1,7 +1,7 @@
 namespace OS.Agent.Api.Schema;
 
 [GraphQLName("User")]
-public class UserSchema(Storage.Models.User user)
+public class UserSchema(Storage.Models.User user) : ModelSchema
 {
     [GraphQLName("id")]
     public Guid Id { get; set; } = user.Id;

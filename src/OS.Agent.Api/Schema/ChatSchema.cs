@@ -3,7 +3,7 @@ using OS.Agent.Services;
 namespace OS.Agent.Api.Schema;
 
 [GraphQLName("Chat")]
-public class ChatSchema(Storage.Models.Chat chat)
+public class ChatSchema(Storage.Models.Chat chat) : ModelSchema
 {
     [GraphQLName("id")]
     public Guid Id { get; init; } = chat.Id;

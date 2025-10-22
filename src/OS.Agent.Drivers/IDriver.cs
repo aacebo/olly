@@ -7,6 +7,8 @@ public interface IDriver
 {
     SourceType Type { get; }
 
+    Task Install(InstallRequest request, CancellationToken cancellationToken = default);
+    Task UnInstall(UnInstallRequest request, CancellationToken cancellationToken = default);
     Task SignIn(SignInRequest request, CancellationToken cancellationToken = default);
 }
 

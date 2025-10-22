@@ -3,7 +3,7 @@ using OS.Agent.Services;
 namespace OS.Agent.Api.Schema;
 
 [GraphQLName("Tenant")]
-public class TenantSchema(Storage.Models.Tenant tenant)
+public class TenantSchema(Storage.Models.Tenant tenant) : ModelSchema
 {
     [GraphQLName("id")]
     public Guid Id { get; init; } = tenant.Id;
@@ -42,5 +42,12 @@ public class TenantSchema(Storage.Models.Tenant tenant)
     {
         var records = await recordService.GetByTenantId(Id, cancellationToken: cancellationToken);
         return records.List.Select(record => new RecordSchema(record));
+    }
+
+    [GraphQLName("logs")]
+    public async Task<IEnumerable<LogSchema>> GetLogs([Service] ILogService logService, CancellationToken cancellationToken = default)
+    {
+        var logs = await logService.GetByTenantId(Id, cancellationToken);
+        return logs.Select(log => new LogSchema(log));
     }
 }
