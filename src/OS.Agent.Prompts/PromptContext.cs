@@ -27,6 +27,7 @@ public interface IPromptContext
     IChatService Chats { get; }
     IMessageService Messages { get; }
     ITokenService Tokens { get; }
+    IRecordService Records { get; }
     IChatDriver Driver { get; }
     CancellationToken CancellationToken { get; }
     IServiceProvider Services { get; }
@@ -54,6 +55,7 @@ public class PromptContext : IPromptContext
     public IChatService Chats { get; }
     public IMessageService Messages { get; }
     public ITokenService Tokens { get; }
+    public IRecordService Records { get; }
     public IChatDriver Driver { get; }
     public IStorage Storage { get; }
     public CancellationToken CancellationToken { get; }
@@ -71,6 +73,7 @@ public class PromptContext : IPromptContext
         Messages = scope.ServiceProvider.GetRequiredService<IMessageService>();
         Tokens = scope.ServiceProvider.GetRequiredService<ITokenService>();
         Model = scope.ServiceProvider.GetRequiredService<OpenAIChatModel>();
+        Records = scope.ServiceProvider.GetRequiredService<IRecordService>();
         Driver = scope.ServiceProvider.GetServices<IChatDriver>().First(driver => driver.Type == @event.Message.SourceType);
         Storage = scope.ServiceProvider.GetRequiredService<IStorage>();
         Tenant = @event.Tenant;

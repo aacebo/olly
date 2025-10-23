@@ -24,7 +24,7 @@ public class GithubEntity : Entity
 
     public GithubEntity() : base("github")
     {
-        
+
     }
 
     public GithubEntity(Octokit.Repository repository) : base("github.repository")

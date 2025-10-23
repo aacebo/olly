@@ -7,6 +7,7 @@ using Octokit.GraphQL;
 
 using OS.Agent.Drivers.Github;
 using OS.Agent.Errors;
+using OS.Agent.Storage;
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Prompts;
@@ -37,13 +38,18 @@ public class GithubPrompt(IPromptContext context)
 
     [Function]
     [Function.Description("get a list of the users Github repositories")]
-    public async Task<string> GetRepositoriesByAccountId([Param] Guid accountId)
+    public async Task<string> GetRepositories()
     {
-        var install = await context.Installs.GetByAccountId(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account install not found");
-        var github = context.Services.GetRequiredService<GithubService>();
-        var client = new Octokit.GitHubClient(await github.GetRestConnection(install, context.CancellationToken));
-        var res = await client.GitHubApps.Installation.GetAllRepositoriesForCurrent();
-        return JsonSerializer.Serialize(res.Repositories, SerializationOptions);
+        var records = await context.Records.GetByTenantId(
+            context.Tenant.Id,
+            Page.Create()
+                .Where("source_type", "=", SourceType.Github.ToString())
+                .Where("type", "=", "repository")
+                .Build(),
+            context.CancellationToken
+        );
+
+        return JsonSerializer.Serialize(records.List, SerializationOptions);
     }
 
     [Function]

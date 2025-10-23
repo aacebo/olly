@@ -23,6 +23,12 @@ public class CreateRecordsTable : Migration
             .OnTable("records")
             .Columns("source_id", "source_type");
 
+        Create.Index()
+            .OnTable("records")
+            .OnColumn("source_type").Ascending()
+            .OnColumn("type").Ascending()
+            .OnColumn("updated_at").Descending();
+
         Create.Table("tenants_records")
             .WithColumn("tenant_id").AsGuid().ForeignKey("tenants", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
             .WithColumn("record_id").AsGuid().ForeignKey("records", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()

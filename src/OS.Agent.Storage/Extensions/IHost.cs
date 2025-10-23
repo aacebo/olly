@@ -14,7 +14,7 @@ public static class IHostExtensions
         {
             foreach (var attribute in type.GetCustomAttributes<EntityAttribute>())
             {
-                EntityTypeRegistry.Types.Add(attribute.Name, type);   
+                EntityTypeRegistry.Types.Add(attribute.Name, type);
             }
         }
 

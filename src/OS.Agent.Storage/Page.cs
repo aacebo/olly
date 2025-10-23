@@ -15,11 +15,19 @@ public class Page
     [JsonPropertyName("sort")]
     public Sort? Sort { get; set; }
 
+    [JsonPropertyName("where")]
+    public IList<Condition> Where { get; set; } = [];
+
     public Task<PaginationResult<T>> Invoke<T>(SqlKata.Query query, CancellationToken cancellationToken = default)
     {
         if (Sort is not null)
         {
             query = Sort.Direction == SortDirection.Asc ? query.OrderBy(Sort.Columns) : query.OrderByDesc(Sort.Columns);
+        }
+
+        foreach (var condition in Where)
+        {
+            query = query.Where(condition.Left, condition.Op, condition.Right);
         }
 
         return query.PaginateAsync<T>(Index + 1, Size, cancellationToken: cancellationToken);
@@ -32,6 +40,7 @@ public class Page
         private int _index = 0;
         private int _size = 20;
         private Sort? _sort;
+        private readonly IList<Condition> _where = [];
 
         public PageBuilder Index(int index)
         {
@@ -62,13 +71,32 @@ public class Page
             return this;
         }
 
+        public PageBuilder Where(Condition condition)
+        {
+            _where.Add(condition);
+            return this;
+        }
+
+        public PageBuilder Where(string left, object right)
+        {
+            _where.Add(new(left, right));
+            return this;
+        }
+
+        public PageBuilder Where(string left, string op, object right)
+        {
+            _where.Add(new(left, op, right));
+            return this;
+        }
+
         public Page Build()
         {
             return new()
             {
                 Index = _index,
                 Size = _size,
-                Sort = _sort
+                Sort = _sort,
+                Where = _where
             };
         }
     }
@@ -124,4 +152,25 @@ public enum SortDirection
 
     [JsonStringEnumMemberName("desc")]
     Desc
+}
+
+public class Condition
+{
+    public string Left { get; }
+    public string Op { get; }
+    public object Right { get; }
+
+    public Condition(string left, object right)
+    {
+        Left = left;
+        Op = "=";
+        Right = right;
+    }
+
+    public Condition(string left, string op, object right)
+    {
+        Left = left;
+        Op = op;
+        Right = right;
+    }
 }
