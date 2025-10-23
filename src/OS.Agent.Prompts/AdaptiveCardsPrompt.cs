@@ -1,5 +1,8 @@
+using System.Text.Json;
+
 using Microsoft.Teams.AI.Annotations;
-using Microsoft.Teams.Cards;
+
+using OS.Agent.Cards.Progress;
 
 namespace OS.Agent.Prompts;
 
@@ -15,14 +18,33 @@ namespace OS.Agent.Prompts;
     "- cards should make use of columns as needed for better layouts",
     "- cards should always have a title"
 )]
-public class AdaptiveCardsPrompt(IPromptContext context)
+public class AdaptiveCardsPrompt
 {
     [Function]
-    [Function.Description("Adds an adaptive card as an attachment to the response message")]
-    public string AddAdaptiveCardToResponse([Param] string adaptiveCard)
+    [Function.Description(
+        "Gets an adaptive card that represents some progress state",
+        "Supported progress styles are 'in-progress', 'success', 'warning', 'error'"
+    )]
+    public string GetProgressCard([Param] string style, [Param] string? title, [Param] string? message)
     {
-        var card = AdaptiveCard.Deserialize(adaptiveCard) ?? throw new InvalidDataException("Invalid Adaptive Card Payload");
-        context.AddAdaptiveCard(card);
-        return "<adaptive card added to response>";
+        var progressStyle = new ProgressStyle(style);
+
+        if (!(progressStyle.IsInProgress || progressStyle.IsSuccess || progressStyle.IsWarning || progressStyle.IsError))
+        {
+            throw new InvalidOperationException("invalid style, supported values are 'in-progress', 'success', 'warning', 'error'");
+        }
+
+        var card = new ProgressCard(progressStyle);
+
+        if (title is not null)
+        {
+            card = card.AddHeader(title);
+        }
+
+        card = progressStyle.IsInProgress
+            ? card.AddProgressBar().AddFooter(message)
+            : card.AddProgressBar(100).AddFooter(message);
+
+        return JsonSerializer.Serialize(card);
     }
 }

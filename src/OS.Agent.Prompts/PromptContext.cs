@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Teams.AI.Models.OpenAI;
-using Microsoft.Teams.Cards;
 
 using OS.Agent.Drivers;
 using OS.Agent.Drivers.Models;
@@ -38,7 +37,6 @@ public interface IPromptContext
     Task<Message> Update(Guid id, string text, params Attachment[] attachments);
     Task<Message> Update(Guid id, params Attachment[] attachments);
     Task<Message> Reply(string text, params Attachment[] attachments);
-    void AddAdaptiveCard(AdaptiveCard card);
 }
 
 public class PromptContext : IPromptContext
@@ -63,7 +61,7 @@ public class PromptContext : IPromptContext
     public CancellationToken CancellationToken { get; }
     public IServiceProvider Services { get; }
 
-    private IList<Attachment> Attachments { get; set; } = [];
+    private Message? Progress { get; set; }
 
     public PromptContext(MessageEvent @event, IServiceScope scope, CancellationToken cancellationToken = default)
     {
@@ -116,7 +114,7 @@ public class PromptContext : IPromptContext
         var request = new MessageRequest()
         {
             Text = text,
-            Attachments = [.. attachments, .. Attachments],
+            Attachments = attachments,
             Chat = Chat,
             From = Account,
             Install = Install
@@ -167,7 +165,7 @@ public class PromptContext : IPromptContext
         var request = new MessageReplyRequest()
         {
             Text = text,
-            Attachments = [.. attachments, .. Attachments],
+            Attachments = attachments,
             Chat = Chat,
             Install = Install,
             From = Account,
@@ -178,14 +176,5 @@ public class PromptContext : IPromptContext
         var message = await Driver.Reply(request, CancellationToken);
         if (string.IsNullOrEmpty(message.SourceId)) return message;
         return await Storage.Messages.Create(message, cancellationToken: CancellationToken);
-    }
-
-    public void AddAdaptiveCard(AdaptiveCard card)
-    {
-        Attachments.Add(new Attachment()
-        {
-            ContentType = Microsoft.Teams.Api.ContentType.AdaptiveCard,
-            Content = card
-        });
     }
 }

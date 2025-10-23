@@ -42,7 +42,7 @@ public class MainPrompt
             Logger = context.Services.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>()
         });
 
-        AdaptiveCardsPrompt = OpenAIChatPrompt.From(context.Model, new AdaptiveCardsPrompt(context), new()
+        AdaptiveCardsPrompt = OpenAIChatPrompt.From(context.Model, new AdaptiveCardsPrompt(), new()
         {
             Logger = context.Services.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>()
         });
