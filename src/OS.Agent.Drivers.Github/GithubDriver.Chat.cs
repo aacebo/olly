@@ -57,9 +57,40 @@ public partial class GithubDriver
         return message;
     }
 
-    public async Task<Message> Update(string id, MessageRequest request, CancellationToken cancellationToken = default)
+    public async Task<Message> Update(MessageUpdateRequest request, CancellationToken cancellationToken = default)
     {
-        
+        var message = request.Message;
+
+        message.Text = request.Text ?? message.Text;
+        message.Attachments = request.Attachments?.ToList() ?? message.Attachments;
+
+        var client = await Github.GetGraphConnection(request.Install, cancellationToken);
+        var query = new Mutation()
+            .UpdateDiscussionComment(new UpdateDiscussionCommentInput()
+            {
+                CommentId = new(message.SourceId),
+                Body = message.Text
+            })
+            .Select(res => new GithubDiscussionComment()
+            {
+                Id = res.Comment.Id,
+                Url = res.Comment.Url,
+                Body = res.Comment.Body,
+                UpVotes = res.Comment.UpvoteCount
+            })
+            .Compile();
+
+        var comment = await client.Run(
+            query,
+            cancellationToken: cancellationToken
+        );
+
+        message.Entities.Put(new GithubDiscussionCommentEntity()
+        {
+            Comment = comment
+        });
+
+        return message;
     }
 
     public async Task<Message> Reply(MessageReplyRequest request, CancellationToken cancellationToken = default)

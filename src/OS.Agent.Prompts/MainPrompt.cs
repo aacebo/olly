@@ -55,21 +55,22 @@ public class MainPrompt
     public async Task SendUpdate([Param] string title, [Param] string? message = null)
     {
         var inProgress = Cards.Progress.InProgress(title, message);
-        var success = Cards.Progress.Success(title);
-        var _ = await Context.Send(message ?? "please wait...", new Attachment()
+        var res = await Context.Send(message ?? "please wait...", new Attachment()
         {
             ContentType = inProgress.ContentType,
             Content = inProgress.Content ?? throw new JsonException()
         });
 
         await Task.Delay(2000);
-        await Context.Send(message ?? "success!", new Attachment()
+
+        var success = Cards.Progress.Success(title);
+        await Context.Update(res.Id, new Attachment()
         {
             ContentType = success.ContentType,
             Content = success.Content ?? throw new JsonException()
         });
 
-        await Context.Typing();
+        // await Context.Typing();
     }
 
     [Function]

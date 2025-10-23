@@ -35,6 +35,8 @@ public interface IPromptContext
     Task SignIn(string url, string state);
     Task Typing(string? text = null);
     Task<Message> Send(string text, params Attachment[] attachments);
+    Task<Message> Update(Guid id, string text, params Attachment[] attachments);
+    Task<Message> Update(Guid id, params Attachment[] attachments);
     Task<Message> Reply(string text, params Attachment[] attachments);
     void AddAdaptiveCard(AdaptiveCard card);
 }
@@ -123,6 +125,41 @@ public class PromptContext : IPromptContext
         var message = await Driver.Send(request, CancellationToken);
         if (string.IsNullOrEmpty(message.SourceId)) return message;
         return await Storage.Messages.Create(message, cancellationToken: CancellationToken);
+    }
+
+    public async Task<Message> Update(Guid id, string text, params Attachment[] attachments)
+    {
+        var message = await Messages.GetById(id, CancellationToken) ?? throw new Exception("message not found");
+        var request = new MessageUpdateRequest()
+        {
+            Text = text,
+            Attachments = attachments.Length > 0 ? attachments : null,
+            Chat = Chat,
+            From = Account,
+            Install = Install,
+            Message = message
+        };
+
+        message = await Driver.Update(request, CancellationToken);
+        if (string.IsNullOrEmpty(message.SourceId)) return message;
+        return await Storage.Messages.Update(message, cancellationToken: CancellationToken);
+    }
+
+    public async Task<Message> Update(Guid id, params Attachment[] attachments)
+    {
+        var message = await Messages.GetById(id, CancellationToken) ?? throw new Exception("message not found");
+        var request = new MessageUpdateRequest()
+        {
+            Attachments = attachments.Length > 0 ? attachments : null,
+            Chat = Chat,
+            From = Account,
+            Install = Install,
+            Message = message
+        };
+
+        message = await Driver.Update(request, CancellationToken);
+        if (string.IsNullOrEmpty(message.SourceId)) return message;
+        return await Storage.Messages.Update(message, cancellationToken: CancellationToken);
     }
 
     public async Task<Message> Reply(string text, params Attachment[] attachments)

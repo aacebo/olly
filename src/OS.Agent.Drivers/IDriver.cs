@@ -16,6 +16,6 @@ public interface IChatDriver : IDriver
 {
     Task Typing(TypingRequest request, CancellationToken cancellationToken = default);
     Task<Message> Send(MessageRequest request, CancellationToken cancellationToken = default);
-    Task<Message> Update(string id, MessageRequest request, CancellationToken cancellationToken = default);
+    Task<Message> Update(MessageUpdateRequest request, CancellationToken cancellationToken = default);
     Task<Message> Reply(MessageReplyRequest request, CancellationToken cancellationToken = default);
 }
