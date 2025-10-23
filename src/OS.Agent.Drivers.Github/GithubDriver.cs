@@ -57,7 +57,7 @@ public partial class GithubDriver(IServiceProvider provider) : IChatDriver
 
                 if (issueRecord is null)
                 {
-                    await Records.Create(
+                    issueRecord = await Records.Create(
                         new()
                         {
                             ParentId = record.Id,
@@ -77,7 +77,37 @@ public partial class GithubDriver(IServiceProvider provider) : IChatDriver
                     issueRecord.Name = issue.Title;
                     issueRecord.Url = issue.HtmlUrl;
                     issueRecord.Entities = [new GithubEntity(issue.ToUpdate())];
-                    await Records.Update(issueRecord, cancellationToken);
+                    issueRecord = await Records.Update(issueRecord, cancellationToken);
+                }
+
+                var comments = await client.Issue.Comment.GetAllForIssue(repository.Owner.Login, repository.Name, issue.Number);
+
+                foreach (var comment in comments)
+                {
+                    var commentRecord = await Records.GetBySourceId(SourceType.Github, comment.NodeId, cancellationToken);
+
+                    if (commentRecord is null)
+                    {
+                        await Records.Create(
+                            new()
+                            {
+                                ParentId = issueRecord.Id,
+                                SourceType = SourceType.Github,
+                                SourceId = comment.NodeId,
+                                Url = comment.HtmlUrl,
+                                Type = "issue.comment",
+                                Entities = [new GithubEntity(comment)]
+                            },
+                            cancellationToken
+                        );
+                    }
+                    else
+                    {
+                        commentRecord.ParentId = issueRecord.Id;
+                        commentRecord.Url = comment.HtmlUrl;
+                        commentRecord.Entities = [new GithubEntity(comment)];
+                        await Records.Update(commentRecord, cancellationToken);
+                    }
                 }
             }
         }
