@@ -38,7 +38,7 @@ public partial class TeamsDriver(IServiceProvider provider) : IChatDriver
                     Type = chatType,
                     Name = request.Chat.Name
                 }
-            }.AddAttachment(Cards.Auth.SignIn($"{request.Url}&state={request.State}")),
+            }.AddAttachment(Cards.Authentication.SignInCard.Github($"{request.Url}&state={request.State}")),
             chatType,
             request.Chat.Url,
             cancellationToken
