@@ -5,6 +5,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.Teams.AI.Annotations;
 using Microsoft.Teams.AI.Models.OpenAI;
 
+using OS.Agent.Cards.Extensions;
+using OS.Agent.Cards.Progress;
 using OS.Agent.Drivers.Github;
 using OS.Agent.Storage.Models;
 
@@ -54,7 +56,10 @@ public class MainPrompt
     )]
     public async Task SendUpdate([Param] string title, [Param] string? message = null)
     {
-        var inProgress = Cards.Progress.InProgress(title, message);
+        var inProgress = message is null
+            ? new ProgressCard().AddHeader(title).AddProgressBar().ToAttachment()
+            : new ProgressCard().AddHeader(title).AddProgressBar().AddFooter(message).ToAttachment();
+
         var res = await Context.Send(message ?? "please wait...", new Attachment()
         {
             ContentType = inProgress.ContentType,
@@ -63,14 +68,17 @@ public class MainPrompt
 
         await Task.Delay(2000);
 
-        var success = Cards.Progress.Success(title);
+        var success = message is null
+            ? new ProgressCard(ProgressStyle.Success).AddHeader(title).AddProgressBar(100).ToAttachment()
+            : new ProgressCard(ProgressStyle.Success).AddHeader(title).AddProgressBar(100).AddFooter(message).ToAttachment();
+
         await Context.Update(res.Id, new Attachment()
         {
             ContentType = success.ContentType,
             Content = success.Content ?? throw new JsonException()
         });
 
-        // await Context.Typing();
+        await Context.Typing();
     }
 
     [Function]
