@@ -52,9 +52,23 @@ public class MainPrompt
         "this function should only be used to provide updates to user during a long process.",
         "**DO NOT** use the say function to send the same message you conclude your response with!"
     )]
-    public async Task Say([Param] string message)
+    public async Task SendUpdate([Param] string title, [Param] string? message = null)
     {
-        await Context.Send(message);
+        var inProgress = Cards.Progress.InProgress(title, message);
+        var success = Cards.Progress.Success(title);
+        var _ = await Context.Send(message ?? "please wait...", new Attachment()
+        {
+            ContentType = inProgress.ContentType,
+            Content = inProgress.Content ?? throw new JsonException()
+        });
+
+        await Task.Delay(2000);
+        await Context.Send(message ?? "success!", new Attachment()
+        {
+            ContentType = success.ContentType,
+            Content = success.Content ?? throw new JsonException()
+        });
+
         await Context.Typing();
     }
 

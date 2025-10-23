@@ -57,6 +57,11 @@ public partial class GithubDriver
         return message;
     }
 
+    public async Task<Message> Update(string id, MessageRequest request, CancellationToken cancellationToken = default)
+    {
+        
+    }
+
     public async Task<Message> Reply(MessageReplyRequest request, CancellationToken cancellationToken = default)
     {
         var message = await Send(request, cancellationToken);
