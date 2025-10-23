@@ -91,7 +91,7 @@ public class Entity
         return Get<T>(path) ?? throw new Exception($"'{path}' not found");
     }
 
-    public static Entity From<T>(T value) where T : class
+    public static Entity From<T>(T value)
     {
         var properties = JsonSerializer.SerializeToDocument(value).Deserialize<Dictionary<string, JsonElement>>();
 
@@ -138,7 +138,7 @@ public class Entities : List<Entity>, IList<Entity>
     }
 }
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true, Inherited = false)]
 public class EntityAttribute(string name) : Attribute
 {
     public string Name { get; } = name;

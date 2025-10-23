@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
+using OS.Agent.Drivers.Github.Models;
 using OS.Agent.Drivers.Models;
 using OS.Agent.Services;
 using OS.Agent.Storage.Models;
@@ -34,7 +35,7 @@ public partial class GithubDriver(IServiceProvider provider) : IChatDriver
                         Url = repository.HtmlUrl,
                         Type = "repository",
                         Name = repository.Name,
-                        Entities = [Entity.From(repository)]
+                        Entities = [new GithubEntity(repository)]
                     },
                     cancellationToken
                 );
@@ -43,7 +44,7 @@ public partial class GithubDriver(IServiceProvider provider) : IChatDriver
             {
                 record.Name = repository.Name;
                 record.Url = repository.Url;
-                record.Entities = [Entity.From(repository)];
+                record.Entities = [new GithubEntity(repository)];
                 record = await Records.Update(record, cancellationToken);
             }
 
@@ -65,7 +66,7 @@ public partial class GithubDriver(IServiceProvider provider) : IChatDriver
                             Url = issue.HtmlUrl,
                             Type = "issue",
                             Name = issue.Title,
-                            Entities = [Entity.From(issue)]
+                            Entities = [new GithubEntity(issue.ToUpdate())]
                         },
                         cancellationToken
                     );
@@ -75,7 +76,7 @@ public partial class GithubDriver(IServiceProvider provider) : IChatDriver
                     issueRecord.ParentId = record.Id;
                     issueRecord.Name = issue.Title;
                     issueRecord.Url = issue.HtmlUrl;
-                    issueRecord.Entities = [Entity.From(issue)];
+                    issueRecord.Entities = [new GithubEntity(issue.ToUpdate())];
                     await Records.Update(issueRecord, cancellationToken);
                 }
             }

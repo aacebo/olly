@@ -12,9 +12,10 @@ public static class IHostExtensions
     {
         foreach (var type in Assembly.GetCallingAssembly().GetTypes())
         {
-            var attribute = type.GetCustomAttribute<EntityAttribute>();
-            if (attribute is null) continue;
-            EntityTypeRegistry.Types.Add(attribute.Name, type);
+            foreach (var attribute in type.GetCustomAttributes<EntityAttribute>())
+            {
+                EntityTypeRegistry.Types.Add(attribute.Name, type);   
+            }
         }
 
         return host;
