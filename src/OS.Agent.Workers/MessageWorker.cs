@@ -11,6 +11,7 @@ using Microsoft.Teams.Apps;
 using NetMQ;
 
 using OS.Agent.Cards.Progress;
+using OS.Agent.Contexts;
 using OS.Agent.Events;
 using OS.Agent.Prompts;
 using OS.Agent.Services;
@@ -54,7 +55,22 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
                         Entities = [Entity.From(@event.Body)]
                     }, lifetime.ApplicationStopping);
 
-                    var context = new PromptContext(@event.Body, scope, lifetime.ApplicationStopping);
+                    if (@event.Body.Account.UserId is null) continue;
+
+                    var user = await storage.Users.GetById(@event.Body.Account.UserId.Value, lifetime.ApplicationStopping);
+
+                    if (user is null) continue;
+
+                    var context = new AgentMessageContext(@event.Body.Account.SourceType, scope, lifetime.ApplicationStopping)
+                    {
+                        Tenant = @event.Body.Tenant,
+                        Account = @event.Body.Account,
+                        User = user,
+                        Chat = @event.Body.Chat,
+                        Message = @event.Body.Message,
+                        Installation = @event.Body.Install
+                    };
+
                     var mainPrompt = new MainPrompt(context);
                     var prompt = OpenAIChatPrompt.From(model, mainPrompt, new()
                     {
@@ -63,8 +79,8 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
 
                     var ok = @event.Name switch
                     {
-                        "messages.create" => await OnCreateEvent(@event, context, prompt, cancellationToken),
-                        "messages.resume" => await OnResumeEvent(@event, context, prompt, cancellationToken),
+                        "messages.create" => await OnCreateEvent(context, prompt),
+                        "messages.resume" => await OnResumeEvent(context, prompt),
                         _ => throw new NotImplementedException($"Event '{@event.Name}' is not implemented")
                     };
 
@@ -94,14 +110,14 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
         return Task.CompletedTask;
     }
 
-    private async Task<bool> OnCreateEvent(Event<MessageEvent> _, IPromptContext context, OpenAIChatPrompt prompt, CancellationToken cancellationToken = default)
+    private async Task<bool> OnCreateEvent(AgentMessageContext context, OpenAIChatPrompt prompt)
     {
         await context.Typing();
 
-        var messages = await context.Messages.GetByChatId(
+        var messages = await context.Services.Messages.GetByChatId(
             context.Chat.Id,
             Page.Create().Sort(SortDirection.Desc, "created_at").Build(),
-            cancellationToken
+            context.CancellationToken
         );
 
         var memory = messages.List
@@ -115,21 +131,21 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
         var res = await prompt.Send(context.Message.Text, new()
         {
             Messages = memory
-        }, null, cancellationToken);
+        }, null, context.CancellationToken);
 
         await context.SendProgressUpdate(ProgressStyle.Success, "✅ Done!");
         await context.Send(res.Content);
         return true;
     }
 
-    private async Task<bool> OnResumeEvent(Event<MessageEvent> _, IPromptContext context, OpenAIChatPrompt prompt, CancellationToken cancellationToken = default)
+    private async Task<bool> OnResumeEvent(AgentMessageContext context, OpenAIChatPrompt prompt)
     {
         await context.Typing();
 
-        var messages = await context.Messages.GetByChatId(
+        var messages = await context.Services.Messages.GetByChatId(
             context.Chat.Id,
             Page.Create().Sort(SortDirection.Desc, "created_at").Build(),
-            cancellationToken
+            context.CancellationToken
         );
 
         var memory = messages.List
@@ -143,7 +159,7 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
         var res = await prompt.Send($"Resume from ", new()
         {
             Messages = memory
-        }, null, cancellationToken);
+        }, null, context.CancellationToken);
 
         await context.SendProgressUpdate(ProgressStyle.Success, "✅ Done!");
         await context.Reply(res.Content);

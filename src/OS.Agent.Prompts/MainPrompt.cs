@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Teams.AI.Annotations;
 using Microsoft.Teams.AI.Models.OpenAI;
 
+using OS.Agent.Contexts;
 using OS.Agent.Drivers.Github.Settings;
 using OS.Agent.Prompts.Github;
 using OS.Agent.Storage.Models;
@@ -26,19 +27,17 @@ namespace OS.Agent.Prompts;
 )]
 public class MainPrompt
 {
-    public readonly IPromptContext Context;
+    public readonly AgentMessageContext Context;
     public readonly IOptions<GithubSettings> GithubSettings;
-    public readonly JsonSerializerOptions SerializationOptions;
     public readonly OpenAIChatPrompt GithubPrompt;
 
-    public MainPrompt(IPromptContext context)
+    public MainPrompt(AgentMessageContext context)
     {
         Context = context;
-        GithubSettings = context.Services.GetRequiredService<IOptions<GithubSettings>>();
-        SerializationOptions = context.Services.GetRequiredService<JsonSerializerOptions>();
-        GithubPrompt = OpenAIChatPrompt.From(context.Model, new GithubPrompt(context), new()
+        GithubSettings = context.Provider.GetRequiredService<IOptions<GithubSettings>>();
+        GithubPrompt = OpenAIChatPrompt.From(context.Provider.GetRequiredService<OpenAIChatModel>(), new GithubPrompt(context), new()
         {
-            Logger = context.Services.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>()
+            Logger = context.Provider.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>()
         });
     }
 
@@ -58,14 +57,14 @@ public class MainPrompt
     [Function.Description("get the current users chat information")]
     public Task<string> GetCurrentChat()
     {
-        return Task.FromResult(JsonSerializer.Serialize(Context.Chat, SerializationOptions));
+        return Task.FromResult(JsonSerializer.Serialize(Context.Chat, Context.JsonSerializerOptions));
     }
 
     [Function]
     [Function.Description("get the current users account information")]
     public Task<string> GetCurrentAccount()
     {
-        return Task.FromResult(JsonSerializer.Serialize(Context.Account, SerializationOptions));
+        return Task.FromResult(JsonSerializer.Serialize(Context.Account, Context.JsonSerializerOptions));
     }
 
     [Function]
@@ -75,13 +74,13 @@ public class MainPrompt
     )]
     public async Task<string> Github([Param] string message)
     {
-        var account = (await Context.Accounts.GetByUserId(
-            Context.UserId,
+        var account = (await Context.Services.Accounts.GetByUserId(
+            Context.User.Id,
             Context.CancellationToken
         )).FirstOrDefault(a => a.SourceType == SourceType.Github);
 
         var token = account is not null
-            ? await Context.Tokens.GetByAccountId(account.Id, Context.CancellationToken)
+            ? await Context.Services.Tokens.GetByAccountId(account.Id, Context.CancellationToken)
             : null;
 
         if (account is null || token is null)
@@ -89,7 +88,7 @@ public class MainPrompt
             var state = new Token.State()
             {
                 TenantId = Context.Tenant.Id,
-                UserId = Context.UserId,
+                UserId = Context.User.Id,
                 MessageId = Context.Message.Id
             };
 

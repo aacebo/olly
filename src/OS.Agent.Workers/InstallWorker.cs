@@ -6,9 +6,10 @@ using Microsoft.Extensions.Logging;
 
 using NetMQ;
 
-using OS.Agent.Drivers;
+using OS.Agent.Contexts;
 using OS.Agent.Events;
 using OS.Agent.Services;
+using OS.Agent.Storage;
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Workers;
@@ -27,6 +28,7 @@ public class InstallWorker(IServiceProvider provider, IServiceScopeFactory scope
         Events.ReceiveReady += async (_, args) =>
         {
             var scope = scopeFactory.CreateScope();
+            var storage = scope.ServiceProvider.GetRequiredService<IStorage>();
             var lifetime = scope.ServiceProvider.GetRequiredService<IHostApplicationLifetime>();
             var logs = scope.ServiceProvider.GetRequiredService<ILogService>();
 
@@ -35,12 +37,6 @@ public class InstallWorker(IServiceProvider provider, IServiceScopeFactory scope
                 try
                 {
                     Logger.LogDebug("{}", JsonSerializer.Serialize(@event, JsonOptions));
-                    var driver = scope.ServiceProvider.GetServices<IDriver>().FirstOrDefault(driver => driver.Type == @event.Body.Install.SourceType);
-
-                    if (driver is null)
-                    {
-                        throw new NotImplementedException($"no driver implemented for source type '{@event.Body.Install.SourceType}'");
-                    }
 
                     await logs.Create(new()
                     {
@@ -51,17 +47,31 @@ public class InstallWorker(IServiceProvider provider, IServiceScopeFactory scope
                         Entities = [Entity.From(@event.Body)]
                     }, lifetime.ApplicationStopping);
 
+                    if (@event.Body.Account.UserId is null) continue;
+
+                    var user = await storage.Users.GetById(@event.Body.Account.UserId.Value, lifetime.ApplicationStopping);
+
+                    if (user is null) continue;
+
+                    var context = new AgentInstallContext(@event.Body.Account.SourceType, scope, lifetime.ApplicationStopping)
+                    {
+                        Tenant = @event.Body.Tenant,
+                        Account = @event.Body.Account,
+                        User = user,
+                        Installation = @event.Body.Install
+                    };
+
                     if (@event.Name == "installs.create")
                     {
-                        await OnCreateEvent(@event, driver, lifetime.ApplicationStopping);
+                        await OnCreateEvent(context);
                     }
                     else if (@event.Name == "installs.update")
                     {
-                        await OnUpdateEvent(@event, driver, lifetime.ApplicationStopping);
+                        await OnUpdateEvent(context);
                     }
                     else if (@event.Name == "installs.delete")
                     {
-                        await OnDeleteEvent(@event, driver, lifetime.ApplicationStopping);
+                        await OnDeleteEvent(context);
                     }
                 }
                 catch (Exception ex)
@@ -85,33 +95,18 @@ public class InstallWorker(IServiceProvider provider, IServiceScopeFactory scope
         return Task.CompletedTask;
     }
 
-    private async Task OnCreateEvent(Event<InstallEvent> @event, IDriver driver, CancellationToken cancellationToken = default)
+    private async Task OnCreateEvent(AgentInstallContext context)
     {
-        await driver.Install(new()
-        {
-            Tenant = @event.Body.Tenant,
-            Account = @event.Body.Account,
-            Install = @event.Body.Install
-        }, cancellationToken);
+        await context.Install();
     }
 
-    private async Task OnUpdateEvent(Event<InstallEvent> @event, IDriver driver, CancellationToken cancellationToken = default)
+    private async Task OnUpdateEvent(AgentInstallContext context)
     {
-        await driver.Install(new()
-        {
-            Tenant = @event.Body.Tenant,
-            Account = @event.Body.Account,
-            Install = @event.Body.Install
-        }, cancellationToken);
+        await context.Install();
     }
 
-    private async Task OnDeleteEvent(Event<InstallEvent> @event, IDriver driver, CancellationToken cancellationToken = default)
+    private async Task OnDeleteEvent(AgentInstallContext context)
     {
-        await driver.UnInstall(new()
-        {
-            Tenant = @event.Body.Tenant,
-            Account = @event.Body.Account,
-            Install = @event.Body.Install
-        }, cancellationToken);
+        await context.UnInstall();
     }
 }

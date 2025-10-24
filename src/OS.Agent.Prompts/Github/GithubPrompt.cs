@@ -6,6 +6,7 @@ using Microsoft.Teams.AI.Annotations;
 using Octokit.GraphQL;
 
 using OS.Agent.Cards.Progress;
+using OS.Agent.Contexts;
 using OS.Agent.Drivers.Github;
 using OS.Agent.Errors;
 using OS.Agent.Storage;
@@ -25,10 +26,8 @@ namespace OS.Agent.Prompts.Github;
     "Several updates can be sent per single message sent by the user.",
     "Call SendUpdate whenever you complete a unit of work."
 )]
-public class GithubPrompt(IPromptContext context)
+public class GithubPrompt(AgentMessageContext context)
 {
-    public JsonSerializerOptions SerializationOptions = context.Services.GetRequiredService<JsonSerializerOptions>();
-
     [Function]
     [Function.Description(
         "say something to the user.",
@@ -47,12 +46,12 @@ public class GithubPrompt(IPromptContext context)
     {
         await SendUpdate(ProgressStyle.InProgress, "Github", "fetching accounts...");
 
-        var accounts = await context.Accounts.GetByTenantId(
+        var accounts = await context.Services.Accounts.GetByTenantId(
             context.Tenant.Id,
             context.CancellationToken
         );
 
-        return JsonSerializer.Serialize(accounts.Where(a => a.SourceType == SourceType.Github), SerializationOptions);
+        return JsonSerializer.Serialize(accounts.Where(a => a.SourceType == SourceType.Github), context.JsonSerializerOptions);
     }
 
     [Function]
@@ -61,7 +60,7 @@ public class GithubPrompt(IPromptContext context)
     {
         await SendUpdate(ProgressStyle.InProgress, "Github", "fetching repositories...");
 
-        var records = await context.Records.GetByTenantId(
+        var records = await context.Services.Records.GetByTenantId(
             context.Tenant.Id,
             Page.Create()
                 .Where("source_type", "=", SourceType.Github.ToString())
@@ -70,7 +69,7 @@ public class GithubPrompt(IPromptContext context)
             context.CancellationToken
         );
 
-        return JsonSerializer.Serialize(records.List, SerializationOptions);
+        return JsonSerializer.Serialize(records.List, context.JsonSerializerOptions);
     }
 
     [Function]
@@ -79,9 +78,9 @@ public class GithubPrompt(IPromptContext context)
     {
         await SendUpdate(ProgressStyle.InProgress, "Github", "fetching discussions...");
 
-        var account = await context.Accounts.GetById(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
-        var install = await context.Installs.GetByAccountId(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account install not found");
-        var github = context.Services.GetRequiredService<GithubService>();
+        var account = await context.Services.Accounts.GetById(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
+        var install = await context.Services.Installs.GetByAccountId(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account install not found");
+        var github = context.Provider.GetRequiredService<GithubService>();
         var client = await github.GetGraphConnection(install, context.CancellationToken);
         var query = new Query()
             .RepositoryOwner(account.Name)
@@ -98,6 +97,6 @@ public class GithubPrompt(IPromptContext context)
             .Compile();
 
         var discussions = await client.Run(query, cancellationToken: context.CancellationToken);
-        return JsonSerializer.Serialize(discussions, SerializationOptions);
+        return JsonSerializer.Serialize(discussions, context.JsonSerializerOptions);
     }
 }

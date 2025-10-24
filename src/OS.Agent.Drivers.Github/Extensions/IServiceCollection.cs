@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using Octokit;
 
 using OS.Agent.Drivers.Github.Settings;
+using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github.Extensions;
 
@@ -20,10 +21,10 @@ public static class IServiceCollectionExtensions
         var provider = services.BuildServiceProvider();
         var jsonOptions = provider.GetRequiredService<JsonSerializerOptions>();
 
-        services.AddScoped<GithubDriver>();
         services.AddScoped<GithubService>();
-        services.AddScoped<IDriver>(provider => provider.GetRequiredService<GithubDriver>());
-        services.AddScoped<IChatDriver>(provider => provider.GetRequiredService<GithubDriver>());
+        services.AddKeyedScoped<GithubDriver>(SourceType.Github.ToString());
+        services.AddKeyedScoped<IDriver, GithubDriver>(SourceType.Github.ToString());
+        services.AddKeyedScoped<IChatDriver, GithubDriver>(SourceType.Github.ToString());
         services.AddSingleton(provider =>
         {
             var settings = provider.GetRequiredService<IOptions<GithubSettings>>();

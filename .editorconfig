@@ -33,6 +33,8 @@ insert_final_newline = false
 
 # Misc
 dotnet_diagnostic.CA1822.severity = none
+dotnet_diagnostic.IDE0290.severity = none
+dotnet_diagnostic.IDE0305.severity = none
 
 # Organize usings
 dotnet_separate_import_directive_groups = true

@@ -1,9 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.10" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.10" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.10" />
-    <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.10" />
   </ItemGroup>
 
   <ItemGroup>
@@ -12,17 +9,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Octokit" Version="14.*" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\OS.Agent.Events\OS.Agent.Events.csproj" />
-    <ProjectReference Include="..\OS.Agent.Storage\OS.Agent.Storage.csproj" />
-    <ProjectReference Include="..\OS.Agent.Services\OS.Agent.Services.csproj" />
-    <ProjectReference Include="..\OS.Agent.Drivers\OS.Agent.Drivers.csproj" />
     <ProjectReference Include="..\OS.Agent.Drivers.Github\OS.Agent.Drivers.Github.csproj" />
-    <ProjectReference Include="..\OS.Agent.Drivers.Teams\OS.Agent.Drivers.Teams.csproj" />
-    <ProjectReference Include="..\OS.Agent.Cards\OS.Agent.Cards.csproj" />
+    <ProjectReference Include="..\OS.Agent.Contexts\OS.Agent.Contexts.csproj" />
     <ProjectReference Include="..\OS.Agent.Errors\OS.Agent.Errors.csproj" />
   </ItemGroup>
 </Project>

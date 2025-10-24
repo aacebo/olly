@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OS.Agent.Storage\OS.Agent.Storage.csproj" />
+    <ProjectReference Include="..\OS.Agent.Services\OS.Agent.Services.csproj" />
+    <ProjectReference Include="..\OS.Agent.Drivers\OS.Agent.Drivers.csproj" />
+    <ProjectReference Include="..\OS.Agent.Cards\OS.Agent.Cards.csproj" />
+  </ItemGroup>
+</Project>

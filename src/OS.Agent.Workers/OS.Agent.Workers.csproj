@@ -21,5 +21,6 @@
     <ProjectReference Include="..\OS.Agent.Storage\OS.Agent.Storage.csproj" />
     <ProjectReference Include="..\OS.Agent.Services\OS.Agent.Services.csproj" />
     <ProjectReference Include="..\OS.Agent.Prompts\OS.Agent.Prompts.csproj" />
+    <ProjectReference Include="..\OS.Agent.Contexts\OS.Agent.Contexts.csproj" />
   </ItemGroup>
 </Project>

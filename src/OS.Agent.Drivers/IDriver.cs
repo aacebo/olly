@@ -9,11 +9,11 @@ public interface IDriver
 
     Task Install(InstallRequest request, CancellationToken cancellationToken = default);
     Task UnInstall(UnInstallRequest request, CancellationToken cancellationToken = default);
-    Task SignIn(SignInRequest request, CancellationToken cancellationToken = default);
 }
 
 public interface IChatDriver : IDriver
 {
+    Task SignIn(SignInRequest request, CancellationToken cancellationToken = default);
     Task Typing(TypingRequest request, CancellationToken cancellationToken = default);
     Task<Message> Send(MessageRequest request, CancellationToken cancellationToken = default);
     Task<Message> Update(MessageUpdateRequest request, CancellationToken cancellationToken = default);
