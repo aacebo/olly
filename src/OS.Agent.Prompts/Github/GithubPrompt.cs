@@ -80,19 +80,33 @@ public class GithubPrompt(AgentMessageContext context)
             Message = "fetching accounts..."
         });
 
-        var accounts = await context.Services.Accounts.GetByTenantId(
-            context.Tenant.Id,
-            context.CancellationToken
-        );
-
-        await context.UpdateTask(task.Id, new()
+        try
         {
-            Style = ProgressStyle.Success,
-            Message = $"found {accounts.Count()} accounts",
-            EndedAt = DateTimeOffset.UtcNow
-        });
+            var accounts = await context.Services.Accounts.GetByTenantId(
+                context.Tenant.Id,
+                context.CancellationToken
+            );
 
-        return JsonSerializer.Serialize(accounts.Where(a => a.SourceType == SourceType.Github), context.JsonSerializerOptions);
+            await context.UpdateTask(task.Id, new()
+            {
+                Style = ProgressStyle.Success,
+                Message = $"found {accounts.Count()} accounts",
+                EndedAt = DateTimeOffset.UtcNow
+            });
+
+            return JsonSerializer.Serialize(accounts.Where(a => a.SourceType == SourceType.Github), context.JsonSerializerOptions);
+        }
+        catch (Exception ex)
+        {
+            await context.UpdateTask(task.Id, new()
+            {
+                Style = ProgressStyle.Error,
+                Message = ex.Message,
+                EndedAt = DateTimeOffset.UtcNow
+            });
+
+            throw new Exception(ex.Message, ex);
+        }
     }
 
     [Function]
@@ -105,23 +119,37 @@ public class GithubPrompt(AgentMessageContext context)
             Message = "fetching repositories..."
         });
 
-        var records = await context.Services.Records.GetByTenantId(
-            context.Tenant.Id,
-            Page.Create()
-                .Where("source_type", "=", SourceType.Github.ToString())
-                .Where("type", "=", "repository")
-                .Build(),
-            context.CancellationToken
-        );
-
-        await context.UpdateTask(task.Id, new()
+        try
         {
-            Style = ProgressStyle.Success,
-            Message = $"found {records.Count} repositories",
-            EndedAt = DateTimeOffset.UtcNow
-        });
+            var records = await context.Services.Records.GetByTenantId(
+                context.Tenant.Id,
+                Page.Create()
+                    .Where("source_type", "=", SourceType.Github.ToString())
+                    .Where("type", "=", "repository")
+                    .Build(),
+                context.CancellationToken
+            );
 
-        return JsonSerializer.Serialize(records.List, context.JsonSerializerOptions);
+            await context.UpdateTask(task.Id, new()
+            {
+                Style = ProgressStyle.Success,
+                Message = $"found {records.Count} repositories",
+                EndedAt = DateTimeOffset.UtcNow
+            });
+
+            return JsonSerializer.Serialize(records.List, context.JsonSerializerOptions);
+        }
+        catch (Exception ex)
+        {
+            await context.UpdateTask(task.Id, new()
+            {
+                Style = ProgressStyle.Error,
+                Message = ex.Message,
+                EndedAt = DateTimeOffset.UtcNow
+            });
+
+            throw new Exception(ex.Message, ex);
+        }
     }
 
     [Function]
@@ -134,33 +162,47 @@ public class GithubPrompt(AgentMessageContext context)
             Message = $"fetching discussions in repository {repositoryName}..."
         });
 
-        var account = await context.Services.Accounts.GetById(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
-        var install = await context.Services.Installs.GetByAccountId(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account install not found");
-        var github = context.Provider.GetRequiredService<GithubService>();
-        var client = await github.GetGraphConnection(install, context.CancellationToken);
-        var query = new Query()
-            .RepositoryOwner(account.Name)
-            .Repository(repositoryName)
-            .Discussions()
-            .AllPages()
-            .Select(discussion => new
-            {
-                discussion.Id,
-                discussion.Title,
-                discussion.Url,
-                discussion.Body
-            })
-            .Compile();
-
-        var discussions = await client.Run(query, cancellationToken: context.CancellationToken);
-
-        await context.UpdateTask(task.Id, new()
+        try
         {
-            Style = ProgressStyle.Success,
-            Message = $"found {discussions.Count()} discussions in repository {repositoryName}",
-            EndedAt = DateTimeOffset.UtcNow
-        });
+            var account = await context.Services.Accounts.GetById(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
+            var install = await context.Services.Installs.GetByAccountId(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account install not found");
+            var github = context.Provider.GetRequiredService<GithubService>();
+            var client = await github.GetGraphConnection(install, context.CancellationToken);
+            var query = new Query()
+                .RepositoryOwner(account.Name)
+                .Repository(repositoryName)
+                .Discussions()
+                .AllPages()
+                .Select(discussion => new
+                {
+                    discussion.Id,
+                    discussion.Title,
+                    discussion.Url,
+                    discussion.Body
+                })
+                .Compile();
 
-        return JsonSerializer.Serialize(discussions, context.JsonSerializerOptions);
+            var discussions = await client.Run(query, cancellationToken: context.CancellationToken);
+
+            await context.UpdateTask(task.Id, new()
+            {
+                Style = ProgressStyle.Success,
+                Message = $"found {discussions.Count()} discussions in repository {repositoryName}",
+                EndedAt = DateTimeOffset.UtcNow
+            });
+
+            return JsonSerializer.Serialize(discussions, context.JsonSerializerOptions);
+        }
+        catch (Exception ex)
+        {
+            await context.UpdateTask(task.Id, new()
+            {
+                Style = ProgressStyle.Error,
+                Message = ex.Message,
+                EndedAt = DateTimeOffset.UtcNow
+            });
+
+            throw new Exception(ex.Message, ex);
+        }
     }
 }

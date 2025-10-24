@@ -10,7 +10,6 @@ using Microsoft.Teams.Apps;
 
 using NetMQ;
 
-using OS.Agent.Cards.Progress;
 using OS.Agent.Contexts;
 using OS.Agent.Events;
 using OS.Agent.Prompts;
@@ -138,7 +137,7 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
             }
         }, null, context.CancellationToken);
 
-        await context.Finish(ProgressStyle.Success, "✅ Done!", "Success!");
+        await context.Finish();
         await context.Send(res.Content);
         return true;
     }
@@ -166,7 +165,7 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
             Messages = memory
         }, null, context.CancellationToken);
 
-        await context.Finish(ProgressStyle.Success, "✅ Done!", "Success!");
+        await context.Finish();
         await context.Reply(res.Content);
         return true;
     }

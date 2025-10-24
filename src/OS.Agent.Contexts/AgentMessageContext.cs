@@ -193,22 +193,22 @@ public class AgentMessageContext : AgentContext<IChatDriver>
         return task;
     }
 
-    public async Task<TaskItem> Finish(ProgressStyle style, string? title, string message)
+    public async Task<TaskItem> Finish()
     {
-        var taskId = Response.TaskCard.Current is not null
-            ? Response.TaskCard.Current.Id
+        var errors = Response.TaskCard.Tasks.Count(t => t.Style.IsError);
+        var warnings = Response.TaskCard.Tasks.Count(t => t.Style.IsWarning);
+        var task = Response.TaskCard.Current is not null
+            ? Response.TaskCard.Current
             : Response.TaskCard.Add(new()
             {
-                Style = style,
-                Title = title,
-                Message = message
-            }).Id;
+                Style = ProgressStyle.InProgress,
+                Title = "✅ Done!",
+                Message = "Success!"
+            });
 
-        var task = Response.TaskCard.Update(taskId, new()
+        task = Response.TaskCard.Update(task.Id, new()
         {
-            Style = style,
-            Title = title,
-            Message = message,
+            Style = errors + warnings > 0 ? ProgressStyle.Warning : ProgressStyle.Success,
             EndedAt = DateTimeOffset.UtcNow
         });
 
