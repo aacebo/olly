@@ -130,7 +130,12 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
 
         var res = await prompt.Send(context.Message.Text, new()
         {
-            Messages = memory
+            Messages = memory,
+            Request = new()
+            {
+                Temperature = 0,
+                EndUserId = context.User.Id.ToString()
+            }
         }, null, context.CancellationToken);
 
         await context.SendProgressUpdate(ProgressStyle.Success, "✅ Done!");

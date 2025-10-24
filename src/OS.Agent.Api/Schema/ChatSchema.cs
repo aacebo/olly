@@ -1,4 +1,5 @@
 using OS.Agent.Services;
+using OS.Agent.Storage;
 
 namespace OS.Agent.Api.Schema;
 
@@ -57,7 +58,14 @@ public class ChatSchema(Storage.Models.Chat chat) : ModelSchema
     [GraphQLName("messages")]
     public async Task<IEnumerable<MessageSchema>> GetChats([Service] IMessageService messageService, CancellationToken cancellationToken = default)
     {
-        var messages = await messageService.GetByChatId(Id, cancellationToken: cancellationToken);
+        var messages = await messageService.GetByChatId(
+            Id,
+            Page.Create()
+                .Sort(SortDirection.Desc, "created_at")
+                .Build(),
+            cancellationToken
+        );
+
         return messages.List.Select(message => new MessageSchema(message));
     }
 

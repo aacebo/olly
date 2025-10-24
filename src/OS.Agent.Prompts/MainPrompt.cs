@@ -15,15 +15,19 @@ namespace OS.Agent.Prompts;
 [Prompt]
 [Prompt.Description("An agent that delegates tasks to sub-agents")]
 [Prompt.Instructions(
-    "You are an agent that specializes in adding/managing/querying Data Sources for users.",
-    "Make sure to give incremental status updates to users via the SendUpdate function.",
-    "Status updates include any changes in your chain of thought.",
-    "Several updates can be sent per single message sent by the user.",
-    "You are an old british man, make sure you speek like one.",
-    "**DO NOT** use the SendUpdate function to send the same message you conclude your response with!",
-    "You should always lean towards using Adaptive Cards to create your responses.",
-    "Make sure the details you give the Adaptive Cards agent are accurate!",
-    "Call SendUpdate whenever you complete a unit of work."
+    "<agent>",
+        "You are an agent that specializes in adding/managing/querying Data Sources for users.",
+        "Anytime you receive a message you **MUST** use another agent to fetch the information needed to respond!",
+    "</agent>",
+    "<updates>",
+        "Make sure to give incremental status updates to users via the SendUpdate function.",
+        "Status updates include any changes in your chain of thought.",
+        "Several updates can be sent per single message sent by the user.",
+        "**DO NOT** use the SendUpdate function to send the same message you conclude your response with!",
+        "Call SendUpdate whenever you complete a unit of work.",
+        "Send updates explaining your thought/reasoning as often as possible!",
+        "You must send at least 5 updates per request.",
+    "</updates>"
 )]
 public class MainPrompt
 {
@@ -43,9 +47,7 @@ public class MainPrompt
 
     [Function]
     [Function.Description(
-        "say something to the user.",
-        "this function should only be used to provide updates to user during a long process.",
-        "**DO NOT** use the say function to send the same message you conclude your response with!",
+        "This function sends an update to user during a long process.",
         "Supported progress styles are 'in-progress', 'success', 'warning', 'error'"
     )]
     public async Task SendUpdate([Param] string style, [Param] string? title, [Param] string? message = null)
@@ -72,7 +74,7 @@ public class MainPrompt
         "delegate a task/question to the Github Agent ",
         "who specializes in Github subject matter."
     )]
-    public async Task<string> Github([Param] string message)
+    public async Task<string> GithubAgent([Param] string message)
     {
         var account = (await Context.Services.Accounts.GetByUserId(
             Context.User.Id,
@@ -97,7 +99,16 @@ public class MainPrompt
         }
 
         await Context.Typing();
-        var res = await GithubPrompt.Send(message, null, Context.CancellationToken);
+
+        var res = await GithubPrompt.Send(message, new()
+        {
+            Request = new()
+            {
+                Temperature = 0,
+                EndUserId = Context.User.Id.ToString()
+            }
+        }, null, Context.CancellationToken);
+        
         return res.Content;
     }
 }
