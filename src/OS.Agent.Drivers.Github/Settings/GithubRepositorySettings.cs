@@ -2,6 +2,19 @@ using YamlDotNet.Serialization;
 
 namespace OS.Agent.Drivers.Github.Settings;
 
+/// <summary>
+/// Github Repository Settings
+/// <example>
+/// <code>
+/// links:
+///     - https://github.com/test/a
+///     - https://github.com/test/b
+/// index:
+///     - ./src/typescript/**/*.ts
+///     - ./src/csharp/**/*.cs
+/// </code>
+/// </example>
+/// </summary>
 public class GithubRepositorySettings
 {
     /// <summary>
