@@ -55,4 +55,12 @@ public class ProgressStyle(string value) : StringEnum(value)
         "error" => "Error!",
         _ => throw new InvalidDataException($"{Value} is not a valid ProgressStyle")
     };
+
+    public void Validate()
+    {
+        if (!IsError && !IsWarning && !IsSuccess && !IsInProgress)
+        {
+            throw new InvalidDataException("invalid style, supported values are 'in-progress', 'success', 'warning', 'error'");
+        }
+    }
 }

@@ -138,7 +138,7 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
             }
         }, null, context.CancellationToken);
 
-        await context.SendProgressUpdate(ProgressStyle.Success, "✅ Done!");
+        await context.Finish(ProgressStyle.Success, "✅ Done!", "Success!");
         await context.Send(res.Content);
         return true;
     }
@@ -166,7 +166,7 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
             Messages = memory
         }, null, context.CancellationToken);
 
-        await context.SendProgressUpdate(ProgressStyle.Success, "✅ Done!");
+        await context.Finish(ProgressStyle.Success, "✅ Done!", "Success!");
         await context.Reply(res.Content);
         return true;
     }

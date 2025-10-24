@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Teams.AI.Annotations;
 using Microsoft.Teams.AI.Models.OpenAI;
 
+using OS.Agent.Cards.Progress;
 using OS.Agent.Contexts;
 using OS.Agent.Drivers.Github.Settings;
 using OS.Agent.Prompts.Github;
@@ -19,15 +20,11 @@ namespace OS.Agent.Prompts;
         "You are an agent that specializes in adding/managing/querying Data Sources for users.",
         "Anytime you receive a message you **MUST** use another agent to fetch the information needed to respond!",
     "</agent>",
-    "<updates>",
-        "Make sure to give incremental status updates to users via the SendUpdate function.",
-        "Status updates include any changes in your chain of thought.",
-        "Several updates can be sent per single message sent by the user.",
-        "**DO NOT** use the SendUpdate function to send the same message you conclude your response with!",
-        "Call SendUpdate whenever you complete a unit of work.",
-        "Send updates explaining your thought/reasoning as often as possible!",
-        "You must send at least 5 updates per request.",
-    "</updates>"
+    "<tasks>",
+        "You should break complex jobs into a series of incremental, single responsibility tasks.",
+        "You are __REQUIRED__ to call StartTask whenever you start a new task.",
+        "You are __REQUIRED__ to call EndTask whenever you complete an in progress task.",
+    "</tasks>"
 )]
 public class MainPrompt
 {
@@ -46,13 +43,42 @@ public class MainPrompt
     }
 
     [Function]
+    [Function.Description("Get the task list")]
+    public string GetTasks()
+    {
+        return JsonSerializer.Serialize(Context.Tasks, Context.JsonSerializerOptions);
+    }
+
+    [Function]
+    [Function.Description("This function sends an update to the user indicating that you have started a new task.")]
+    public async Task<string> StartTask([Param] string? title, [Param] string message)
+    {
+        var task = await Context.CreateTask(new()
+        {
+            Style = ProgressStyle.InProgress,
+            Title = title,
+            Message = message
+        });
+
+        return JsonSerializer.Serialize(task, Context.JsonSerializerOptions);
+    }
+
+    [Function]
     [Function.Description(
-        "This function sends an update to user during a long process.",
+        "This function sends an update to the user indicating that a specific task has completed.",
         "Supported progress styles are 'in-progress', 'success', 'warning', 'error'"
     )]
-    public async Task SendUpdate([Param] string style, [Param] string? title, [Param] string? message = null)
+    public async Task<string> EndTask([Param] Guid taskId, [Param] string? style, [Param] string? title, [Param] string? message)
     {
-        await Context.SendProgressUpdate(style, title, message);
+        var task = await Context.UpdateTask(taskId, new()
+        {
+            Style = style is not null ? new(style) : null,
+            Title = title,
+            Message = message,
+            EndedAt = DateTimeOffset.UtcNow
+        });
+
+        return JsonSerializer.Serialize(task, Context.JsonSerializerOptions);
     }
 
     [Function]

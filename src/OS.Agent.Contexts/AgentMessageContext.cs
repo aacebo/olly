@@ -1,11 +1,10 @@
 using System.Text.Json;
 
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Teams.Cards;
-using Microsoft.Teams.Common;
 
 using OS.Agent.Cards.Extensions;
 using OS.Agent.Cards.Progress;
+using OS.Agent.Cards.Tasks;
 using OS.Agent.Drivers;
 using OS.Agent.Drivers.Models;
 using OS.Agent.Storage.Models;
@@ -23,9 +22,9 @@ public class AgentMessageContext : AgentContext<IChatDriver>
     public required Install Installation { get; init; }
     public required Chat Chat { get; init; }
     public required Message Message { get; init; }
+    public IList<TaskItem> Tasks => Response.TaskCard.Tasks;
 
-    private Message? ProgressMessage { get; set; }
-    private IList<(ProgressStyle, string)> ProgressHistory { get; set; } = [];
+    private AgentResponse Response { get; } = new();
 
     public AgentMessageContext(SourceType type, IServiceScopeFactory factory) : base(type, factory)
     {
@@ -132,108 +131,42 @@ public class AgentMessageContext : AgentContext<IChatDriver>
 
     public async Task<Message> Progress(string text)
     {
-        if (ProgressMessage is null)
+        if (Response.Progress is null)
         {
-            ProgressMessage = await Send(text);
-            return ProgressMessage;
+            Response.Progress = await Send(text);
+            return Response.Progress;
         }
 
-        ProgressMessage = await Update(ProgressMessage.Id, text);
-        return ProgressMessage;
+        Response.Progress = await Update(Response.Progress.Id, text);
+        return Response.Progress;
     }
 
     public async Task<Message> Progress(params Attachment[] attachments)
     {
-        if (ProgressMessage is null)
+        if (Response.Progress is null)
         {
-            ProgressMessage = await Send("please wait...");
+            Response.Progress = await Send("please wait...");
         }
 
-        ProgressMessage = await Update(ProgressMessage.Id, attachments);
-        return ProgressMessage;
+        Response.Progress = await Update(Response.Progress.Id, attachments);
+        return Response.Progress;
     }
 
     public async Task<Message> Progress(string text, params Attachment[] attachments)
     {
-        if (ProgressMessage is null)
+        if (Response.Progress is null)
         {
-            ProgressMessage = await Send(text);
+            Response.Progress = await Send(text);
         }
 
-        ProgressMessage = await Update(ProgressMessage.Id, attachments);
-        return ProgressMessage;
+        Response.Progress = await Update(Response.Progress.Id, attachments);
+        return Response.Progress;
     }
 
-    public async Task SendProgressUpdate(string style, string? title = null, string? message = null)
+    public async Task<TaskItem> CreateTask(TaskItem.Create create)
     {
-        var progressStyle = new ProgressStyle(style);
-
-        if (!(progressStyle.IsInProgress || progressStyle.IsSuccess || progressStyle.IsWarning || progressStyle.IsError))
-        {
-            throw new InvalidOperationException("invalid style, supported values are 'in-progress', 'success', 'warning', 'error'");
-        }
-
-        if (ProgressMessage is null && (progressStyle.IsSuccess || progressStyle.IsWarning || progressStyle.IsError))
-        {
-            return;
-        }
-
-        if (message is not null)
-        {
-            ProgressHistory.Add((progressStyle, message));
-        }
-
-        var card = new ProgressCard(progressStyle);
-
-        if (title is not null)
-        {
-            card = card.AddHeader(title);
-        }
-
-        card = card
-            .AddProgressBar(progressStyle.IsInProgress ? null : 100)
-            .AddFooter(message);
-
-        card = (ProgressCard)card.WithStyle(progressStyle.ContainerStyle) ?? throw new InvalidDataException();
-        card.Body?.Add(
-            new ActionSet(
-                new ShowCardAction()
-                    .WithTitle($"Show {ProgressHistory.Count}")
-                    .WithTooltip("Task Status Updates")
-                    .WithCard(new AdaptiveCard(
-                        ProgressHistory
-                            .Select(item =>
-                                new ColumnSet()
-                                .WithColumns(
-                                    new Column(
-                                        new Icon(item.Item1.Icon)
-                                            .WithColor(item.Item1.Color)
-                                            .WithSize(IconSize.XxSmall)
-                                    )
-                                    .WithWidth(new Union<string, float>("auto"))
-                                    .WithVerticalContentAlignment(VerticalAlignment.Center),
-                                    new Column(
-                                        new TextBlock(item.Item2)
-                                            .WithColor(item.Item1.Color)
-                                            .WithSize(TextSize.Small)
-                                            .WithSpacing(Spacing.Small)
-                                            .WithIsSubtle(true)
-                                            .WithWrap(false)
-                                    )
-                                    .WithWidth(new Union<string, float>("stetch"))
-                                    .WithVerticalContentAlignment(VerticalAlignment.Center)
-                                )
-                                .WithShowBorder(true)
-                                .WithRoundedCorners(true)
-                            )
-                            .ToList<CardElement>()
-                        )
-                    )
-            )
-            .WithHorizontalAlignment(HorizontalAlignment.Right)
-        );
-
-        var attachment = card.ToAttachment();
+        var task = Response.TaskCard.Add(create);
+        var attachment = Response.TaskCard.Build().ToAttachment();
 
         await Progress(new Attachment()
         {
@@ -242,5 +175,52 @@ public class AgentMessageContext : AgentContext<IChatDriver>
         });
 
         await Typing();
+        return task;
+    }
+
+    public async Task<TaskItem> UpdateTask(Guid id, TaskItem.Update update)
+    {
+        var task = Response.TaskCard.Update(id, update);
+        var attachment = Response.TaskCard.Build().ToAttachment();
+
+        await Progress(new Attachment()
+        {
+            ContentType = attachment.ContentType,
+            Content = attachment.Content ?? throw new JsonException()
+        });
+
+        await Typing();
+        return task;
+    }
+
+    public async Task<TaskItem> Finish(ProgressStyle style, string? title, string message)
+    {
+        var taskId = Response.TaskCard.Current is not null
+            ? Response.TaskCard.Current.Id
+            : Response.TaskCard.Add(new()
+            {
+                Style = style,
+                Title = title,
+                Message = message
+            }).Id;
+
+        var task = Response.TaskCard.Update(taskId, new()
+        {
+            Style = style,
+            Title = title,
+            Message = message,
+            EndedAt = DateTimeOffset.UtcNow
+        });
+
+        var attachment = Response.TaskCard.Build().ToAttachment();
+
+        await Progress(new Attachment()
+        {
+            ContentType = attachment.ContentType,
+            Content = attachment.Content ?? throw new JsonException()
+        });
+
+        await Typing();
+        return task;
     }
 }

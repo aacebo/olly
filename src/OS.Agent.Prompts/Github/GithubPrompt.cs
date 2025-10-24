@@ -23,38 +23,74 @@ namespace OS.Agent.Prompts.Github;
     "<agent>",
         "You are an agent that specializes in helping users manage their Github data.",
     "</agent>",
-    "<updates>",
-        "Make sure to give incremental status updates to users via the SendUpdate function.",
-        "Status updates include any changes in your chain of thought.",
-        "Several updates can be sent per single message sent by the user.",
-        "**DO NOT** use the SendUpdate function to send the same message you conclude your response with!",
-        "Call SendUpdate whenever you complete a unit of work.",
-        "Send updates explaining your thought/reasoning as often as possible!",
-        "You must send at least 5 updates per request.",
-    "</updates>"
+    "<tasks>",
+        "You should break complex jobs into a series of incremental, single responsibility tasks.",
+        "You are __REQUIRED__ to call StartTask whenever you start a new task.",
+        "You are __REQUIRED__ to call EndTask whenever you complete an in progress task.",
+    "</tasks>"
 )]
 public class GithubPrompt(AgentMessageContext context)
 {
     [Function]
+    [Function.Description("Get the task list")]
+    public string GetTasks()
+    {
+        return JsonSerializer.Serialize(context.Tasks, context.JsonSerializerOptions);
+    }
+
+    [Function]
+    [Function.Description("This function sends an update to the user indicating that you have started a new task.")]
+    public async Task<string> StartTask([Param] string? title, [Param] string message)
+    {
+        var task = await context.CreateTask(new()
+        {
+            Style = ProgressStyle.InProgress,
+            Title = title,
+            Message = message
+        });
+
+        return JsonSerializer.Serialize(task, context.JsonSerializerOptions);
+    }
+
+    [Function]
     [Function.Description(
-        "This function sends an update to user during a long process.",
+        "This function sends an update to the user indicating that a specific task has completed.",
         "Supported progress styles are 'in-progress', 'success', 'warning', 'error'"
     )]
-    public async Task SendUpdate([Param] string style, [Param] string? title, [Param] string? message = null)
+    public async Task<string> EndTask([Param] Guid taskId, [Param] string? style, [Param] string? title, [Param] string? message)
     {
-        await context.SendProgressUpdate(style, title, message);
+        var task = await context.UpdateTask(taskId, new()
+        {
+            Style = style is not null ? new(style) : null,
+            Title = title,
+            Message = message,
+            EndedAt = DateTimeOffset.UtcNow
+        });
+
+        return JsonSerializer.Serialize(task, context.JsonSerializerOptions);
     }
 
     [Function]
     [Function.Description("get a list of connected Github data source accounts for the user")]
     public async Task<string> GetAllGithubAccounts()
     {
-        await SendUpdate(ProgressStyle.InProgress, "Github", "fetching accounts...");
+        var task = await context.CreateTask(new()
+        {
+            Title = "Github",
+            Message = "fetching accounts..."
+        });
 
         var accounts = await context.Services.Accounts.GetByTenantId(
             context.Tenant.Id,
             context.CancellationToken
         );
+
+        await context.UpdateTask(task.Id, new()
+        {
+            Style = ProgressStyle.Success,
+            Message = $"found {accounts.Count()} accounts",
+            EndedAt = DateTimeOffset.UtcNow
+        });
 
         return JsonSerializer.Serialize(accounts.Where(a => a.SourceType == SourceType.Github), context.JsonSerializerOptions);
     }
@@ -63,7 +99,11 @@ public class GithubPrompt(AgentMessageContext context)
     [Function.Description("get a list of the users Github repositories")]
     public async Task<string> GetRepositories()
     {
-        await SendUpdate(ProgressStyle.InProgress, "Github", "fetching repositories...");
+        var task = await context.CreateTask(new()
+        {
+            Title = "Github",
+            Message = "fetching repositories..."
+        });
 
         var records = await context.Services.Records.GetByTenantId(
             context.Tenant.Id,
@@ -74,6 +114,13 @@ public class GithubPrompt(AgentMessageContext context)
             context.CancellationToken
         );
 
+        await context.UpdateTask(task.Id, new()
+        {
+            Style = ProgressStyle.Success,
+            Message = $"found {records.Count} repositories",
+            EndedAt = DateTimeOffset.UtcNow
+        });
+
         return JsonSerializer.Serialize(records.List, context.JsonSerializerOptions);
     }
 
@@ -81,7 +128,11 @@ public class GithubPrompt(AgentMessageContext context)
     [Function.Description("get a list of a Github repositories discussions")]
     public async Task<string> GetRepositoryDiscussions([Param] Guid accountId, [Param] string repositoryName)
     {
-        await SendUpdate(ProgressStyle.InProgress, "Github", "fetching discussions...");
+        var task = await context.CreateTask(new()
+        {
+            Title = "Github",
+            Message = $"fetching discussions in repository {repositoryName}..."
+        });
 
         var account = await context.Services.Accounts.GetById(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
         var install = await context.Services.Installs.GetByAccountId(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account install not found");
@@ -102,6 +153,14 @@ public class GithubPrompt(AgentMessageContext context)
             .Compile();
 
         var discussions = await client.Run(query, cancellationToken: context.CancellationToken);
+
+        await context.UpdateTask(task.Id, new()
+        {
+            Style = ProgressStyle.Success,
+            Message = $"found {discussions.Count()} discussions in repository {repositoryName}",
+            EndedAt = DateTimeOffset.UtcNow
+        });
+
         return JsonSerializer.Serialize(discussions, context.JsonSerializerOptions);
     }
 }
