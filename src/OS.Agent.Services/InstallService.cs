@@ -17,6 +17,7 @@ public interface IInstallService
     Task<Install?> GetByAccountId(Guid accountId, CancellationToken cancellationToken = default);
     Task<Install?> GetBySourceId(SourceType type, string sourceId, CancellationToken cancellationToken = default);
     Task<Install> Create(Install value, CancellationToken cancellationToken = default);
+    Task<Install> Create(Install value, Message message, CancellationToken cancellationToken = default);
     Task<Install> Update(Install value, CancellationToken cancellationToken = default);
     Task Delete(Guid id, CancellationToken cancellationToken = default);
 }
@@ -28,6 +29,7 @@ public class InstallService(IServiceProvider provider) : IInstallService
     private IInstallStorage Storage { get; init; } = provider.GetRequiredService<IInstallStorage>();
     private ITenantService Tenants { get; init; } = provider.GetRequiredService<ITenantService>();
     private IAccountService Accounts { get; init; } = provider.GetRequiredService<IAccountService>();
+    private IChatService Chats { get; init; } = provider.GetRequiredService<IChatService>();
 
     public async Task<Install?> GetById(Guid id, CancellationToken cancellationToken = default)
     {
@@ -76,6 +78,25 @@ public class InstallService(IServiceProvider provider) : IInstallService
             Tenant = tenant,
             Account = account,
             Install = install
+        }));
+
+        return install;
+    }
+
+    public async Task<Install> Create(Install value, Message message, CancellationToken cancellationToken = default)
+    {
+        var account = await Accounts.GetById(value.AccountId, cancellationToken) ?? throw new Exception("account not found");
+        var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
+        var chat = await Chats.GetById(message.ChatId, cancellationToken) ?? throw new Exception("chat not found");
+        var install = await Storage.Create(value, cancellationToken: cancellationToken);
+
+        Events.Enqueue(new("installs.create", new()
+        {
+            Tenant = tenant,
+            Account = account,
+            Install = install,
+            Chat = chat,
+            Message = message
         }));
 
         return install;

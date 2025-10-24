@@ -16,6 +16,21 @@ public partial class GithubDriver(IServiceProvider provider) : IChatDriver
 
     public async Task Install(InstallRequest request, CancellationToken cancellationToken = default)
     {
+        var driver = request.Chat is null
+            ? null
+            : provider.GetRequiredKeyedService<IChatDriver>(request.Chat.SourceType.ToString());
+
+        if (driver is not null)
+        {
+            await driver.Send(new()
+            {
+                Chat = request.Chat!,
+                From = request.Account,
+                Install = request.Install,
+                Text = "I see you've added a Github account, please wait while I import your data"
+            }, cancellationToken);
+        }
+
         var client = new Octokit.GitHubClient(await Github.GetRestConnection(request.Install, cancellationToken));
         var repositories = await client.GitHubApps.Installation.GetAllRepositoriesForCurrent();
 
@@ -110,6 +125,17 @@ public partial class GithubDriver(IServiceProvider provider) : IChatDriver
                     }
                 }
             }
+        }
+
+        if (driver is not null)
+        {
+            await driver.Send(new()
+            {
+                Chat = request.Chat!,
+                From = request.Account,
+                Install = request.Install,
+                Text = "###🎉Your Github account data has been successfully imported!🎉\nWnat can I assist you with?"
+            }, cancellationToken);
         }
     }
 

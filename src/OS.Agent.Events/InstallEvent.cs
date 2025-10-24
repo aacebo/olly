@@ -14,4 +14,10 @@ public class InstallEvent
 
     [JsonPropertyName("install")]
     public required Install Install { get; init; }
+
+    [JsonPropertyName("chat")]
+    public Chat? Chat { get; init; }
+
+    [JsonPropertyName("message")]
+    public Message? Message { get; init; }
 }

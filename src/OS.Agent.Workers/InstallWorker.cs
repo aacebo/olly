@@ -58,7 +58,9 @@ public class InstallWorker(IServiceProvider provider, IServiceScopeFactory scope
                         Tenant = @event.Body.Tenant,
                         Account = @event.Body.Account,
                         User = user,
-                        Installation = @event.Body.Install
+                        Installation = @event.Body.Install,
+                        Chat = @event.Body.Chat,
+                        Message = @event.Body.Message
                     };
 
                     if (@event.Name == "installs.create")

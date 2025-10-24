@@ -104,7 +104,7 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
                         AccessToken = githubAccessToken
                     }
                 ]
-            }, cancellationToken);
+            }, message, cancellationToken);
         }
         else
         {

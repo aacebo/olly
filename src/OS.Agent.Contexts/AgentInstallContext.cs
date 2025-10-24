@@ -14,6 +14,8 @@ public class AgentInstallContext : AgentContext<IDriver>
     public required Account Account { get; init; }
     public required User User { get; init; }
     public required Install Installation { get; init; }
+    public Chat? Chat { get; init; }
+    public Message? Message { get; init; }
 
     public AgentInstallContext(SourceType type, IServiceScopeFactory factory) : base(type, factory)
     {
@@ -31,7 +33,9 @@ public class AgentInstallContext : AgentContext<IDriver>
         {
             Tenant = Tenant,
             Account = Account,
-            Install = Installation
+            Install = Installation,
+            Chat = Chat,
+            Message = Message
         }, CancellationToken);
     }
 

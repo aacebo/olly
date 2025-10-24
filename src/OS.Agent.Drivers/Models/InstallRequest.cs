@@ -14,4 +14,10 @@ public class InstallRequest
 
     [JsonPropertyName("install")]
     public required Install Install { get; set; }
+
+    [JsonPropertyName("chat")]
+    public Chat? Chat { get; set; }
+
+    [JsonPropertyName("message")]
+    public Message? Message { get; set; }
 }
