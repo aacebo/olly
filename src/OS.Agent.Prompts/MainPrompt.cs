@@ -134,7 +134,7 @@ public class MainPrompt
                 EndUserId = Context.User.Id.ToString()
             }
         }, null, Context.CancellationToken);
-        
+
         return res.Content;
     }
 }
