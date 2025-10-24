@@ -101,7 +101,7 @@ public class GithubPrompt(AgentMessageContext context)
             await context.UpdateTask(task.Id, new()
             {
                 Style = ProgressStyle.Error,
-                Message = ex.Message,
+                Message = $"{task.Message} => {ex.Message}",
                 EndedAt = DateTimeOffset.UtcNow
             });
 
@@ -144,7 +144,7 @@ public class GithubPrompt(AgentMessageContext context)
             await context.UpdateTask(task.Id, new()
             {
                 Style = ProgressStyle.Error,
-                Message = ex.Message,
+                Message = $"{task.Message} => {ex.Message}",
                 EndedAt = DateTimeOffset.UtcNow
             });
 
@@ -198,7 +198,7 @@ public class GithubPrompt(AgentMessageContext context)
             await context.UpdateTask(task.Id, new()
             {
                 Style = ProgressStyle.Error,
-                Message = ex.Message,
+                Message = $"{task.Message} => {ex.Message}",
                 EndedAt = DateTimeOffset.UtcNow
             });
 

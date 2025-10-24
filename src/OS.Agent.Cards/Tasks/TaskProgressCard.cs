@@ -116,54 +116,59 @@ public class TaskProgressCard
                     .WithTitle($"Show {Tasks.Count}")
                     .WithTooltip("Task Status Updates")
                     .WithCard(new AdaptiveCard(
-                        Tasks.Select(task =>
-                        {
-                            List<Column> columns = [
-                                new Column(
-                                    new Icon(task.Style.Icon)
-                                        .WithColor(task.Style.Color)
-                                        .WithSize(IconSize.XxSmall)
-                                        .WithIsVisible(!task.Style.IsInProgress),
-                                    new ProgressRing()
-                                        .WithSize(new("Tiny"))
-                                        .WithIsVisible(task.Style.IsInProgress)
-                                )
-                                .WithWidth(new Union<string, float>("auto"))
-                                .WithVerticalContentAlignment(VerticalAlignment.Center),
-                                new Column(
-                                    new TextBlock(task.Message)
-                                        .WithColor(task.Style.Color)
-                                        .WithSize(TextSize.Small)
-                                        .WithSpacing(Spacing.Small)
-                                        .WithIsSubtle(true)
-                                        .WithWrap(false)
-                                )
-                                .WithWidth(new Union<string, float>("stretch"))
-                                .WithVerticalContentAlignment(VerticalAlignment.Center)
-                            ];
-
-                            if (task.EndedAt is not null)
+                        new Container(
+                            Tasks.Select(task =>
                             {
-                                var elapse = task.EndedAt - task.StartedAt;
-
-                                columns.Add(
+                                List<Column> columns = [
                                     new Column(
-                                        new TextBlock($"{elapse?.Seconds}s")
+                                        new Icon(task.Style.Icon)
                                             .WithColor(task.Style.Color)
-                                            .WithIsSubtle(true)
-                                            .WithHorizontalAlignment(HorizontalAlignment.Right)
+                                            .WithSize(IconSize.XxSmall)
+                                            .WithIsVisible(!task.Style.IsInProgress),
+                                        new ProgressRing()
+                                            .WithSize(new("Tiny"))
+                                            .WithIsVisible(task.Style.IsInProgress)
                                     )
                                     .WithWidth(new Union<string, float>("auto"))
+                                    .WithVerticalContentAlignment(VerticalAlignment.Center),
+                                    new Column(
+                                        new TextBlock(task.Message)
+                                            .WithColor(task.Style.Color)
+                                            .WithSize(TextSize.Small)
+                                            .WithSpacing(Spacing.Small)
+                                            .WithIsSubtle(true)
+                                            .WithWrap(false)
+                                    )
+                                    .WithWidth(new Union<string, float>("stretch"))
                                     .WithVerticalContentAlignment(VerticalAlignment.Center)
-                                );
-                            }
+                                ];
 
-                            return new ColumnSet()
-                                .WithColumns(columns)
-                                .WithShowBorder(true)
-                                .WithRoundedCorners(true);
-                        })
-                        .ToList<CardElement>()
+                                if (task.EndedAt is not null)
+                                {
+                                    var elapse = task.EndedAt - task.StartedAt;
+
+                                    columns.Add(
+                                        new Column(
+                                            new TextBlock($"{elapse?.Seconds}s")
+                                                .WithColor(task.Style.Color)
+                                                .WithIsSubtle(true)
+                                                .WithHorizontalAlignment(HorizontalAlignment.Right)
+                                        )
+                                        .WithWidth(new Union<string, float>("auto"))
+                                        .WithVerticalContentAlignment(VerticalAlignment.Center)
+                                    );
+                                }
+
+                                return new ColumnSet()
+                                    .WithColumns(columns)
+                                    .WithShowBorder(true)
+                                    .WithRoundedCorners(true);
+                            })
+                            .ToList<CardElement>()
+                        )
+                        .WithHeight(ElementHeight.Auto)
+                        .WithHorizontalAlignment(HorizontalAlignment.Center)
+                        .WithMaxHeight("500px")
                     ))
             )
             .WithHorizontalAlignment(HorizontalAlignment.Right)
