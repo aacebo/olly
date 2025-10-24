@@ -68,7 +68,7 @@ public partial class TeamsDriver
                         ContentType = new(attachment.ContentType),
                         Content = attachment.Content
                     }).AsList()
-                },
+                }.AddAIGenerated().AddFeedback().ToMessage(),
                 chatType,
                 request.Chat.Url,
                 cancellationToken

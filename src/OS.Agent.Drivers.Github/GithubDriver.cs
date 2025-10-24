@@ -134,7 +134,7 @@ public partial class GithubDriver(IServiceProvider provider) : IChatDriver
                 Chat = request.Chat!,
                 From = request.Account,
                 Install = request.Install,
-                Text = "###🎉Your Github account data has been successfully imported!🎉\nWnat can I assist you with?"
+                Text = "## 🎉Your Github account data has been successfully imported!🎉<br>Wnat can I assist you with?"
             }, cancellationToken);
         }
     }

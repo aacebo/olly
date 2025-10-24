@@ -59,6 +59,7 @@ public class TaskProgressCard
 
         var card = new ProgressCard(style);
         card.Body ??= [];
+        card.Style = style.ContainerStyle;
 
         if (Current.Title is not null)
         {
@@ -109,7 +110,6 @@ public class TaskProgressCard
             .AddProgressBar(Tasks.Count - inProgressCount, Tasks.Count)
             .AddFooter(Current.Message);
 
-        card = (ProgressCard)card.WithStyle(style.ContainerStyle) ?? throw new InvalidDataException();
         card.Body?.Add(
             new ActionSet(
                 new ShowCardAction()
@@ -162,14 +162,16 @@ public class TaskProgressCard
                                 return new ColumnSet()
                                     .WithColumns(columns)
                                     .WithShowBorder(true)
-                                    .WithRoundedCorners(true);
+                                    .WithRoundedCorners(true)
+                                    .WithStyle(task.Style.ContainerStyle);
                             })
                             .ToList<CardElement>()
                         )
                         .WithHeight(ElementHeight.Auto)
                         .WithHorizontalAlignment(HorizontalAlignment.Center)
                         .WithMaxHeight("500px")
-                    ))
+                    ).WithStyle(style.ContainerStyle)
+                )
             )
             .WithHorizontalAlignment(HorizontalAlignment.Right)
         );
