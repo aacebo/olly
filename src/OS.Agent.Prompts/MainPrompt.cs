@@ -5,9 +5,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.Teams.AI.Annotations;
 using Microsoft.Teams.AI.Models.OpenAI;
 
-using OS.Agent.Cards.Extensions;
-using OS.Agent.Cards.Progress;
 using OS.Agent.Drivers.Github;
+using OS.Agent.Prompts.Github;
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Prompts;
@@ -16,13 +15,14 @@ namespace OS.Agent.Prompts;
 [Prompt.Description("An agent that delegates tasks to sub-agents")]
 [Prompt.Instructions(
     "You are an agent that specializes in adding/managing/querying Data Sources for users.",
-    "Make sure to give incremental status updates to users via the Say function.",
+    "Make sure to give incremental status updates to users via the SendUpdate function.",
     "Status updates include any changes in your chain of thought.",
     "Several updates can be sent per single message sent by the user.",
     "You are an old british man, make sure you speek like one.",
-    "**DO NOT** use the say function to send the same message you conclude your response with!",
+    "**DO NOT** use the SendUpdate function to send the same message you conclude your response with!",
     "You should always lean towards using Adaptive Cards to create your responses.",
-    "Make sure the details you give the Adaptive Cards agent are accurate!"
+    "Make sure the details you give the Adaptive Cards agent are accurate!",
+    "Call SendUpdate whenever you complete a unit of work."
 )]
 public class MainPrompt
 {
@@ -30,7 +30,6 @@ public class MainPrompt
     public readonly IOptions<GithubSettings> GithubSettings;
     public readonly JsonSerializerOptions SerializationOptions;
     public readonly OpenAIChatPrompt GithubPrompt;
-    public readonly OpenAIChatPrompt AdaptiveCardsPrompt;
 
     public MainPrompt(IPromptContext context)
     {
@@ -41,44 +40,18 @@ public class MainPrompt
         {
             Logger = context.Services.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>()
         });
-
-        AdaptiveCardsPrompt = OpenAIChatPrompt.From(context.Model, new AdaptiveCardsPrompt(), new()
-        {
-            Logger = context.Services.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>()
-        });
     }
 
     [Function]
     [Function.Description(
         "say something to the user.",
         "this function should only be used to provide updates to user during a long process.",
-        "**DO NOT** use the say function to send the same message you conclude your response with!"
+        "**DO NOT** use the say function to send the same message you conclude your response with!",
+        "Supported progress styles are 'in-progress', 'success', 'warning', 'error'"
     )]
-    public async Task SendUpdate([Param] string title, [Param] string? message = null)
+    public async Task SendUpdate([Param] string style, [Param] string? title, [Param] string? message = null)
     {
-        var inProgress = message is null
-            ? new ProgressCard().AddHeader(title).AddProgressBar().ToAttachment()
-            : new ProgressCard().AddHeader(title).AddProgressBar().AddFooter(message).ToAttachment();
-
-        var res = await Context.Send(message ?? "please wait...", new Attachment()
-        {
-            ContentType = inProgress.ContentType,
-            Content = inProgress.Content ?? throw new JsonException()
-        });
-
-        await Task.Delay(2000);
-
-        var success = message is null
-            ? new ProgressCard(ProgressStyle.Success).AddHeader(title).AddProgressBar(100).ToAttachment()
-            : new ProgressCard(ProgressStyle.Success).AddHeader(title).AddProgressBar(100).AddFooter(message).ToAttachment();
-
-        await Context.Update(res.Id, new Attachment()
-        {
-            ContentType = success.ContentType,
-            Content = success.Content ?? throw new JsonException()
-        });
-
-        await Context.Typing();
+        await Context.SendProgressUpdate(style, title, message);
     }
 
     [Function]
@@ -126,18 +99,6 @@ public class MainPrompt
 
         await Context.Typing();
         var res = await GithubPrompt.Send(message, null, Context.CancellationToken);
-        return res.Content;
-    }
-
-    [Function]
-    [Function.Description(
-        "delegate a task/question to the Adaptive Cards Agent ",
-        "who specializes in Microsoft Adaptive Cards and all their subject matter."
-    )]
-    public async Task<string> AdaptiveCards([Param] string message)
-    {
-        await Context.Typing();
-        var res = await AdaptiveCardsPrompt.Send(message, null, Context.CancellationToken);
         return res.Content;
     }
 }

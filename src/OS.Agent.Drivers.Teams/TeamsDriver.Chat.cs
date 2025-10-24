@@ -47,7 +47,7 @@ public partial class TeamsDriver
                     Type = chatType,
                     Name = request.Chat.Name
                 }
-            },
+            }.AddAIGenerated().AddFeedback().ToMessage(),
             chatType,
             request.Chat.Url,
             cancellationToken

@@ -1,7 +1,7 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.20/MicrosoftTeams.schema.json",
   "version": "1.0.0",
-  "manifestVersion": "1.20",
+  "manifestVersion": "1.22",
   "id": "${{TEAMS_APP_ID}}",
   "name": {
     "short": "os-agent-${{APP_NAME_SUFFIX}}",
@@ -40,7 +40,24 @@
       "isNotificationOnly": false,
       "supportsCalling": false,
       "supportsVideo": false,
-      "supportsFiles": false
+      "supportsFiles": false,
+      "commandLists": [
+        {
+          "scopes": [
+            "personal"
+          ],
+          "commands": [
+            {
+              "title": "List Github Repositories",
+              "description": "List all your Github repositories"
+            },
+            {
+              "title": "List Recent Github Discussions",
+              "description": "List recent discussions in your Github repositories"
+            }
+          ]
+        }
+      ]
     }
   ],
   "validDomains": [

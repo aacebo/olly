@@ -38,6 +38,15 @@ public class ProgressStyle(string value) : StringEnum(value)
         _ => throw new InvalidDataException($"{Value} is not a valid ProgressStyle")
     };
 
+    public ContainerStyle ContainerStyle => Value switch
+    {
+        "in-progress" => ContainerStyle.Accent,
+        "success" => ContainerStyle.Good,
+        "warning" => ContainerStyle.Warning,
+        "error" => ContainerStyle.Attention,
+        _ => throw new InvalidDataException($"{Value} is not a valid ProgressStyle")
+    };
+
     public string Message => Value switch
     {
         "in-progress" => "Please Wait...",
