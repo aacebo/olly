@@ -107,6 +107,7 @@ builder.Services.AddScoped<IRecordStorage, RecordStorage>();
 builder.Services.AddScoped<IInstallStorage, InstallStorage>();
 
 // Services
+builder.Services.AddScoped<IServices, Services>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITenantService, TenantService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
