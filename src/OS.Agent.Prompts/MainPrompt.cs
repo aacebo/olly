@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Teams.AI.Annotations;
 using Microsoft.Teams.AI.Models.OpenAI;
 
-using OS.Agent.Drivers.Github;
+using OS.Agent.Drivers.Github.Settings;
 using OS.Agent.Prompts.Github;
 using OS.Agent.Storage.Models;
 

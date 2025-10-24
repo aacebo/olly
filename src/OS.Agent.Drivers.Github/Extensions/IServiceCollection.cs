@@ -9,6 +9,8 @@ using Microsoft.IdentityModel.Tokens;
 
 using Octokit;
 
+using OS.Agent.Drivers.Github.Settings;
+
 namespace OS.Agent.Drivers.Github.Extensions;
 
 public static class IServiceCollectionExtensions

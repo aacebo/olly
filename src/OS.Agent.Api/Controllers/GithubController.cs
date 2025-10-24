@@ -3,8 +3,8 @@ using Microsoft.Extensions.Options;
 
 using Octokit;
 
-using OS.Agent.Drivers.Github;
 using OS.Agent.Drivers.Github.Models;
+using OS.Agent.Drivers.Github.Settings;
 using OS.Agent.Errors;
 using OS.Agent.Services;
 using OS.Agent.Storage.Models;
