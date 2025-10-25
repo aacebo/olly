@@ -25,7 +25,7 @@ public interface IInstallService
 public class InstallService(IServiceProvider provider) : IInstallService
 {
     private IMemoryCache Cache { get; init; } = provider.GetRequiredService<IMemoryCache>();
-    private NetMQQueue<Event<InstallEvent>> Events { get; init; } = provider.GetRequiredService<NetMQQueue<Event<InstallEvent>>>();
+    private NetMQQueue<InstallEvent> Events { get; init; } = provider.GetRequiredService<NetMQQueue<InstallEvent>>();
     private IInstallStorage Storage { get; init; } = provider.GetRequiredService<IInstallStorage>();
     private ITenantService Tenants { get; init; } = provider.GetRequiredService<ITenantService>();
     private IAccountService Accounts { get; init; } = provider.GetRequiredService<IAccountService>();
@@ -73,12 +73,12 @@ public class InstallService(IServiceProvider provider) : IInstallService
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var install = await Storage.Create(value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("installs.create", new()
+        Events.Enqueue(new(ActionType.Create)
         {
             Tenant = tenant,
             Account = account,
             Install = install
-        }));
+        });
 
         return install;
     }
@@ -90,14 +90,14 @@ public class InstallService(IServiceProvider provider) : IInstallService
         var chat = await Chats.GetById(message.ChatId, cancellationToken) ?? throw new Exception("chat not found");
         var install = await Storage.Create(value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("installs.create", new()
+        Events.Enqueue(new(ActionType.Create)
         {
             Tenant = tenant,
             Account = account,
             Install = install,
             Chat = chat,
             Message = message
-        }));
+        });
 
         return install;
     }
@@ -108,12 +108,12 @@ public class InstallService(IServiceProvider provider) : IInstallService
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var install = await Storage.Update(value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("installs.update", new()
+        Events.Enqueue(new(ActionType.Update)
         {
             Tenant = tenant,
             Account = account,
             Install = install
-        }));
+        });
 
         return install;
     }
@@ -126,11 +126,11 @@ public class InstallService(IServiceProvider provider) : IInstallService
 
         await Storage.Delete(id, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("installs.delete", new()
+        Events.Enqueue(new(ActionType.Delete)
         {
             Tenant = tenant,
             Account = account,
             Install = install
-        }));
+        });
     }
 }

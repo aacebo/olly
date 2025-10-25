@@ -21,7 +21,7 @@ public interface ITokenService
 public class TokenService(IServiceProvider provider) : ITokenService
 {
     private IMemoryCache Cache { get; init; } = provider.GetRequiredService<IMemoryCache>();
-    private NetMQQueue<Event<TokenEvent>> Events { get; init; } = provider.GetRequiredService<NetMQQueue<Event<TokenEvent>>>();
+    private NetMQQueue<TokenEvent> Events { get; init; } = provider.GetRequiredService<NetMQQueue<TokenEvent>>();
     private ITokenStorage Storage { get; init; } = provider.GetRequiredService<ITokenStorage>();
     private ITenantService Tenants { get; init; } = provider.GetRequiredService<ITenantService>();
     private IAccountService Accounts { get; init; } = provider.GetRequiredService<IAccountService>();
@@ -63,12 +63,12 @@ public class TokenService(IServiceProvider provider) : ITokenService
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var token = await Storage.Create(value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("tokens.create", new()
+        Events.Enqueue(new(ActionType.Create)
         {
             Tenant = tenant,
             Account = account,
             Token = token
-        }));
+        });
 
         return token;
     }
@@ -79,12 +79,12 @@ public class TokenService(IServiceProvider provider) : ITokenService
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var token = await Storage.Update(value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("tokens.update", new()
+        Events.Enqueue(new(ActionType.Update)
         {
             Tenant = tenant,
             Account = account,
             Token = token
-        }));
+        });
 
         return token;
     }
@@ -97,11 +97,11 @@ public class TokenService(IServiceProvider provider) : ITokenService
 
         await Storage.Delete(token.Id, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("tokens.delete", new()
+        Events.Enqueue(new(ActionType.Delete)
         {
             Tenant = tenant,
             Account = account,
             Token = token
-        }));
+        });
     }
 }

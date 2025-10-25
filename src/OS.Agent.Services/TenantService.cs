@@ -24,7 +24,7 @@ public interface ITenantService
 public class TenantService(IServiceProvider provider) : ITenantService
 {
     private IMemoryCache Cache { get; init; } = provider.GetRequiredService<IMemoryCache>();
-    private NetMQQueue<Event<TenantEvent>> Events { get; init; } = provider.GetRequiredService<NetMQQueue<Event<TenantEvent>>>();
+    private NetMQQueue<TenantEvent> Events { get; init; } = provider.GetRequiredService<NetMQQueue<TenantEvent>>();
     private ITenantStorage Storage { get; init; } = provider.GetRequiredService<ITenantStorage>();
 
     public async Task<PaginationResult<Tenant>> Get(Page? page = null, CancellationToken cancellationToken = default)
@@ -67,10 +67,10 @@ public class TenantService(IServiceProvider provider) : ITenantService
     {
         var tenant = await Storage.Create(value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("tenants.create", new()
+        Events.Enqueue(new(ActionType.Create)
         {
             Tenant = tenant
-        }));
+        });
 
         return tenant;
     }
@@ -79,10 +79,10 @@ public class TenantService(IServiceProvider provider) : ITenantService
     {
         var tenant = await Storage.Update(value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("tenants.update", new()
+        Events.Enqueue(new(ActionType.Update)
         {
             Tenant = tenant
-        }));
+        });
 
         return tenant;
     }
@@ -93,9 +93,9 @@ public class TenantService(IServiceProvider provider) : ITenantService
 
         await Storage.Delete(id, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("tenants.delete", new()
+        Events.Enqueue(new(ActionType.Delete)
         {
             Tenant = tenant
-        }));
+        });
     }
 }

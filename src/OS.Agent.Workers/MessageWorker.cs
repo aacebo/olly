@@ -22,7 +22,7 @@ namespace OS.Agent.Workers;
 public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scopeFactory) : IHostedService
 {
     private ILogger<MessageWorker> Logger { get; init; } = provider.GetRequiredService<ILogger<MessageWorker>>();
-    private NetMQQueue<Event<MessageEvent>> Events { get; init; } = provider.GetRequiredService<NetMQQueue<Event<MessageEvent>>>();
+    private NetMQQueue<MessageEvent> Events { get; init; } = provider.GetRequiredService<NetMQQueue<MessageEvent>>();
     private JsonSerializerOptions JsonOptions { get; init; } = provider.GetRequiredService<JsonSerializerOptions>();
     private NetMQPoller Poller { get; init; } = [];
 
@@ -47,27 +47,27 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
 
                     await logs.Create(new()
                     {
-                        TenantId = @event.Body.Tenant.Id,
+                        TenantId = @event.Tenant.Id,
                         Type = LogType.Message,
-                        TypeId = @event.Body.Message.Id.ToString(),
-                        Text = @event.Name,
-                        Entities = [Entity.From(@event.Body)]
+                        TypeId = @event.Message.Id.ToString(),
+                        Text = @event.Key,
+                        Entities = [Entity.From(@event)]
                     }, lifetime.ApplicationStopping);
 
-                    if (@event.Body.Account.UserId is null) continue;
+                    if (@event.Account.UserId is null) continue;
 
-                    var user = await storage.Users.GetById(@event.Body.Account.UserId.Value, lifetime.ApplicationStopping);
+                    var user = await storage.Users.GetById(@event.Account.UserId.Value, lifetime.ApplicationStopping);
 
                     if (user is null) continue;
 
-                    var context = new AgentMessageContext(@event.Body.Account.SourceType, scope.ServiceProvider, lifetime.ApplicationStopping)
+                    var context = new AgentMessageContext(@event.Account.SourceType, scope.ServiceProvider, lifetime.ApplicationStopping)
                     {
-                        Tenant = @event.Body.Tenant,
-                        Account = @event.Body.Account,
+                        Tenant = @event.Tenant,
+                        Account = @event.Account,
                         User = user,
-                        Chat = @event.Body.Chat,
-                        Message = @event.Body.Message,
-                        Installation = @event.Body.Install
+                        Chat = @event.Chat,
+                        Message = @event.Message,
+                        Installation = @event.Install
                     };
 
                     var mainPrompt = new MainPrompt(context);
@@ -76,11 +76,11 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
                         Logger = app.Logger
                     });
 
-                    var ok = @event.Name switch
+                    var ok = @event.Key switch
                     {
                         "messages.create" => await OnCreateEvent(context, prompt),
                         "messages.resume" => await OnResumeEvent(context, prompt),
-                        _ => throw new NotImplementedException($"Event '{@event.Name}' is not implemented")
+                        _ => throw new NotImplementedException($"Event '{@event.Key}' is not implemented")
                     };
 
                     if (!ok)

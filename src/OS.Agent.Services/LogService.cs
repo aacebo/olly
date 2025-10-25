@@ -20,7 +20,7 @@ public interface ILogService
 public class LogService(IServiceProvider provider) : ILogService
 {
     private IMemoryCache Cache { get; init; } = provider.GetRequiredService<IMemoryCache>();
-    private NetMQQueue<Event<LogEvent>> Events { get; init; } = provider.GetRequiredService<NetMQQueue<Event<LogEvent>>>();
+    private NetMQQueue<LogEvent> Events { get; init; } = provider.GetRequiredService<NetMQQueue<LogEvent>>();
     private ILogStorage Storage { get; init; } = provider.GetRequiredService<ILogStorage>();
     private ITenantService Tenants { get; init; } = provider.GetRequiredService<ITenantService>();
     private IAccountService Accounts { get; init; } = provider.GetRequiredService<IAccountService>();
@@ -66,11 +66,11 @@ public class LogService(IServiceProvider provider) : ILogService
         var tenant = await Tenants.GetById(value.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var log = await Storage.Create(value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("logs.create", new()
+        Events.Enqueue(new(ActionType.Create)
         {
             Tenant = tenant,
             Log = log
-        }));
+        });
 
         return log;
     }

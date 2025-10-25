@@ -25,7 +25,7 @@ public interface IChatService
 public class ChatService(IServiceProvider provider) : IChatService
 {
     private IMemoryCache Cache { get; init; } = provider.GetRequiredService<IMemoryCache>();
-    private NetMQQueue<Event<ChatEvent>> Events { get; init; } = provider.GetRequiredService<NetMQQueue<Event<ChatEvent>>>();
+    private NetMQQueue<ChatEvent> Events { get; init; } = provider.GetRequiredService<NetMQQueue<ChatEvent>>();
     private IChatStorage Storage { get; init; } = provider.GetRequiredService<IChatStorage>();
     private ITenantService Tenants { get; init; } = provider.GetRequiredService<ITenantService>();
 
@@ -75,11 +75,11 @@ public class ChatService(IServiceProvider provider) : IChatService
         var tenant = await Tenants.GetById(value.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var chat = await Storage.Create(value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("chats.create", new()
+        Events.Enqueue(new(ActionType.Create)
         {
             Tenant = tenant,
             Chat = chat
-        }));
+        });
 
         return chat;
     }
@@ -89,11 +89,11 @@ public class ChatService(IServiceProvider provider) : IChatService
         var tenant = await Tenants.GetById(value.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var chat = await Storage.Update(value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("chats.update", new()
+        Events.Enqueue(new(ActionType.Update)
         {
             Tenant = tenant,
             Chat = chat
-        }));
+        });
 
         return chat;
     }
@@ -105,10 +105,10 @@ public class ChatService(IServiceProvider provider) : IChatService
 
         await Storage.Delete(id, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("chats.delete", new()
+        Events.Enqueue(new(ActionType.Delete)
         {
             Tenant = tenant,
             Chat = chat
-        }));
+        });
     }
 }

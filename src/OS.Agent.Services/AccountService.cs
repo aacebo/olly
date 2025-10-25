@@ -24,7 +24,7 @@ public interface IAccountService
 public class AccountService(IServiceProvider provider) : IAccountService
 {
     private IMemoryCache Cache { get; init; } = provider.GetRequiredService<IMemoryCache>();
-    private NetMQQueue<Event<AccountEvent>> Events { get; init; } = provider.GetRequiredService<NetMQQueue<Event<AccountEvent>>>();
+    private NetMQQueue<AccountEvent> Events { get; init; } = provider.GetRequiredService<NetMQQueue<AccountEvent>>();
     private IAccountStorage Storage { get; init; } = provider.GetRequiredService<IAccountStorage>();
     private ITenantService Tenants { get; init; } = provider.GetRequiredService<ITenantService>();
 
@@ -79,11 +79,11 @@ public class AccountService(IServiceProvider provider) : IAccountService
         var tenant = await Tenants.GetById(value.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var account = await Storage.Create(value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("accounts.create", new()
+        Events.Enqueue(new(ActionType.Create)
         {
             Tenant = tenant,
             Account = account
-        }));
+        });
 
         if (tenant.Name is null && value.Name != tenant.Name)
         {
@@ -99,11 +99,11 @@ public class AccountService(IServiceProvider provider) : IAccountService
         var tenant = await Tenants.GetById(value.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var account = await Storage.Update(value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("accounts.update", new()
+        Events.Enqueue(new(ActionType.Update)
         {
             Tenant = tenant,
             Account = account
-        }));
+        });
 
         if (tenant.Name is null && value.Name != tenant.Name)
         {
@@ -121,10 +121,10 @@ public class AccountService(IServiceProvider provider) : IAccountService
 
         await Storage.Delete(id, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("accounts.delete", new()
+        Events.Enqueue(new(ActionType.Delete)
         {
             Tenant = tenant,
             Account = account
-        }));
+        });
     }
 }

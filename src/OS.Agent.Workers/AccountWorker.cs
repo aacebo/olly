@@ -15,7 +15,7 @@ namespace OS.Agent.Workers;
 public class AccountWorker(IServiceProvider provider, IServiceScopeFactory scopeFactory) : IHostedService
 {
     private ILogger<AccountWorker> Logger { get; init; } = provider.GetRequiredService<ILogger<AccountWorker>>();
-    private NetMQQueue<Event<AccountEvent>> Events { get; init; } = provider.GetRequiredService<NetMQQueue<Event<AccountEvent>>>();
+    private NetMQQueue<AccountEvent> Events { get; init; } = provider.GetRequiredService<NetMQQueue<AccountEvent>>();
     private JsonSerializerOptions JsonOptions { get; init; } = provider.GetRequiredService<JsonSerializerOptions>();
     private NetMQPoller Poller { get; init; } = [];
 
@@ -37,11 +37,11 @@ public class AccountWorker(IServiceProvider provider, IServiceScopeFactory scope
 
                     await logs.Create(new()
                     {
-                        TenantId = @event.Body.Tenant.Id,
+                        TenantId = @event.Tenant.Id,
                         Type = LogType.Account,
-                        TypeId = @event.Body.Account.Id.ToString(),
-                        Text = @event.Name,
-                        Entities = [Entity.From(@event.Body)]
+                        TypeId = @event.Account.Id.ToString(),
+                        Text = @event.Key,
+                        Entities = [Entity.From(@event)]
                     }, lifetime.ApplicationStopping);
                 }
                 catch (Exception ex)

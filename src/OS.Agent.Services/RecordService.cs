@@ -32,7 +32,7 @@ public interface IRecordService
 public class RecordService(IServiceProvider provider) : IRecordService
 {
     private IMemoryCache Cache { get; init; } = provider.GetRequiredService<IMemoryCache>();
-    private NetMQQueue<Event<RecordEvent>> Events { get; init; } = provider.GetRequiredService<NetMQQueue<Event<RecordEvent>>>();
+    private NetMQQueue<RecordEvent> Events { get; init; } = provider.GetRequiredService<NetMQQueue<RecordEvent>>();
     private IRecordStorage Storage { get; init; } = provider.GetRequiredService<IRecordStorage>();
     private ITenantService Tenants { get; init; } = provider.GetRequiredService<ITenantService>();
     private IChatService Chats { get; init; } = provider.GetRequiredService<IChatService>();
@@ -98,10 +98,10 @@ public class RecordService(IServiceProvider provider) : IRecordService
     {
         var record = await Storage.Create(value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("records.create", new()
+        Events.Enqueue(new(ActionType.Create)
         {
             Record = record
-        }));
+        });
 
         return record;
     }
@@ -110,11 +110,11 @@ public class RecordService(IServiceProvider provider) : IRecordService
     {
         var record = await Storage.Create(tenant, value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("records.create", new()
+        Events.Enqueue(new(ActionType.Create)
         {
             Tenant = tenant,
             Record = record
-        }));
+        });
 
         return record;
     }
@@ -124,12 +124,12 @@ public class RecordService(IServiceProvider provider) : IRecordService
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var record = await Storage.Create(account, value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("records.create", new()
+        Events.Enqueue(new(ActionType.Create)
         {
             Tenant = tenant,
             Account = account,
             Record = record
-        }));
+        });
 
         return record;
     }
@@ -139,12 +139,12 @@ public class RecordService(IServiceProvider provider) : IRecordService
         var tenant = await Tenants.GetById(chat.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var record = await Storage.Create(chat, value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("records.create", new()
+        Events.Enqueue(new(ActionType.Create)
         {
             Tenant = tenant,
             Chat = chat,
             Record = record
-        }));
+        });
 
         return record;
     }
@@ -155,13 +155,13 @@ public class RecordService(IServiceProvider provider) : IRecordService
         var tenant = await Tenants.GetById(chat.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var record = await Storage.Create(message, value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("records.create", new()
+        Events.Enqueue(new(ActionType.Create)
         {
             Tenant = tenant,
             Chat = chat,
             Message = message,
             Record = record
-        }));
+        });
 
         return record;
     }
@@ -170,10 +170,10 @@ public class RecordService(IServiceProvider provider) : IRecordService
     {
         var record = await Storage.Update(value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("records.update", new()
+        Events.Enqueue(new(ActionType.Update)
         {
             Record = record
-        }));
+        });
 
         return record;
     }
@@ -184,9 +184,9 @@ public class RecordService(IServiceProvider provider) : IRecordService
 
         await Storage.Delete(id, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("records.delete", new()
+        Events.Enqueue(new(ActionType.Delete)
         {
             Record = record
-        }));
+        });
     }
 }

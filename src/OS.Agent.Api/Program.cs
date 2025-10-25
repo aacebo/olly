@@ -26,7 +26,6 @@ using OS.Agent.Events;
 using OS.Agent.Services;
 using OS.Agent.Storage;
 using OS.Agent.Storage.Extensions;
-using OS.Agent.Storage.Models;
 using OS.Agent.Workers;
 
 using Schema = OS.Agent.Api.Schema;
@@ -75,15 +74,15 @@ builder.Services.AddScoped<InstallController>();
 builder.Services.AddScoped<MessageController>();
 
 // Queues
-builder.Services.AddSingleton<NetMQQueue<Event<UserEvent>>>(); // users.(create | update | delete)
-builder.Services.AddSingleton<NetMQQueue<Event<TenantEvent>>>(); // tenants.(create | update | delete)
-builder.Services.AddSingleton<NetMQQueue<Event<AccountEvent>>>(); // accounts.(create | update | delete)
-builder.Services.AddSingleton<NetMQQueue<Event<ChatEvent>>>(); // chats.(create | update | delete)
-builder.Services.AddSingleton<NetMQQueue<Event<MessageEvent>>>(); // messages.(create | update | delete | resume)
-builder.Services.AddSingleton<NetMQQueue<Event<TokenEvent>>>(); // tokens.(create | update | delete)
-builder.Services.AddSingleton<NetMQQueue<Event<RecordEvent>>>(); // records.(create | update | delete)
-builder.Services.AddSingleton<NetMQQueue<Event<InstallEvent>>>(); // installs.(create | update | delete)
-builder.Services.AddSingleton<NetMQQueue<Event<LogEvent>>>(); // logs.create
+builder.Services.AddSingleton<NetMQQueue<UserEvent>>(); // users.(create | update | delete)
+builder.Services.AddSingleton<NetMQQueue<TenantEvent>>(); // tenants.(create | update | delete)
+builder.Services.AddSingleton<NetMQQueue<AccountEvent>>(); // accounts.(create | update | delete)
+builder.Services.AddSingleton<NetMQQueue<ChatEvent>>(); // chats.(create | update | delete)
+builder.Services.AddSingleton<NetMQQueue<MessageEvent>>(); // messages.(create | update | delete | resume)
+builder.Services.AddSingleton<NetMQQueue<TokenEvent>>(); // tokens.(create | update | delete)
+builder.Services.AddSingleton<NetMQQueue<RecordEvent>>(); // records.(create | update | delete)
+builder.Services.AddSingleton<NetMQQueue<InstallEvent>>(); // installs.(create | update | delete)
+builder.Services.AddSingleton<NetMQQueue<LogEvent>>(); // logs.create
 
 // Webhooks
 builder.Services.AddSingleton<WebhookEventProcessor, GithubInstallWebhook>();

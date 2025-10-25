@@ -4,7 +4,7 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Events;
 
-public class InstallEvent
+public class InstallEvent(ActionType action) : Event(EntityType.Install, action)
 {
     [JsonPropertyName("tenant")]
     public required Tenant Tenant { get; init; }

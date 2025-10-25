@@ -26,7 +26,7 @@ public interface IMessageService
 public class MessageService(IServiceProvider provider) : IMessageService
 {
     private IMemoryCache Cache { get; init; } = provider.GetRequiredService<IMemoryCache>();
-    private NetMQQueue<Event<MessageEvent>> Events { get; init; } = provider.GetRequiredService<NetMQQueue<Event<MessageEvent>>>();
+    private NetMQQueue<MessageEvent> Events { get; init; } = provider.GetRequiredService<NetMQQueue<MessageEvent>>();
     private IMessageStorage Storage { get; init; } = provider.GetRequiredService<IMessageStorage>();
     private ITenantService Tenants { get; init; } = provider.GetRequiredService<ITenantService>();
     private IAccountService Accounts { get; init; } = provider.GetRequiredService<IAccountService>();
@@ -84,14 +84,14 @@ public class MessageService(IServiceProvider provider) : IMessageService
         var chat = await Chats.GetById(value.ChatId, cancellationToken) ?? throw new Exception("chat not found");
         var message = await Storage.Create(value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("messages.create", new()
+        Events.Enqueue(new(ActionType.Create)
         {
             Tenant = tenant,
             Account = account,
             Install = install,
             Chat = chat,
             Message = message
-        }));
+        });
 
         return message;
     }
@@ -106,14 +106,14 @@ public class MessageService(IServiceProvider provider) : IMessageService
         var chat = await Chats.GetById(value.ChatId, cancellationToken) ?? throw new Exception("chat not found");
         var message = await Storage.Update(value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("messages.update", new()
+        Events.Enqueue(new(ActionType.Update)
         {
             Tenant = tenant,
             Account = account,
             Install = install,
             Chat = chat,
             Message = message
-        }));
+        });
 
         return message;
     }
@@ -131,14 +131,14 @@ public class MessageService(IServiceProvider provider) : IMessageService
 
         await Storage.Delete(message.Id, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("messages.delete", new()
+        Events.Enqueue(new(ActionType.Delete)
         {
             Tenant = tenant,
             Account = account,
             Install = install,
             Chat = chat,
             Message = message
-        }));
+        });
     }
 
     public async Task Resume(Guid id, CancellationToken cancellationToken = default)
@@ -152,13 +152,13 @@ public class MessageService(IServiceProvider provider) : IMessageService
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var chat = await Chats.GetById(message.ChatId, cancellationToken) ?? throw new Exception("chat not found");
 
-        Events.Enqueue(new("messages.resume", new()
+        Events.Enqueue(new(ActionType.Resume)
         {
             Tenant = tenant,
             Account = account,
             Install = install,
             Chat = chat,
             Message = message
-        }));
+        });
     }
 }

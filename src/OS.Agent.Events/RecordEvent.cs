@@ -4,7 +4,7 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Events;
 
-public class RecordEvent
+public class RecordEvent(ActionType action) : Event(EntityType.Record, action)
 {
     [JsonPropertyName("record")]
     public required Record Record { get; init; }

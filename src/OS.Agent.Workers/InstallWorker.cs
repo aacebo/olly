@@ -17,7 +17,7 @@ namespace OS.Agent.Workers;
 public class InstallWorker(IServiceProvider provider, IServiceScopeFactory scopeFactory) : IHostedService
 {
     private ILogger<InstallWorker> Logger { get; init; } = provider.GetRequiredService<ILogger<InstallWorker>>();
-    private NetMQQueue<Event<InstallEvent>> Events { get; init; } = provider.GetRequiredService<NetMQQueue<Event<InstallEvent>>>();
+    private NetMQQueue<InstallEvent> Events { get; init; } = provider.GetRequiredService<NetMQQueue<InstallEvent>>();
     private JsonSerializerOptions JsonOptions { get; init; } = provider.GetRequiredService<JsonSerializerOptions>();
     private NetMQPoller Poller { get; init; } = [];
 
@@ -40,38 +40,38 @@ public class InstallWorker(IServiceProvider provider, IServiceScopeFactory scope
 
                     await logs.Create(new()
                     {
-                        TenantId = @event.Body.Tenant.Id,
+                        TenantId = @event.Tenant.Id,
                         Type = LogType.Install,
-                        TypeId = @event.Body.Install.Id.ToString(),
-                        Text = @event.Name,
-                        Entities = [Entity.From(@event.Body)]
+                        TypeId = @event.Install.Id.ToString(),
+                        Text = @event.Key,
+                        Entities = [Entity.From(@event)]
                     }, lifetime.ApplicationStopping);
 
-                    if (@event.Body.Account.UserId is null) continue;
+                    if (@event.Account.UserId is null) continue;
 
-                    var user = await storage.Users.GetById(@event.Body.Account.UserId.Value, lifetime.ApplicationStopping);
+                    var user = await storage.Users.GetById(@event.Account.UserId.Value, lifetime.ApplicationStopping);
 
                     if (user is null) continue;
 
-                    var context = new AgentInstallContext(@event.Body.Account.SourceType, scope.ServiceProvider, lifetime.ApplicationStopping)
+                    var context = new AgentInstallContext(@event.Account.SourceType, scope.ServiceProvider, lifetime.ApplicationStopping)
                     {
-                        Tenant = @event.Body.Tenant,
-                        Account = @event.Body.Account,
+                        Tenant = @event.Tenant,
+                        Account = @event.Account,
                         User = user,
-                        Installation = @event.Body.Install,
-                        Chat = @event.Body.Chat,
-                        Message = @event.Body.Message
+                        Installation = @event.Install,
+                        Chat = @event.Chat,
+                        Message = @event.Message
                     };
 
-                    if (@event.Name == "installs.create")
+                    if (@event.Key == "installs.create")
                     {
                         await OnCreateEvent(context);
                     }
-                    else if (@event.Name == "installs.update")
+                    else if (@event.Key == "installs.update")
                     {
                         await OnUpdateEvent(context);
                     }
-                    else if (@event.Name == "installs.delete")
+                    else if (@event.Key == "installs.delete")
                     {
                         await OnDeleteEvent(context);
                     }

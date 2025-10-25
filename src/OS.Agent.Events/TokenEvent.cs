@@ -4,7 +4,7 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Events;
 
-public class TokenEvent
+public class TokenEvent(ActionType action) : Event(EntityType.Token, action)
 {
     [JsonPropertyName("tenant")]
     public required Tenant Tenant { get; init; }

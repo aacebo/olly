@@ -20,7 +20,7 @@ public interface IUserService
 public class UserService(IServiceProvider provider) : IUserService
 {
     private IMemoryCache Cache { get; init; } = provider.GetRequiredService<IMemoryCache>();
-    private NetMQQueue<Event<UserEvent>> Events { get; init; } = provider.GetRequiredService<NetMQQueue<Event<UserEvent>>>();
+    private NetMQQueue<UserEvent> Events { get; init; } = provider.GetRequiredService<NetMQQueue<UserEvent>>();
     private IUserStorage Storage { get; init; } = provider.GetRequiredService<IUserStorage>();
 
     public async Task<User?> GetById(Guid id, CancellationToken cancellationToken = default)
@@ -46,10 +46,10 @@ public class UserService(IServiceProvider provider) : IUserService
     {
         var user = await Storage.Create(value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("users.create", new()
+        Events.Enqueue(new(ActionType.Create)
         {
             User = user
-        }));
+        });
 
         return user;
     }
@@ -58,10 +58,10 @@ public class UserService(IServiceProvider provider) : IUserService
     {
         var user = await Storage.Update(value, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("users.update", new()
+        Events.Enqueue(new(ActionType.Update)
         {
             User = user
-        }));
+        });
 
         return user;
     }
@@ -72,9 +72,9 @@ public class UserService(IServiceProvider provider) : IUserService
 
         await Storage.Delete(id, cancellationToken: cancellationToken);
 
-        Events.Enqueue(new("users.delete", new()
+        Events.Enqueue(new(ActionType.Delete)
         {
             User = user
-        }));
+        });
     }
 }
