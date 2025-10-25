@@ -14,11 +14,11 @@ public partial class GithubDriver
             ? null
             : provider.GetRequiredKeyedService<IChatDriver>(request.Chat.SourceType.ToString());
 
-        if (driver is not null)
+        if (driver is not null && request.Chat is not null)
         {
             await driver.Send(new()
             {
-                Chat = request.Chat!,
+                Chat = request.Chat,
                 From = request.Account,
                 Install = request.Install,
                 Provider = request.Provider,
@@ -122,11 +122,11 @@ public partial class GithubDriver
             }
         }
 
-        if (driver is not null)
+        if (driver is not null && request.Chat is not null)
         {
             await driver.Send(new()
             {
-                Chat = request.Chat!,
+                Chat = request.Chat,
                 From = request.Account,
                 Install = request.Install,
                 Provider = request.Provider,
