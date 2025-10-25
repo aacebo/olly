@@ -80,7 +80,7 @@ public partial class TeamsDriver
         return new Message()
         {
             ChatId = request.Chat.Id,
-            AccountId = request.From.Id,
+            AccountId = request.Account.Id,
             SourceId = activity.Id,
             SourceType = SourceType.Teams,
             Url = $"{request.Chat.Url}v3/conversations/{request.Chat.SourceId}/activities/{activity.Id}",

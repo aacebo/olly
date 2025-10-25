@@ -25,11 +25,6 @@ public abstract class AgentContext<TDriver> where TDriver : IDriver
     protected TDriver Driver { get; }
     protected ILogger<AgentContext<TDriver>> Logger { get; }
 
-    public AgentContext(SourceType type, IServiceScopeFactory factory) : this(type, factory.CreateScope().ServiceProvider)
-    {
-        Type = type;
-    }
-
     public AgentContext(SourceType type, IServiceProvider provider, CancellationToken cancellationToken = default)
     {
         Provider = provider;

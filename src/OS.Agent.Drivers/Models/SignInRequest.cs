@@ -6,9 +6,6 @@ namespace OS.Agent.Drivers.Models;
 
 public class SignInRequest : DriverRequest
 {
-    [JsonPropertyName("from")]
-    public required Account From { get; set; }
-
     [JsonPropertyName("chat")]
     public required Chat Chat { get; set; }
 

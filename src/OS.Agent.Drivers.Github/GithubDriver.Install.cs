@@ -18,11 +18,13 @@ public partial class GithubDriver
         {
             await driver.Send(new()
             {
+                Tenant = request.Tenant,
+                User = request.User,
                 Chat = request.Chat,
-                From = request.Account,
+                Account = request.Account,
                 Install = request.Install,
                 Provider = request.Provider,
-                Text = "I see you've added a Github account, please wait while I import your data"
+                Text = "⌛⌛⌛I see you've added a Github account, please wait while I import your data⌛⌛⌛"
             }, cancellationToken);
         }
 
@@ -126,11 +128,13 @@ public partial class GithubDriver
         {
             await driver.Send(new()
             {
+                Tenant = request.Tenant,
+                User = request.User,
                 Chat = request.Chat,
-                From = request.Account,
+                Account = request.Account,
                 Install = request.Install,
                 Provider = request.Provider,
-                Text = "🎉Your Github account data has been successfully imported!🎉<br>Wnat can I assist you with?"
+                Text = "🎉🎉🎉Your Github account data has been successfully imported!🎉🎉🎉<br>Wnat can I assist you with?"
             }, cancellationToken);
         }
     }

@@ -1,7 +1,5 @@
 using System.Text.Json;
 
-using Microsoft.Extensions.DependencyInjection;
-
 using OS.Agent.Cards.Extensions;
 using OS.Agent.Cards.Progress;
 using OS.Agent.Cards.Tasks;
@@ -26,11 +24,6 @@ public class AgentMessageContext : AgentContext<IChatDriver>
 
     private AgentResponse Response { get; } = new();
 
-    public AgentMessageContext(SourceType type, IServiceScopeFactory factory) : base(type, factory)
-    {
-
-    }
-
     public AgentMessageContext(SourceType type, IServiceProvider provider, CancellationToken cancellationToken = default) : base(type, provider, cancellationToken)
     {
 
@@ -40,8 +33,11 @@ public class AgentMessageContext : AgentContext<IChatDriver>
     {
         await Driver.SignIn(new()
         {
+            Tenant = Tenant,
+            User = User,
             Chat = Chat,
-            From = Account,
+            Account = Account,
+            Install = Installation,
             Url = url,
             State = state,
             Provider = Provider
@@ -53,8 +49,10 @@ public class AgentMessageContext : AgentContext<IChatDriver>
         var request = new TypingRequest()
         {
             Text = text,
+            Tenant = Tenant,
+            User = User,
             Chat = Chat,
-            From = Account,
+            Account = Account,
             Install = Installation,
             Provider = Provider
         };
@@ -68,8 +66,10 @@ public class AgentMessageContext : AgentContext<IChatDriver>
         {
             Text = text,
             Attachments = attachments,
+            Tenant = Tenant,
+            User = User,
             Chat = Chat,
-            From = Account,
+            Account = Account,
             Install = Installation,
             Provider = Provider
         };
@@ -86,8 +86,10 @@ public class AgentMessageContext : AgentContext<IChatDriver>
         {
             Text = text,
             Attachments = attachments.Length > 0 ? attachments : null,
+            Tenant = Tenant,
+            User = User,
             Chat = Chat,
-            From = Account,
+            Account = Account,
             Install = Installation,
             Message = message,
             Provider = Provider
@@ -104,8 +106,10 @@ public class AgentMessageContext : AgentContext<IChatDriver>
         var request = new MessageUpdateRequest()
         {
             Attachments = attachments.Length > 0 ? attachments : null,
+            Tenant = Tenant,
+            User = User,
             Chat = Chat,
-            From = Account,
+            Account = Account,
             Install = Installation,
             Message = message,
             Provider = Provider
@@ -122,11 +126,12 @@ public class AgentMessageContext : AgentContext<IChatDriver>
         {
             Text = text,
             Attachments = attachments,
+            Tenant = Tenant,
+            User = User,
             Chat = Chat,
             Install = Installation,
-            From = Account,
+            Account = Account,
             ReplyTo = Message,
-            ReplyToAccount = Account,
             Provider = Provider
         };
 

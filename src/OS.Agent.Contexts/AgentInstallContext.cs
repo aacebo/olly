@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
 using OS.Agent.Drivers;
 using OS.Agent.Storage.Models;
 
@@ -17,11 +15,6 @@ public class AgentInstallContext : AgentContext<IDriver>
     public Chat? Chat { get; init; }
     public Message? Message { get; init; }
 
-    public AgentInstallContext(SourceType type, IServiceScopeFactory factory) : base(type, factory)
-    {
-
-    }
-
     public AgentInstallContext(SourceType type, IServiceProvider provider, CancellationToken cancellationToken = default) : base(type, provider, cancellationToken)
     {
 
@@ -32,6 +25,7 @@ public class AgentInstallContext : AgentContext<IDriver>
         await Driver.Install(new()
         {
             Tenant = Tenant,
+            User = User,
             Account = Account,
             Install = Installation,
             Chat = Chat,
@@ -45,8 +39,11 @@ public class AgentInstallContext : AgentContext<IDriver>
         await Driver.UnInstall(new()
         {
             Tenant = Tenant,
+            User = User,
             Account = Account,
             Install = Installation,
+            Chat = Chat,
+            Message = Message,
             Provider = Provider
         }, CancellationToken);
     }

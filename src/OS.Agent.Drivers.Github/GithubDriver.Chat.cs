@@ -41,7 +41,7 @@ public partial class GithubDriver
         var message = new Message()
         {
             ChatId = request.Chat.Id,
-            AccountId = request.From.Id,
+            AccountId = request.Account.Id,
             SourceId = comment.Id.ToString(),
             SourceType = SourceType.Github,
             Url = comment.Url,

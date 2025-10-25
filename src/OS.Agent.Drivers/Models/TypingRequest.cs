@@ -9,12 +9,6 @@ public class TypingRequest : DriverRequest
     [JsonPropertyName("text")]
     public string? Text { get; set; }
 
-    [JsonPropertyName("from")]
-    public required Account From { get; set; }
-
     [JsonPropertyName("chat")]
     public required Chat Chat { get; set; }
-
-    [JsonPropertyName("install")]
-    public required Install Install { get; set; }
 }
