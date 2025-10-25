@@ -4,7 +4,7 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Models;
 
-public class UnInstallRequest
+public class UnInstallRequest : DriverRequest
 {
     [JsonPropertyName("tenant")]
     public required Tenant Tenant { get; set; }

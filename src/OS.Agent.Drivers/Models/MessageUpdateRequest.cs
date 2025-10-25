@@ -4,7 +4,7 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Models;
 
-public class MessageUpdateRequest
+public class MessageUpdateRequest : DriverRequest
 {
     [JsonPropertyName("text")]
     public string? Text { get; set; }

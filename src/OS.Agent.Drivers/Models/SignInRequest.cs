@@ -4,7 +4,7 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Models;
 
-public class SignInRequest
+public class SignInRequest : DriverRequest
 {
     [JsonPropertyName("from")]
     public required Account From { get; set; }

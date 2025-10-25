@@ -35,7 +35,8 @@ public class AgentInstallContext : AgentContext<IDriver>
             Account = Account,
             Install = Installation,
             Chat = Chat,
-            Message = Message
+            Message = Message,
+            Provider = Provider
         }, CancellationToken);
     }
 
@@ -45,7 +46,8 @@ public class AgentInstallContext : AgentContext<IDriver>
         {
             Tenant = Tenant,
             Account = Account,
-            Install = Installation
+            Install = Installation,
+            Provider = Provider
         }, CancellationToken);
     }
 }

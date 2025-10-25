@@ -43,7 +43,8 @@ public class AgentMessageContext : AgentContext<IChatDriver>
             Chat = Chat,
             From = Account,
             Url = url,
-            State = state
+            State = state,
+            Provider = Provider
         }, CancellationToken);
     }
 
@@ -54,7 +55,8 @@ public class AgentMessageContext : AgentContext<IChatDriver>
             Text = text,
             Chat = Chat,
             From = Account,
-            Install = Installation
+            Install = Installation,
+            Provider = Provider
         };
 
         await Driver.Typing(request, CancellationToken);
@@ -68,7 +70,8 @@ public class AgentMessageContext : AgentContext<IChatDriver>
             Attachments = attachments,
             Chat = Chat,
             From = Account,
-            Install = Installation
+            Install = Installation,
+            Provider = Provider
         };
 
         var message = await Driver.Send(request, CancellationToken);
@@ -86,7 +89,8 @@ public class AgentMessageContext : AgentContext<IChatDriver>
             Chat = Chat,
             From = Account,
             Install = Installation,
-            Message = message
+            Message = message,
+            Provider = Provider
         };
 
         message = await Driver.Update(request, CancellationToken);
@@ -103,7 +107,8 @@ public class AgentMessageContext : AgentContext<IChatDriver>
             Chat = Chat,
             From = Account,
             Install = Installation,
-            Message = message
+            Message = message,
+            Provider = Provider
         };
 
         message = await Driver.Update(request, CancellationToken);
@@ -122,6 +127,7 @@ public class AgentMessageContext : AgentContext<IChatDriver>
             From = Account,
             ReplyTo = Message,
             ReplyToAccount = Account,
+            Provider = Provider
         };
 
         var message = await Driver.Reply(request, CancellationToken);
