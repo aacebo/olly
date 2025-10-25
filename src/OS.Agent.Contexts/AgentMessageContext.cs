@@ -166,7 +166,7 @@ public class AgentMessageContext : AgentContext<IChatDriver>
     public async Task<TaskItem> CreateTask(TaskItem.Create create)
     {
         var task = Response.TaskCard.Add(create);
-        var attachment = Response.TaskCard.Build().ToAttachment();
+        var attachment = Response.TaskCard.Render().ToAttachment();
 
         await Progress(new Attachment()
         {
@@ -181,7 +181,7 @@ public class AgentMessageContext : AgentContext<IChatDriver>
     public async Task<TaskItem> UpdateTask(Guid id, TaskItem.Update update)
     {
         var task = Response.TaskCard.Update(id, update);
-        var attachment = Response.TaskCard.Build().ToAttachment();
+        var attachment = Response.TaskCard.Render().ToAttachment();
 
         await Progress(new Attachment()
         {
@@ -212,7 +212,7 @@ public class AgentMessageContext : AgentContext<IChatDriver>
             EndedAt = DateTimeOffset.UtcNow
         });
 
-        var attachment = Response.TaskCard.Build().ToAttachment();
+        var attachment = Response.TaskCard.Render().ToAttachment();
 
         await Progress(new Attachment()
         {

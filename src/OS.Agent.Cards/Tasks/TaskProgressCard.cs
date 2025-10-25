@@ -5,7 +5,7 @@ using OS.Agent.Cards.Progress;
 
 namespace OS.Agent.Cards.Tasks;
 
-public class TaskProgressCard
+public class TaskProgressCard : CardComponent
 {
     public TaskItem? Current { get; set; }
     public IList<TaskItem> Tasks { get; set; } = [];
@@ -44,7 +44,7 @@ public class TaskProgressCard
         return Tasks[i];
     }
 
-    public AdaptiveCard Build()
+    public override AdaptiveCard Render()
     {
         if (Current is null) throw new InvalidOperationException();
 
