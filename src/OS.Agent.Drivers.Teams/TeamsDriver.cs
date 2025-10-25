@@ -2,6 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Teams.Api.Activities;
 using Microsoft.Teams.Apps;
 
+using OS.Agent.Cards.Extensions;
 using OS.Agent.Drivers.Models;
 using OS.Agent.Storage.Models;
 
@@ -38,7 +39,11 @@ public partial class TeamsDriver(IServiceProvider provider) : IChatDriver
                     Type = chatType,
                     Name = request.Chat.Name
                 }
-            }.AddAttachment(Cards.Authentication.SignInCard.Github($"{request.Url}&state={request.State}")),
+            }.AddAttachment(
+                Cards.Authentication.SignInCard.Github($"{request.Url}&state={request.State}")
+                    .Render()
+                    .ToAdaptiveCard()
+            ),
             chatType,
             request.Chat.Url,
             cancellationToken

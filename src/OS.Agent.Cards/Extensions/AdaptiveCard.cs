@@ -7,6 +7,6 @@ public static class AdaptiveCardExtensions
 {
     public static Attachment ToAttachment(this AdaptiveCard card)
     {
-        return new Attachment(card);
+        return new(card);
     }
 }
