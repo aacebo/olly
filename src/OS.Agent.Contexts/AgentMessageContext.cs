@@ -208,7 +208,6 @@ public class AgentMessageContext : AgentContext<IChatDriver>
 
         task = Response.TaskCard.Update(task.Id, new()
         {
-            Style = errors + warnings > 0 ? ProgressStyle.Warning : ProgressStyle.Success,
             EndedAt = DateTimeOffset.UtcNow
         });
 

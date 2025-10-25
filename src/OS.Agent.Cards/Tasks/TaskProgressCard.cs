@@ -169,7 +169,7 @@ public class TaskProgressCard : CardComponent
                         )
                         .WithHeight(ElementHeight.Auto)
                         .WithHorizontalAlignment(HorizontalAlignment.Center)
-                        .WithMaxHeight("500px")
+                        .WithMaxHeight("300px")
                     ).WithStyle(style.ContainerStyle)
                 )
             )
