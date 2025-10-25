@@ -7,7 +7,7 @@ using OS.Agent.Errors;
 using OS.Agent.Services;
 using OS.Agent.Storage.Models;
 
-namespace OS.Agent.Drivers.Github;
+namespace OS.Agent.Drivers.Github.Http;
 
 public class GithubTokenRefreshHandler(IServiceProvider provider, Install? install = null) : DelegatingHandler(HttpMessageHandlerFactory.CreateDefault())
 {

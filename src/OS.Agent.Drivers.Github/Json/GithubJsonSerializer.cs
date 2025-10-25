@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace OS.Agent.Drivers.Github;
+namespace OS.Agent.Drivers.Github.Json;
 
 public static class GithubJsonSerializer
 {

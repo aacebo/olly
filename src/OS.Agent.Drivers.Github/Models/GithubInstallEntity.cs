@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 
+using OS.Agent.Drivers.Github.Json;
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github.Models;

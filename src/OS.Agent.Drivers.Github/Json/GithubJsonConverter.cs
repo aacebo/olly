@@ -2,7 +2,7 @@ using System.Text.Json;
 
 using Json.More;
 
-namespace OS.Agent.Drivers.Github;
+namespace OS.Agent.Drivers.Github.Json;
 
 public class GithubJsonConverter<T> : WeaklyTypedJsonConverter<T>
 {
