@@ -25,20 +25,20 @@ public abstract class AgentContext<TDriver> where TDriver : IDriver
     protected TDriver Driver { get; }
     protected ILogger<AgentContext<TDriver>> Logger { get; }
 
-    public AgentContext(SourceType type, IServiceScopeFactory factory) : this(type, factory.CreateScope())
+    public AgentContext(SourceType type, IServiceScopeFactory factory) : this(type, factory.CreateScope().ServiceProvider)
     {
         Type = type;
     }
 
-    public AgentContext(SourceType type, IServiceScope scope, CancellationToken cancellationToken = default)
+    public AgentContext(SourceType type, IServiceProvider provider, CancellationToken cancellationToken = default)
     {
-        Provider = scope.ServiceProvider;
+        Provider = provider;
         Type = type;
-        Services = scope.ServiceProvider.GetRequiredService<IServices>();
-        Storage = scope.ServiceProvider.GetRequiredService<IStorage>();
-        JsonSerializerOptions = scope.ServiceProvider.GetRequiredService<JsonSerializerOptions>();
-        Logger = scope.ServiceProvider.GetRequiredService<ILogger<AgentContext<TDriver>>>();
-        Driver = scope.ServiceProvider.GetRequiredKeyedService<TDriver>(type.ToString());
+        Services = provider.GetRequiredService<IServices>();
+        Storage = provider.GetRequiredService<IStorage>();
+        JsonSerializerOptions = provider.GetRequiredService<JsonSerializerOptions>();
+        Logger = provider.GetRequiredService<ILogger<AgentContext<TDriver>>>();
+        Driver = provider.GetRequiredKeyedService<TDriver>(type.ToString());
         CancellationToken = cancellationToken;
     }
 }

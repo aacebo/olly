@@ -31,7 +31,7 @@ public class AgentMessageContext : AgentContext<IChatDriver>
 
     }
 
-    public AgentMessageContext(SourceType type, IServiceScope scope, CancellationToken cancellationToken = default) : base(type, scope, cancellationToken)
+    public AgentMessageContext(SourceType type, IServiceProvider provider, CancellationToken cancellationToken = default) : base(type, provider, cancellationToken)
     {
 
     }

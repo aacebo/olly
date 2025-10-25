@@ -53,7 +53,7 @@ public class InstallWorker(IServiceProvider provider, IServiceScopeFactory scope
 
                     if (user is null) continue;
 
-                    var context = new AgentInstallContext(@event.Body.Account.SourceType, scope, lifetime.ApplicationStopping)
+                    var context = new AgentInstallContext(@event.Body.Account.SourceType, scope.ServiceProvider, lifetime.ApplicationStopping)
                     {
                         Tenant = @event.Body.Tenant,
                         Account = @event.Body.Account,

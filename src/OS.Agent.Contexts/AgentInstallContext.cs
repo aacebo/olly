@@ -22,7 +22,7 @@ public class AgentInstallContext : AgentContext<IDriver>
 
     }
 
-    public AgentInstallContext(SourceType type, IServiceScope scope, CancellationToken cancellationToken = default) : base(type, scope, cancellationToken)
+    public AgentInstallContext(SourceType type, IServiceProvider provider, CancellationToken cancellationToken = default) : base(type, provider, cancellationToken)
     {
 
     }
