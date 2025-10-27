@@ -40,9 +40,15 @@ public class InstallController(IServiceScopeFactory scopeFactory)
 
         if (account is null)
         {
+            var user = await users.Create(new()
+            {
+                Name = context.Activity.From.Name
+            }, context.CancellationToken);
+
             account = await accounts.Create(new()
             {
                 TenantId = tenant.Id,
+                UserId = user.Id,
                 Name = context.Activity.From.Name,
                 SourceId = context.Activity.From.Id,
                 SourceType = SourceType.Teams,
@@ -65,35 +71,6 @@ public class InstallController(IServiceScopeFactory scopeFactory)
             account = await accounts.Update(account, context.CancellationToken);
         }
 
-        if (account.UserId is null)
-        {
-            var user = await users.Create(new()
-            {
-                Name = context.Activity.From.Name
-            }, context.CancellationToken);
-
-            account.UserId = user.Id;
-            await accounts.Update(account, context.CancellationToken);
-        }
-
-        var install = await installs.GetBySourceId(SourceType.Teams, account.SourceId);
-
-        if (install is null)
-        {
-            await installs.Create(new()
-            {
-                AccountId = account.Id,
-                SourceType = SourceType.Teams,
-                SourceId = account.SourceId,
-                Url = context.Activity.ServiceUrl
-            }, context.CancellationToken);
-        }
-        else
-        {
-            install.Url = context.Activity.ServiceUrl;
-            await installs.Update(install, context.CancellationToken);
-        }
-
         var chat = await chats.GetBySourceId(
             tenant.Id,
             SourceType.Teams,
@@ -103,7 +80,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
 
         if (chat is null)
         {
-            await chats.Create(new()
+            chat = await chats.Create(new()
             {
                 TenantId = tenant.Id,
                 SourceId = context.Activity.Conversation.Id,
@@ -131,7 +108,25 @@ public class InstallController(IServiceScopeFactory scopeFactory)
                 ServiceUrl = context.Activity.ServiceUrl
             });
 
-            await chats.Update(chat, context.CancellationToken);
+            chat = await chats.Update(chat, context.CancellationToken);
+        }
+
+        var install = await installs.GetBySourceId(SourceType.Teams, account.SourceId);
+
+        if (install is null)
+        {
+            await installs.Create(new()
+            {
+                AccountId = account.Id,
+                SourceType = SourceType.Teams,
+                SourceId = account.SourceId,
+                Url = context.Activity.ServiceUrl
+            }, chat, context.CancellationToken);
+        }
+        else
+        {
+            install.Url = context.Activity.ServiceUrl;
+            await installs.Update(install, context.CancellationToken);
         }
 
         await context.Send("Hello! Is there anything I can help you with?");

@@ -9,7 +9,6 @@ public class CreateAccountsTable : Migration
     {
         Create.Table("accounts")
             .WithColumn("id").AsGuid().PrimaryKey()
-            .WithColumn("user_id").AsGuid().ForeignKey("users", "id").Nullable()
             .WithColumn("tenant_id").AsGuid().ForeignKey("tenants", "id").NotNullable()
             .WithColumn("source_id").AsString().NotNullable()
             .WithColumn("source_type").AsString().NotNullable()

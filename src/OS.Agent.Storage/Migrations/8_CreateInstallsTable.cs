@@ -9,6 +9,7 @@ public class CreateInstallsTable : Migration
     {
         Create.Table("installs")
             .WithColumn("id").AsGuid().PrimaryKey()
+            .WithColumn("user_id").AsGuid().ForeignKey("users", "id").NotNullable()
             .WithColumn("account_id").AsGuid().ForeignKey("accounts", "id").NotNullable()
             .WithColumn("source_type").AsString().NotNullable()
             .WithColumn("source_id").AsString().NotNullable()
@@ -21,7 +22,16 @@ public class CreateInstallsTable : Migration
 
         Create.UniqueConstraint()
             .OnTable("installs")
-            .Columns("source_id", "source_type");
+            .Columns("user_id", "account_id");
+
+        Create.UniqueConstraint()
+            .OnTable("installs")
+            .Columns("user_id", "source_id", "source_type");
+
+        Create.Index()
+            .OnTable("installs")
+            .OnColumn("user_id").Ascending()
+            .OnColumn("source_type").Ascending();
     }
 
     public override void Down()

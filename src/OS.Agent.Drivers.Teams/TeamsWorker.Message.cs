@@ -47,7 +47,7 @@ public partial class TeamsWorker
         {
             Logger = client.Provider.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>()
         });
-        
+
         var prompt = OpenAIChatPrompt.From(model, new MainPrompt(client), new()
         {
             Logger = client.Provider.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>()
@@ -120,7 +120,7 @@ public partial class TeamsWorker
         {
             Logger = client.Provider.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>()
         });
-        
+
         var prompt = OpenAIChatPrompt.From(model, new MainPrompt(client), new()
         {
             Logger = client.Provider.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>()

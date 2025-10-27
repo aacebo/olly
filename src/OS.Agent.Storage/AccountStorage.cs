@@ -16,9 +16,7 @@ public interface IAccountStorage
 {
     Task<Account?> GetById(Guid id, CancellationToken cancellationToken = default);
     Task<Account?> GetBySourceId(Guid tenantId, SourceType type, string sourceId, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Account>> GetByUserId(Guid userId, CancellationToken cancellationToken = default);
     Task<IEnumerable<Account>> GetByTenantId(Guid tenantId, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Account>> GetByTenantUserId(Guid tenantId, Guid userId, SourceType? type = null, CancellationToken cancellationToken = default);
     Task<Account> Create(Account value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
     Task<Account> Update(Account value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
     Task Delete(Guid id, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
@@ -48,17 +46,6 @@ public class AccountStorage(ILogger<IAccountStorage> logger, QueryFactory db) : 
             .FirstOrDefaultAsync<Account?>(cancellationToken: cancellationToken);
     }
 
-    public async Task<IEnumerable<Account>> GetByUserId(Guid userId, CancellationToken cancellationToken = default)
-    {
-        logger.LogDebug("GetByUserId");
-        return await db
-            .Query()
-            .Select("*")
-            .From("accounts")
-            .Where("user_id", "=", userId)
-            .GetAsync<Account>(cancellationToken: cancellationToken);
-    }
-
     public async Task<IEnumerable<Account>> GetByTenantId(Guid tenantId, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("GetByTenantId");
@@ -70,39 +57,20 @@ public class AccountStorage(ILogger<IAccountStorage> logger, QueryFactory db) : 
             .GetAsync<Account>(cancellationToken: cancellationToken);
     }
 
-    public async Task<IEnumerable<Account>> GetByTenantUserId(Guid tenantId, Guid userId, SourceType? type = null, CancellationToken cancellationToken = default)
-    {
-        logger.LogDebug("GetByTenantUserId");
-        var query = db
-            .Query()
-            .Select("*")
-            .From("accounts")
-            .Where("tenant_id", "=", tenantId)
-            .Where("user_id", "=", userId);
-
-        if (type is not null)
-        {
-            query = query.Where("source_type", "=", type.ToString());
-        }
-
-        return await query.GetAsync<Account>(cancellationToken: cancellationToken);
-    }
-
     public async Task<Account> Create(Account value, IDbTransaction? tx = null, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Create");
         using var cmd = new NpgsqlCommand(
         """
             INSERT INTO accounts
-            (id, user_id, tenant_id, source_id, source_type, url, name, entities, created_at, updated_at)
+            (id, tenant_id, source_id, source_type, url, name, entities, created_at, updated_at)
             VALUES
-            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         """, (NpgsqlConnection)db.Connection)
         {
             Parameters =
             {
                 new() { Value = value.Id, NpgsqlDbType = NpgsqlDbType.Uuid },
-                new() { Value = value.UserId is null ? DBNull.Value : value.UserId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.TenantId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.SourceId, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
@@ -125,22 +93,20 @@ public class AccountStorage(ILogger<IAccountStorage> logger, QueryFactory db) : 
         using var cmd = new NpgsqlCommand(
         """
             UPDATE accounts SET
-                user_id = $2,
-                tenant_id = $3,
-                source_id = $4,
-                source_type = $5,
-                url = $6,
-                name = $7,
-                entities = $8,
-                created_at = $9,
-                updated_at = $10
+                tenant_id = $2,
+                source_id = $3,
+                source_type = $4,
+                url = $5,
+                name = $6,
+                entities = $7,
+                created_at = $8,
+                updated_at = $9
             WHERE id = $1
         """, (NpgsqlConnection)db.Connection)
         {
             Parameters =
             {
                 new() { Value = value.Id, NpgsqlDbType = NpgsqlDbType.Uuid },
-                new() { Value = value.UserId is null ? DBNull.Value : value.UserId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.TenantId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.SourceId, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },

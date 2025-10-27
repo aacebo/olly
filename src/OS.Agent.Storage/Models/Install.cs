@@ -11,6 +11,10 @@ public class Install : Model
     [JsonPropertyName("id")]
     public Guid Id { get; init; } = Guid.NewGuid();
 
+    [Column("user_id")]
+    [JsonPropertyName("user_id")]
+    public required Guid UserId { get; init; }
+
     [Column("account_id")]
     [JsonPropertyName("account_id")]
     public required Guid AccountId { get; init; }

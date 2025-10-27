@@ -83,7 +83,7 @@ public class MessageService(IServiceProvider provider) : IMessageService
         var install = await Installs.GetByAccountId(account.Id, cancellationToken) ?? throw new Exception("install not found");
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var chat = await Chats.GetById(value.ChatId, cancellationToken) ?? throw new Exception("chat not found");
-        var user = account.UserId is not null ? await Users.GetById(account.UserId.Value, cancellationToken) : null;
+        var user = await Users.GetById(install.UserId, cancellationToken) ?? throw new Exception("user not found");
         var message = await Storage.Create(value, cancellationToken: cancellationToken);
 
         Events.Enqueue(new(ActionType.Create)
@@ -107,7 +107,7 @@ public class MessageService(IServiceProvider provider) : IMessageService
         var install = await Installs.GetByAccountId(account.Id, cancellationToken) ?? throw new Exception("install not found");
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var chat = await Chats.GetById(value.ChatId, cancellationToken) ?? throw new Exception("chat not found");
-        var user = account.UserId is not null ? await Users.GetById(account.UserId.Value, cancellationToken) : null;
+        var user = await Users.GetById(install.UserId, cancellationToken) ?? throw new Exception("user not found");
         var message = await Storage.Update(value, cancellationToken: cancellationToken);
 
         Events.Enqueue(new(ActionType.Update)
@@ -133,7 +133,7 @@ public class MessageService(IServiceProvider provider) : IMessageService
         var install = await Installs.GetByAccountId(account.Id, cancellationToken) ?? throw new Exception("install not found");
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var chat = await Chats.GetById(message.ChatId, cancellationToken) ?? throw new Exception("chat not found");
-        var user = account.UserId is not null ? await Users.GetById(account.UserId.Value, cancellationToken) : null;
+        var user = await Users.GetById(install.UserId, cancellationToken) ?? throw new Exception("user not found");
 
         await Storage.Delete(message.Id, cancellationToken: cancellationToken);
 
@@ -158,7 +158,7 @@ public class MessageService(IServiceProvider provider) : IMessageService
         var install = await Installs.GetByAccountId(account.Id, cancellationToken) ?? throw new Exception("install not found");
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var chat = await Chats.GetById(message.ChatId, cancellationToken) ?? throw new Exception("chat not found");
-        var user = account.UserId is not null ? await Users.GetById(account.UserId.Value, cancellationToken) : null;
+        var user = await Users.GetById(install.UserId, cancellationToken) ?? throw new Exception("user not found");
 
         Events.Enqueue(new(ActionType.Resume)
         {

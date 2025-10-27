@@ -11,10 +11,6 @@ public class Account : Model
     [JsonPropertyName("id")]
     public Guid Id { get; init; } = Guid.NewGuid();
 
-    [Column("user_id")]
-    [JsonPropertyName("user_id")]
-    public Guid? UserId { get; set; }
-
     [Column("tenant_id")]
     [JsonPropertyName("tenant_id")]
     public required Guid TenantId { get; init; }
