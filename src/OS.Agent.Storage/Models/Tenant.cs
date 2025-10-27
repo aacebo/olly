@@ -30,4 +30,9 @@ public class Tenant : Model
     [Column("updated_at")]
     [JsonPropertyName("updated_at")]
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
+
+    public Tenant Copy()
+    {
+        return (Tenant)MemberwiseClone();
+    }
 }

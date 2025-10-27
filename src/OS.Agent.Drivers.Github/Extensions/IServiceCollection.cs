@@ -3,12 +3,14 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text.Json;
 
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
+using NetMQ;
+
 using Octokit;
 
+using OS.Agent.Drivers.Github.Events;
 using OS.Agent.Drivers.Github.Settings;
 using OS.Agent.Storage.Models;
 
@@ -25,6 +27,8 @@ public static class IServiceCollectionExtensions
         services.AddKeyedScoped<GithubDriver>(SourceType.Github.ToString());
         services.AddKeyedScoped<IDriver, GithubDriver>(SourceType.Github.ToString());
         services.AddKeyedScoped<IChatDriver, GithubDriver>(SourceType.Github.ToString());
+        services.AddSingleton<NetMQQueue<GithubEvent>>();
+        services.AddHostedService<GithubWorker>();
         services.AddSingleton(provider =>
         {
             var settings = provider.GetRequiredService<IOptions<GithubSettings>>();

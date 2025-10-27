@@ -22,4 +22,9 @@ public class User : Model
     [Column("updated_at")]
     [JsonPropertyName("updated_at")]
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
+
+    public User Copy()
+    {
+        return (User)MemberwiseClone();
+    }
 }

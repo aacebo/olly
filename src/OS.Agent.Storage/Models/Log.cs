@@ -38,6 +38,11 @@ public class Log : Model
     [Column("created_at")]
     [JsonPropertyName("created_at")]
     public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
+
+    public Log Copy()
+    {
+        return (Log)MemberwiseClone();
+    }
 }
 
 [JsonConverter(typeof(Converter<LogLevel>))]

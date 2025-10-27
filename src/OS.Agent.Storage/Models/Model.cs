@@ -8,8 +8,13 @@ public class ModelAttribute : Attribute
     public string? Name { get; set; }
 }
 
-public abstract class Model
+public abstract class Model : ICloneable
 {
+    public object Clone()
+    {
+        return MemberwiseClone();
+    }
+
     public override string ToString()
     {
         return JsonSerializer.Serialize(this);

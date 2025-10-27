@@ -54,4 +54,9 @@ public class Message : Model
     [Column("updated_at")]
     [JsonPropertyName("updated_at")]
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
+
+    public Message Copy()
+    {
+        return (Message)MemberwiseClone();
+    }
 }

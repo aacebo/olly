@@ -1,7 +1,7 @@
 using Microsoft.Teams.Api;
 using Microsoft.Teams.Cards;
 
-namespace OS.Agent.Cards.Extensions;
+namespace OS.Agent.Drivers.Teams.Extensions;
 
 public static class AdaptiveCardExtensions
 {

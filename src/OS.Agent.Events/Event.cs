@@ -11,7 +11,7 @@ public abstract class Event(EntityType type, ActionType action)
     public Guid Id { get; init; } = Guid.NewGuid();
 
     [JsonPropertyName("key")]
-    public string Key => $"{Type}s.{Action}";
+    public virtual string Key => $"{Type}.{Action}";
 
     [JsonPropertyName("type")]
     public EntityType Type { get; init; } = type;

@@ -46,4 +46,9 @@ public class Record : Model
     [Column("updated_at")]
     [JsonPropertyName("updated_at")]
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
+
+    public Record Copy()
+    {
+        return (Record)MemberwiseClone();
+    }
 }

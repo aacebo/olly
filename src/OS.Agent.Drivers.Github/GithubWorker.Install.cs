@@ -1,43 +1,46 @@
+using OS.Agent.Drivers.Github.Events;
 using OS.Agent.Drivers.Github.Models;
-using OS.Agent.Drivers.Models;
+using OS.Agent.Services;
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github;
 
-public partial class GithubDriver
+public partial class GithubWorker
 {
-    public async Task Install(InstallRequest request, CancellationToken cancellationToken = default)
+    protected async Task OnInstallEvent(GithubInstallEvent @event, CancellationToken cancellationToken = default)
     {
-        var driver = request.Chat is null
-            ? null
-            : provider.GetRequiredKeyedService<IChatDriver>(request.Chat.SourceType.ToString());
-
-        if (driver is not null && request.Chat is not null)
+        if (@event.Action.IsCreate)
         {
-            await driver.Send(new()
-            {
-                Tenant = request.Tenant,
-                User = request.User,
-                Chat = request.Chat,
-                Account = request.Account,
-                Install = request.Install,
-                Provider = request.Provider,
-                Text = "⌛⌛⌛I see you've added a Github account, please wait while I import your data⌛⌛⌛"
-            }, cancellationToken);
+            await OnInstallCreateEvent(@event, cancellationToken);
+        }
+        else if (@event.Action.IsUpdate)
+        {
+            await OnInstallUpdateEvent(@event, cancellationToken);
+        }
+        else if (@event.Action.IsDelete)
+        {
+            await OnInstallDeleteEvent(@event, cancellationToken);
         }
 
-        var client = new Octokit.GitHubClient(await Github.GetRestConnection(request.Install, cancellationToken));
+        throw new Exception($"event '{@event.Key}' not found");
+    }
+
+    protected async Task OnInstallCreateEvent(GithubInstallEvent @event, CancellationToken cancellationToken = default)
+    {
+        var githubService = @event.Scope.ServiceProvider.GetRequiredService<GithubService>();
+        var services = @event.Scope.ServiceProvider.GetRequiredService<IServices>();
+        var client = new Octokit.GitHubClient(await githubService.GetRestConnection(@event.Install, cancellationToken));
         var repositories = await client.GitHubApps.Installation.GetAllRepositoriesForCurrent();
 
         // upsert installed repositories
         foreach (var repository in repositories.Repositories)
         {
-            var record = await Records.GetBySourceId(SourceType.Github, repository.NodeId, cancellationToken);
+            var record = await services.Records.GetBySourceId(SourceType.Github, repository.NodeId, cancellationToken);
 
             if (record is null)
             {
-                record = await Records.Create(
-                    request.Tenant,
+                record = await services.Records.Create(
+                    @event.Tenant,
                     new()
                     {
                         SourceType = SourceType.Github,
@@ -55,7 +58,7 @@ public partial class GithubDriver
                 record.Name = repository.Name;
                 record.Url = repository.Url;
                 record.Entities = [new GithubEntity(repository)];
-                record = await Records.Update(record, cancellationToken);
+                record = await services.Records.Update(record, cancellationToken);
             }
 
             // upsert repository issues
@@ -63,11 +66,11 @@ public partial class GithubDriver
 
             foreach (var issue in issues)
             {
-                var issueRecord = await Records.GetBySourceId(SourceType.Github, issue.NodeId, cancellationToken);
+                var issueRecord = await services.Records.GetBySourceId(SourceType.Github, issue.NodeId, cancellationToken);
 
                 if (issueRecord is null)
                 {
-                    issueRecord = await Records.Create(
+                    issueRecord = await services.Records.Create(
                         new()
                         {
                             ParentId = record.Id,
@@ -87,18 +90,18 @@ public partial class GithubDriver
                     issueRecord.Name = issue.Title;
                     issueRecord.Url = issue.HtmlUrl;
                     issueRecord.Entities = [new GithubEntity(issue.ToUpdate())];
-                    issueRecord = await Records.Update(issueRecord, cancellationToken);
+                    issueRecord = await services.Records.Update(issueRecord, cancellationToken);
                 }
 
                 var comments = await client.Issue.Comment.GetAllForIssue(repository.Owner.Login, repository.Name, issue.Number);
 
                 foreach (var comment in comments)
                 {
-                    var commentRecord = await Records.GetBySourceId(SourceType.Github, comment.NodeId, cancellationToken);
+                    var commentRecord = await services.Records.GetBySourceId(SourceType.Github, comment.NodeId, cancellationToken);
 
                     if (commentRecord is null)
                     {
-                        await Records.Create(
+                        await services.Records.Create(
                             new()
                             {
                                 ParentId = issueRecord.Id,
@@ -116,24 +119,20 @@ public partial class GithubDriver
                         commentRecord.ParentId = issueRecord.Id;
                         commentRecord.Url = comment.HtmlUrl;
                         commentRecord.Entities = [new GithubEntity(comment)];
-                        await Records.Update(commentRecord, cancellationToken);
+                        await services.Records.Update(commentRecord, cancellationToken);
                     }
                 }
             }
         }
+    }
 
-        if (driver is not null && request.Chat is not null)
-        {
-            await driver.Send(new()
-            {
-                Tenant = request.Tenant,
-                User = request.User,
-                Chat = request.Chat,
-                Account = request.Account,
-                Install = request.Install,
-                Provider = request.Provider,
-                Text = "🎉🎉🎉Your Github account data has been successfully imported!🎉🎉🎉<br>Wnat can I assist you with?"
-            }, cancellationToken);
-        }
+    protected Task OnInstallUpdateEvent(GithubInstallEvent @event, CancellationToken cancellationToken = default)
+    {
+        return OnInstallUpdateEvent(@event, cancellationToken);
+    }
+
+    protected Task OnInstallDeleteEvent(GithubInstallEvent @event, CancellationToken _ = default)
+    {
+        return Task.CompletedTask;
     }
 }

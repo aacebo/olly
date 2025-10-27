@@ -53,6 +53,11 @@ public class Token : Model
     [JsonIgnore]
     public bool IsRefreshExpired => RefreshExpiresAt is not null && RefreshExpiresAt.Value > DateTimeOffset.UtcNow;
 
+    public Token Copy()
+    {
+        return (Token)MemberwiseClone();
+    }
+
     public class State
     {
         [JsonPropertyName("tenant_id")]
