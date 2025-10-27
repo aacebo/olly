@@ -58,7 +58,7 @@ public partial class TeamsWorker
             githubPrompt.Description,
             new JsonSchemaBuilder().Type(SchemaValueType.Object).Properties(
                 ("message", new JsonSchemaBuilder().Type(SchemaValueType.String).Description("message to send"))
-            ),
+            ).Required("message"),
             async (string message) =>
             {
                 var res = await githubPrompt.Send(message, new()
@@ -131,7 +131,7 @@ public partial class TeamsWorker
             githubPrompt.Description,
             new JsonSchemaBuilder().Type(SchemaValueType.Object).Properties(
                 ("message", new JsonSchemaBuilder().Type(SchemaValueType.String).Description("message to send"))
-            ),
+            ).Required("message"),
             async (string message) =>
             {
                 var res = await githubPrompt.Send(message, new()
