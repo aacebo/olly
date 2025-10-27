@@ -3,7 +3,7 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers;
 
-public class DriverResponse
+public class ClientResponse
 {
     public Message? Message { get; set; }
     public Message? Progress { get; set; }

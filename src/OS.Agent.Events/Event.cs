@@ -19,11 +19,11 @@ public abstract class Event(EntityType type, ActionType action)
     [JsonPropertyName("action")]
     public ActionType Action { get; init; } = action;
 
-    [JsonPropertyName("created_by")]
-    public User? CreatedBy { get; init; }
-
     [JsonPropertyName("created_at")]
     public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
+
+    [JsonPropertyName("created_by")]
+    public User? CreatedBy { get; init; }
 
     [JsonExtensionData]
     public IDictionary<string, JsonElement> Properties { get; set; } = new Dictionary<string, JsonElement>();

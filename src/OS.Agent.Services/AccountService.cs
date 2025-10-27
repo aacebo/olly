@@ -27,6 +27,7 @@ public class AccountService(IServiceProvider provider) : IAccountService
     private NetMQQueue<AccountEvent> Events { get; init; } = provider.GetRequiredService<NetMQQueue<AccountEvent>>();
     private IAccountStorage Storage { get; init; } = provider.GetRequiredService<IAccountStorage>();
     private ITenantService Tenants { get; init; } = provider.GetRequiredService<ITenantService>();
+    private IUserService Users { get; init; } = provider.GetRequiredService<IUserService>();
 
     public async Task<Account?> GetById(Guid id, CancellationToken cancellationToken = default)
     {
@@ -77,12 +78,14 @@ public class AccountService(IServiceProvider provider) : IAccountService
     public async Task<Account> Create(Account value, CancellationToken cancellationToken = default)
     {
         var tenant = await Tenants.GetById(value.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
+        var user = value.UserId is not null ? await Users.GetById(value.UserId.Value, cancellationToken) : null;
         var account = await Storage.Create(value, cancellationToken: cancellationToken);
 
         Events.Enqueue(new(ActionType.Create)
         {
             Tenant = tenant,
-            Account = account
+            Account = account,
+            CreatedBy = user
         });
 
         if (tenant.Name is null && value.Name != tenant.Name)
@@ -97,12 +100,14 @@ public class AccountService(IServiceProvider provider) : IAccountService
     public async Task<Account> Update(Account value, CancellationToken cancellationToken = default)
     {
         var tenant = await Tenants.GetById(value.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
+        var user = value.UserId is not null ? await Users.GetById(value.UserId.Value, cancellationToken) : null;
         var account = await Storage.Update(value, cancellationToken: cancellationToken);
 
         Events.Enqueue(new(ActionType.Update)
         {
             Tenant = tenant,
-            Account = account
+            Account = account,
+            CreatedBy = user
         });
 
         if (tenant.Name is null && value.Name != tenant.Name)
@@ -118,13 +123,15 @@ public class AccountService(IServiceProvider provider) : IAccountService
     {
         var account = await GetById(id, cancellationToken) ?? throw new Exception("account not found");
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
+        var user = account.UserId is not null ? await Users.GetById(account.UserId.Value, cancellationToken) : null;
 
         await Storage.Delete(id, cancellationToken: cancellationToken);
 
         Events.Enqueue(new(ActionType.Delete)
         {
             Tenant = tenant,
-            Account = account
+            Account = account,
+            CreatedBy = user
         });
     }
 }

@@ -40,6 +40,11 @@ var jsonSerializerOptions = new JsonSerializerOptions()
 };
 
 builder.Services.Configure<GithubSettings>(builder.Configuration.GetSection("Github"));
+builder.Services.Configure<HostOptions>(options =>
+{
+    options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+});
+
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.DefaultIgnoreCondition = jsonSerializerOptions.DefaultIgnoreCondition;

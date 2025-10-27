@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Hosting;
+
 using OS.Agent.Storage.Extensions;
 
 namespace OS.Agent.Drivers.Teams.Extensions;

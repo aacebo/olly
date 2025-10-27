@@ -1,8 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Worker">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <PackageReference Include="Microsoft.Teams.Apps" Version="2.*" />
-    <PackageReference Include="Microsoft.Teams.AI" Version="2.*" />
-    <PackageReference Include="Microsoft.Teams.AI.Models.OpenAI" Version="2.*" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.10" />
   </ItemGroup>
 
   <ItemGroup>
@@ -13,8 +14,6 @@
     <ProjectReference Include="..\OS.Agent.Events\OS.Agent.Events.csproj" />
     <ProjectReference Include="..\OS.Agent.Storage\OS.Agent.Storage.csproj" />
     <ProjectReference Include="..\OS.Agent.Services\OS.Agent.Services.csproj" />
-    <ProjectReference Include="..\OS.Agent.Prompts\OS.Agent.Prompts.csproj" />
-    <ProjectReference Include="..\OS.Agent.Contexts\OS.Agent.Contexts.csproj" />
     <ProjectReference Include="..\OS.Agent.Drivers.Teams\OS.Agent.Drivers.Teams.csproj" />
     <ProjectReference Include="..\OS.Agent.Drivers.Github\OS.Agent.Drivers.Github.csproj" />
   </ItemGroup>

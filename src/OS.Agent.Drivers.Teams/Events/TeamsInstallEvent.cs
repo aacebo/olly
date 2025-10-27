@@ -12,10 +12,14 @@ public class TeamsInstallEvent(ActionType action) : TeamsEvent(EntityType.Instal
 
     public static TeamsInstallEvent From(InstallEvent @event) => new(@event.Action)
     {
+        Id = @event.Id,
+        Type = @event.Type,
         Tenant = @event.Tenant,
         Account = @event.Account,
         Install = @event.Install,
         Chat = @event.Chat ?? throw new Exception("chat is required"),
-        Message = @event.Message
+        Message = @event.Message,
+        CreatedBy = @event.CreatedBy,
+        CreatedAt = @event.CreatedAt
     };
 }

@@ -2,27 +2,22 @@ using Octokit.GraphQL;
 using Octokit.GraphQL.Model;
 
 using OS.Agent.Drivers.Github.Models;
-using OS.Agent.Drivers.Models;
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github;
 
-public partial class GithubDriver
+public partial class GithubClient
 {
-    public Task Typing(TypingRequest request, CancellationToken cancellationToken = default)
+    public override async Task<Message> Send(string text)
     {
-        return Task.CompletedTask;
-    }
-
-    public async Task<Message> Send(MessageRequest request, CancellationToken cancellationToken = default)
-    {
-        var client = await Github.GetGraphConnection(request.Install, cancellationToken);
+        var chat = Event.GetChat() ?? throw new Exception("chat not found");
+        var message = Event.GetMessage();
+        var client = await Github.GetGraphConnection(Event.Install, CancellationToken);
         var query = new Mutation()
             .AddDiscussionComment(new AddDiscussionCommentInput()
             {
-                DiscussionId = new ID(request.Chat.SourceId),
-                ReplyToId = request is MessageReplyRequest reply ? new(reply.ReplyTo.SourceId) : null,
-                Body = request.Text
+                DiscussionId = new ID(chat.SourceId),
+                Body = text
             })
             .Select(res => new GithubDiscussionComment()
             {
@@ -35,13 +30,14 @@ public partial class GithubDriver
 
         var comment = await client.Run(
             query,
-            cancellationToken: cancellationToken
+            cancellationToken: CancellationToken
         );
 
-        var message = new Message()
+        var response = new Message()
         {
-            ChatId = request.Chat.Id,
-            AccountId = request.Account.Id,
+            ChatId = chat.Id,
+            AccountId = Event.Account.Id,
+            ReplyToId = message?.Id,
             SourceId = comment.Id.ToString(),
             SourceType = SourceType.Github,
             Url = comment.Url,
@@ -54,17 +50,27 @@ public partial class GithubDriver
             ]
         };
 
-        return message;
+        return await Storage.Messages.Create(response, cancellationToken: CancellationToken);
     }
 
-    public async Task<Message> Update(MessageUpdateRequest request, CancellationToken cancellationToken = default)
+    public override async Task<Message> Send(string text, params Attachment[] attachments)
     {
-        var message = request.Message;
+        return await Send(text);
+    }
 
-        message.Text = request.Text ?? message.Text;
-        message.Attachments = request.Attachments?.ToList() ?? message.Attachments;
+    public override async Task<Message> Send(params Attachment[] attachments)
+    {
+        return await Send(string.Empty, attachments);
+    }
 
-        var client = await Github.GetGraphConnection(request.Install, cancellationToken);
+    public override async Task<Message> SendUpdate(Guid id, string? text, params Attachment[] attachments)
+    {
+        var message = Event.GetMessage() ?? throw new Exception("message not found");
+
+        message.Text = text ?? message.Text;
+        message.Attachments = attachments.Length > 0 ? attachments.ToList() : message.Attachments;
+
+        var client = await Github.GetGraphConnection(Event.Install, CancellationToken);
         var query = new Mutation()
             .UpdateDiscussionComment(new UpdateDiscussionCommentInput()
             {
@@ -82,7 +88,7 @@ public partial class GithubDriver
 
         var comment = await client.Run(
             query,
-            cancellationToken: cancellationToken
+            cancellationToken: CancellationToken
         );
 
         message.Entities.Put(new GithubDiscussionCommentEntity()
@@ -90,13 +96,11 @@ public partial class GithubDriver
             Comment = comment
         });
 
-        return message;
+        return await Storage.Messages.Update(message, cancellationToken: CancellationToken);
     }
 
-    public async Task<Message> Reply(MessageReplyRequest request, CancellationToken cancellationToken = default)
+    public override async Task<Message> SendReply(string text, params Attachment[] attachments)
     {
-        var message = await Send(request, cancellationToken);
-        message.ReplyToId = request.ReplyTo.Id;
-        return message;
+        return await Send(text, attachments);
     }
 }

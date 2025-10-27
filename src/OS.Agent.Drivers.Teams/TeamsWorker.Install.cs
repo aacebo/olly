@@ -9,14 +9,17 @@ public partial class TeamsWorker
         if (@event.Action.IsCreate)
         {
             await OnInstallCreateEvent(@event, client, cancellationToken);
+            return;
         }
         else if (@event.Action.IsUpdate)
         {
             await OnInstallUpdateEvent(@event, client, cancellationToken);
+            return;
         }
         else if (@event.Action.IsDelete)
         {
             await OnInstallDeleteEvent(@event, client, cancellationToken);
+            return;
         }
 
         throw new Exception($"event '{@event.Key}' not found");

@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+
 using OS.Agent.Drivers.Github.Events;
 using OS.Agent.Drivers.Github.Models;
 using OS.Agent.Services;
@@ -7,30 +9,33 @@ namespace OS.Agent.Drivers.Github;
 
 public partial class GithubWorker
 {
-    protected async Task OnInstallEvent(GithubInstallEvent @event, CancellationToken cancellationToken = default)
+    protected async Task OnInstallEvent(GithubInstallEvent @event, GithubClient client, CancellationToken cancellationToken = default)
     {
         if (@event.Action.IsCreate)
         {
-            await OnInstallCreateEvent(@event, cancellationToken);
+            await OnInstallCreateEvent(@event, client, cancellationToken);
+            return;
         }
         else if (@event.Action.IsUpdate)
         {
-            await OnInstallUpdateEvent(@event, cancellationToken);
+            await OnInstallUpdateEvent(@event, client, cancellationToken);
+            return;
         }
         else if (@event.Action.IsDelete)
         {
-            await OnInstallDeleteEvent(@event, cancellationToken);
+            await OnInstallDeleteEvent(@event, client, cancellationToken);
+            return;
         }
 
         throw new Exception($"event '{@event.Key}' not found");
     }
 
-    protected async Task OnInstallCreateEvent(GithubInstallEvent @event, CancellationToken cancellationToken = default)
+    protected async Task OnInstallCreateEvent(GithubInstallEvent @event, GithubClient client, CancellationToken cancellationToken = default)
     {
         var githubService = @event.Scope.ServiceProvider.GetRequiredService<GithubService>();
         var services = @event.Scope.ServiceProvider.GetRequiredService<IServices>();
-        var client = new Octokit.GitHubClient(await githubService.GetRestConnection(@event.Install, cancellationToken));
-        var repositories = await client.GitHubApps.Installation.GetAllRepositoriesForCurrent();
+        var github = new Octokit.GitHubClient(await githubService.GetRestConnection(@event.Install, cancellationToken));
+        var repositories = await github.GitHubApps.Installation.GetAllRepositoriesForCurrent();
 
         // upsert installed repositories
         foreach (var repository in repositories.Repositories)
@@ -62,7 +67,7 @@ public partial class GithubWorker
             }
 
             // upsert repository issues
-            var issues = await client.Issue.GetAllForRepository(repository.Id);
+            var issues = await github.Issue.GetAllForRepository(repository.Id);
 
             foreach (var issue in issues)
             {
@@ -93,7 +98,7 @@ public partial class GithubWorker
                     issueRecord = await services.Records.Update(issueRecord, cancellationToken);
                 }
 
-                var comments = await client.Issue.Comment.GetAllForIssue(repository.Owner.Login, repository.Name, issue.Number);
+                var comments = await github.Issue.Comment.GetAllForIssue(repository.Owner.Login, repository.Name, issue.Number);
 
                 foreach (var comment in comments)
                 {
@@ -126,12 +131,12 @@ public partial class GithubWorker
         }
     }
 
-    protected Task OnInstallUpdateEvent(GithubInstallEvent @event, CancellationToken cancellationToken = default)
+    protected Task OnInstallUpdateEvent(GithubInstallEvent @event, GithubClient client, CancellationToken cancellationToken = default)
     {
-        return OnInstallUpdateEvent(@event, cancellationToken);
+        return OnInstallUpdateEvent(@event, client, cancellationToken);
     }
 
-    protected Task OnInstallDeleteEvent(GithubInstallEvent @event, CancellationToken _ = default)
+    protected Task OnInstallDeleteEvent(GithubInstallEvent @event, GithubClient client, CancellationToken _ = default)
     {
         return Task.CompletedTask;
     }

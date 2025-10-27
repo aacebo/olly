@@ -1,5 +1,9 @@
 using System.Text.Json;
 
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
 using NetMQ;
 
 using OS.Agent.Drivers.Github.Events;
@@ -18,41 +22,63 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
     private NetMQQueue<GithubEvent> GithubQueue { get; init; } = provider.GetRequiredService<NetMQQueue<GithubEvent>>();
     private JsonSerializerOptions JsonSerializerOptions { get; init; } = provider.GetRequiredService<JsonSerializerOptions>();
 
-    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        Logger.LogInformation("starting...");
-
-        var scope = scopeFactory.CreateScope();
-        var services = scope.ServiceProvider.GetRequiredService<IServices>();
-
-        while (Queue.TryDequeue(out var @event, TimeSpan.FromMilliseconds(200)))
+        return Task.Run(async () =>
         {
-            Logger.LogDebug("{}", JsonSerializer.Serialize(@event, JsonSerializerOptions));
+            Logger.LogInformation("starting...");
 
-            await services.Logs.Create(new()
+            var scope = scopeFactory.CreateScope();
+            var services = scope.ServiceProvider.GetRequiredService<IServices>();
+
+            while (!cancellationToken.IsCancellationRequested)
             {
-                TenantId = @event.Tenant.Id,
-                Type = LogType.Message,
-                TypeId = @event.Message.Id.ToString(),
-                Text = @event.Key,
-                Entities = [Entity.From(@event)]
-            }, cancellationToken);
+                if (!Queue.TryDequeue(out var @event, TimeSpan.FromMilliseconds(200))) continue;
+                Logger.LogDebug("{}", JsonSerializer.Serialize(@event, JsonSerializerOptions));
 
-            var _ = OnEvent(@event, scope, cancellationToken);
-        }
+                await services.Logs.Create(new()
+                {
+                    TenantId = @event.Tenant.Id,
+                    Type = LogType.Message,
+                    TypeId = @event.Message.Id.ToString(),
+                    Text = @event.Key,
+                    Entities = [Entity.From(@event)]
+                }, cancellationToken);
 
-        Logger.LogInformation("stopping...");
+                try
+                {
+                    await OnEvent(@event, scope, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError("{}", ex);
+                    await services.Logs.Create(new()
+                    {
+                        TenantId = @event.Tenant.Id,
+                        Level = Storage.Models.LogLevel.Error,
+                        Type = LogType.Message,
+                        TypeId = @event.Message.Id.ToString(),
+                        Text = ex.Message,
+                        Entities = [Entity.From(@event)]
+                    }, cancellationToken);
+                }
+            }
+
+            Logger.LogInformation("stopping...");
+        }, cancellationToken);
     }
 
-    protected async Task OnEvent(MessageEvent @event, IServiceScope scope, CancellationToken _ = default)
+    protected Task OnEvent(MessageEvent @event, IServiceScope scope, CancellationToken _ = default)
     {
         if (@event.Message.SourceType.IsTeams)
         {
             TeamsQueue.Enqueue(TeamsMessageEvent.From(@event));
+            return Task.CompletedTask;
         }
         else if (@event.Message.SourceType.IsGithub)
         {
             GithubQueue.Enqueue(GithubMessageEvent.From(@event, scope));
+            return Task.CompletedTask;
         }
 
         throw new Exception($"event source '{@event.Message.SourceType}' not found");

@@ -9,12 +9,12 @@ namespace OS.Agent.Drivers.Teams;
 
 public partial class TeamsClient
 {
-    public async Task<TaskItem> Task(TaskItem.Create create)
+    public override async Task<TaskItem> SendTask(TaskItem.Create create)
     {
         var task = Response.TaskCard.Add(create);
         var attachment = Response.TaskCard.Render().ToAttachment();
 
-        await Progress(new Attachment()
+        await SendProgress(new Attachment()
         {
             ContentType = attachment.ContentType,
             Content = attachment.Content ?? throw new JsonException()
@@ -24,12 +24,12 @@ public partial class TeamsClient
         return task;
     }
 
-    public async Task<TaskItem> Task(Guid id, TaskItem.Update update)
+    public override async Task<TaskItem> SendTask(Guid id, TaskItem.Update update)
     {
         var task = Response.TaskCard.Update(id, update);
         var attachment = Response.TaskCard.Render().ToAttachment();
 
-        await Progress(new Attachment()
+        await SendProgress(new Attachment()
         {
             ContentType = attachment.ContentType,
             Content = attachment.Content ?? throw new JsonException()
@@ -39,7 +39,7 @@ public partial class TeamsClient
         return task;
     }
 
-    public async Task<TaskItem> Finish()
+    public override async Task<TaskItem> Finish()
     {
         var errors = Response.TaskCard.Tasks.Count(t => t.Style.IsError);
         var warnings = Response.TaskCard.Tasks.Count(t => t.Style.IsWarning);
@@ -59,7 +59,7 @@ public partial class TeamsClient
 
         var attachment = Response.TaskCard.Render().ToAttachment();
 
-        await Progress(new Attachment()
+        await SendProgress(new Attachment()
         {
             ContentType = attachment.ContentType,
             Content = attachment.Content ?? throw new JsonException()

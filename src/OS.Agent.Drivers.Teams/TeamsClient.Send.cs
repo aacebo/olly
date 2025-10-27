@@ -8,7 +8,7 @@ namespace OS.Agent.Drivers.Teams;
 
 public partial class TeamsClient
 {
-    public async Task Typing(string? text = null)
+    public override async Task Typing(string? text = null)
     {
         var chatType = Event.Chat.Type is null ? Microsoft.Teams.Api.ConversationType.Personal : new(Event.Chat.Type);
 
@@ -30,17 +30,17 @@ public partial class TeamsClient
         );
     }
 
-    public async Task<Message> Send(string text)
+    public override async Task<Message> Send(string text)
     {
         return await Send(text, []);
     }
 
-    public async Task<Message> Send(params Attachment[] attachments)
+    public override async Task<Message> Send(params Attachment[] attachments)
     {
         return await Send(string.Empty, []);
     }
 
-    public async Task<Message> Send(string text, params Attachment[] attachments)
+    public override async Task<Message> Send(string text, params Attachment[] attachments)
     {
         var chatType = Event.Chat.Type is null ? Microsoft.Teams.Api.ConversationType.Personal : new(Event.Chat.Type);
         var activity = await Send(
@@ -85,7 +85,7 @@ public partial class TeamsClient
             : await Storage.Messages.Create(message, cancellationToken: CancellationToken);
     }
 
-    public async Task<Message> Update(Guid id, string? text, params Attachment[] attachments)
+    public override async Task<Message> SendUpdate(Guid id, string? text, params Attachment[] attachments)
     {
         var message = await Services.Messages.GetById(id, CancellationToken) ?? throw new Exception("message not found");
         var activity = !string.IsNullOrEmpty(text)
@@ -124,7 +124,7 @@ public partial class TeamsClient
         return await Storage.Messages.Update(message, cancellationToken: CancellationToken);
     }
 
-    public async Task<Message> Reply(string text, params Attachment[] attachments)
+    public override async Task<Message> SendReply(string text, params Attachment[] attachments)
     {
         if (Event is not TeamsMessageEvent messageEvent) throw new InvalidOperationException("no message to reply to");
 

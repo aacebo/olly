@@ -4,7 +4,7 @@ namespace OS.Agent.Drivers.Teams;
 
 public partial class TeamsClient
 {
-    public async Task<Message> Progress(string text)
+    public override async Task<Message> SendProgress(string text)
     {
         if (Response.Progress is null)
         {
@@ -12,29 +12,29 @@ public partial class TeamsClient
             return Response.Progress;
         }
 
-        Response.Progress = await Update(Response.Progress.Id, text);
+        Response.Progress = await SendUpdate(Response.Progress.Id, text);
         return Response.Progress;
     }
 
-    public async Task<Message> Progress(params Attachment[] attachments)
+    public override async Task<Message> SendProgress(params Attachment[] attachments)
     {
         if (Response.Progress is null)
         {
             Response.Progress = await Send("please wait...");
         }
 
-        Response.Progress = await Update(Response.Progress.Id, null, attachments);
+        Response.Progress = await SendUpdate(Response.Progress.Id, null, attachments);
         return Response.Progress;
     }
 
-    public async Task<Message> Progress(string text, params Attachment[] attachments)
+    public override async Task<Message> SendProgress(string text, params Attachment[] attachments)
     {
         if (Response.Progress is null)
         {
             Response.Progress = await Send(text);
         }
 
-        Response.Progress = await Update(Response.Progress.Id, null, attachments);
+        Response.Progress = await SendUpdate(Response.Progress.Id, null, attachments);
         return Response.Progress;
     }
 }

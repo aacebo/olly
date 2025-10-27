@@ -1,15 +1,9 @@
 using System.Text.Json;
 
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Microsoft.Teams.AI.Annotations;
-using Microsoft.Teams.AI.Models.OpenAI;
 
 using OS.Agent.Cards.Progress;
-using OS.Agent.Contexts;
-using OS.Agent.Drivers.Github.Settings;
-using OS.Agent.Prompts.Github;
-using OS.Agent.Storage.Models;
+using OS.Agent.Drivers;
 
 namespace OS.Agent.Prompts;
 
@@ -26,41 +20,27 @@ namespace OS.Agent.Prompts;
         "You are __REQUIRED__ to call EndTask whenever you complete an in progress task.",
     "</tasks>"
 )]
-public class MainPrompt
+public class MainPrompt(Client client)
 {
-    public readonly AgentMessageContext Context;
-    public readonly IOptions<GithubSettings> GithubSettings;
-    public readonly OpenAIChatPrompt GithubPrompt;
-
-    public MainPrompt(AgentMessageContext context)
-    {
-        Context = context;
-        GithubSettings = context.Provider.GetRequiredService<IOptions<GithubSettings>>();
-        GithubPrompt = OpenAIChatPrompt.From(context.Provider.GetRequiredService<OpenAIChatModel>(), new GithubPrompt(context), new()
-        {
-            Logger = context.Provider.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>()
-        });
-    }
-
     [Function]
     [Function.Description("Get the task list")]
     public string GetTasks()
     {
-        return JsonSerializer.Serialize(Context.Tasks, Context.JsonSerializerOptions);
+        return JsonSerializer.Serialize(client.Tasks, client.JsonSerializerOptions);
     }
 
     [Function]
     [Function.Description("This function sends an update to the user indicating that you have started a new task.")]
     public async Task<string> StartTask([Param] string? title, [Param] string message)
     {
-        var task = await Context.CreateTask(new()
+        var task = await client.SendTask(new()
         {
             Style = ProgressStyle.InProgress,
             Title = title,
             Message = message
         });
 
-        return JsonSerializer.Serialize(task, Context.JsonSerializerOptions);
+        return JsonSerializer.Serialize(task, client.JsonSerializerOptions);
     }
 
     [Function]
@@ -70,7 +50,7 @@ public class MainPrompt
     )]
     public async Task<string> EndTask([Param] Guid taskId, [Param] string? style, [Param] string? title, [Param] string? message)
     {
-        var task = await Context.UpdateTask(taskId, new()
+        var task = await client.SendTask(taskId, new()
         {
             Style = style is not null ? new(style) : null,
             Title = title,
@@ -78,63 +58,20 @@ public class MainPrompt
             EndedAt = DateTimeOffset.UtcNow
         });
 
-        return JsonSerializer.Serialize(task, Context.JsonSerializerOptions);
+        return JsonSerializer.Serialize(task, client.JsonSerializerOptions);
     }
 
     [Function]
     [Function.Description("get the current users chat information")]
     public Task<string> GetCurrentChat()
     {
-        return Task.FromResult(JsonSerializer.Serialize(Context.Chat, Context.JsonSerializerOptions));
+        return Task.FromResult(JsonSerializer.Serialize(client.Chat, client.JsonSerializerOptions));
     }
 
     [Function]
     [Function.Description("get the current users account information")]
     public Task<string> GetCurrentAccount()
     {
-        return Task.FromResult(JsonSerializer.Serialize(Context.Account, Context.JsonSerializerOptions));
-    }
-
-    [Function]
-    [Function.Description(
-        "delegate a task/question to the Github Agent ",
-        "who specializes in Github subject matter."
-    )]
-    public async Task<string> GithubAgent([Param] string message)
-    {
-        var account = (await Context.Services.Accounts.GetByUserId(
-            Context.User.Id,
-            Context.CancellationToken
-        )).FirstOrDefault(a => a.SourceType == SourceType.Github);
-
-        var token = account is not null
-            ? await Context.Services.Tokens.GetByAccountId(account.Id, Context.CancellationToken)
-            : null;
-
-        if (account is null || token is null)
-        {
-            var state = new Token.State()
-            {
-                TenantId = Context.Tenant.Id,
-                UserId = Context.User.Id,
-                MessageId = Context.Message.Id
-            };
-
-            await Context.SignIn(GithubSettings.Value.InstallUrl, state.Encode());
-            return "<user was prompted to login to Github>";
-        }
-
-        await Context.Typing();
-
-        var res = await GithubPrompt.Send(message, new()
-        {
-            Request = new()
-            {
-                Temperature = 0,
-                EndUserId = Context.User.Id.ToString()
-            }
-        }, null, Context.CancellationToken);
-
-        return res.Content;
+        return Task.FromResult(JsonSerializer.Serialize(client.Account, client.JsonSerializerOptions));
     }
 }

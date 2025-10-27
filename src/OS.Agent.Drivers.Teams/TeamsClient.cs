@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Teams.Apps;
 
 using OS.Agent.Cards.Extensions;
@@ -6,9 +7,14 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Teams;
 
-public partial class TeamsClient : DriverClient, IAuthClient, IChatClient, IProgressClient, ITaskClient
+public partial class TeamsClient : Client
 {
     public TeamsEvent Event { get; }
+    public override Tenant Tenant => Event.Tenant;
+    public override Account Account => Event.Account;
+    public override User User => Event.CreatedBy ?? throw new NullReferenceException("created_by is null");
+    public override Chat Chat => Event.Chat;
+    public override Message Message => Event.GetMessage() ?? throw new NullReferenceException("message is null");
 
     protected App Teams { get; }
 
@@ -17,8 +23,8 @@ public partial class TeamsClient : DriverClient, IAuthClient, IChatClient, IProg
         Event = @event;
         Teams = provider.GetRequiredService<App>();
     }
-    
-    public async Task SignIn(string url, string state)
+
+    public override async Task SignIn(string url, string state)
     {
         var chatType = Event.Chat.Type is null ? Microsoft.Teams.Api.ConversationType.Personal : new(Event.Chat.Type);
 

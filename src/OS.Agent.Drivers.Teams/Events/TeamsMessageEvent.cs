@@ -12,10 +12,14 @@ public class TeamsMessageEvent(ActionType action) : TeamsEvent(EntityType.Messag
 
     public static TeamsMessageEvent From(MessageEvent @event) => new(@event.Action)
     {
+        Id = @event.Id,
+        Type = @event.Type,
         Tenant = @event.Tenant,
         Account = @event.Account,
         Install = @event.Install,
-        Chat = @event.Chat,
-        Message = @event.Message
+        Chat = @event.Chat ?? throw new Exception("chat is required"),
+        Message = @event.Message,
+        CreatedBy = @event.CreatedBy,
+        CreatedAt = @event.CreatedAt
     };
 }
