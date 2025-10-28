@@ -9,10 +9,12 @@ public class CreateInstallsTable : Migration
     {
         Create.Table("installs")
             .WithColumn("id").AsGuid().PrimaryKey()
-            .WithColumn("user_id").AsGuid().ForeignKey("users", "id").NotNullable()
-            .WithColumn("account_id").AsGuid().ForeignKey("accounts", "id").NotNullable()
+            .WithColumn("user_id").AsGuid().ForeignKey("users", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
+            .WithColumn("account_id").AsGuid().ForeignKey("accounts", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
+            .WithColumn("message_id").AsGuid().ForeignKey("messages", "id").Nullable()
             .WithColumn("source_type").AsString().NotNullable()
             .WithColumn("source_id").AsString().NotNullable()
+            .WithColumn("status").AsString().NotNullable()
             .WithColumn("url").AsString().Nullable()
             .WithColumn("access_token").AsString().Nullable()
             .WithColumn("expires_at").AsDateTimeOffset().Nullable()
@@ -27,6 +29,11 @@ public class CreateInstallsTable : Migration
         Create.UniqueConstraint()
             .OnTable("installs")
             .Columns("source_id", "source_type");
+
+        Create.Index()
+            .OnTable("installs")
+            .OnColumn("user_id").Ascending()
+            .OnColumn("status").Ascending();
     }
 
     public override void Down()

@@ -19,6 +19,10 @@ public class Install : Model
     [JsonPropertyName("account_id")]
     public required Guid AccountId { get; init; }
 
+    [Column("message_id")]
+    [JsonPropertyName("message_id")]
+    public Guid? MessageId { get; init; }
+
     [Column("source_id")]
     [JsonPropertyName("source_id")]
     public required string SourceId { get; set; }
@@ -26,6 +30,10 @@ public class Install : Model
     [Column("source_type")]
     [JsonPropertyName("source_type")]
     public required SourceType SourceType { get; init; }
+
+    [Column("status")]
+    [JsonPropertyName("status")]
+    public InstallStatus Status { get; set; } = InstallStatus.InProgress;
 
     [Column("url")]
     [JsonPropertyName("url")]
@@ -55,4 +63,17 @@ public class Install : Model
     {
         return (Install)MemberwiseClone();
     }
+}
+
+[JsonConverter(typeof(Converter<InstallStatus>))]
+public class InstallStatus(string value) : StringEnum(value)
+{
+    public static readonly InstallStatus InProgress = new("in-progress");
+    public bool IsInProgress => InProgress.Equals(Value);
+
+    public static readonly InstallStatus Success = new("success");
+    public bool IsSuccess => Success.Equals(Value);
+
+    public static readonly InstallStatus Error = new("error");
+    public bool IsError => Error.Equals(Value);
 }

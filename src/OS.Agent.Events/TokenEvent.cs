@@ -6,6 +6,9 @@ namespace OS.Agent.Events;
 
 public class TokenEvent(ActionType action) : Event(EntityType.Token, action)
 {
+    [JsonPropertyName("source_type")]
+    public override SourceType? SourceType => Account.SourceType;
+
     [JsonPropertyName("tenant")]
     public required Tenant Tenant { get; init; }
 

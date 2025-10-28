@@ -9,7 +9,7 @@ public class CreateAccountsTable : Migration
     {
         Create.Table("accounts")
             .WithColumn("id").AsGuid().PrimaryKey()
-            .WithColumn("tenant_id").AsGuid().ForeignKey("tenants", "id").NotNullable()
+            .WithColumn("tenant_id").AsGuid().ForeignKey("tenants", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
             .WithColumn("source_id").AsString().NotNullable()
             .WithColumn("source_type").AsString().NotNullable()
             .WithColumn("url").AsString().Nullable()

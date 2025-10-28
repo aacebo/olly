@@ -9,7 +9,7 @@ public class CreateLogsTable : Migration
     {
         Create.Table("logs")
             .WithColumn("id").AsGuid().PrimaryKey()
-            .WithColumn("tenant_id").AsGuid().ForeignKey("tenants", "id").NotNullable()
+            .WithColumn("tenant_id").AsGuid().ForeignKey("tenants", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
             .WithColumn("level").AsString().NotNullable()
             .WithColumn("type").AsString().NotNullable()
             .WithColumn("type_id").AsString().Nullable()

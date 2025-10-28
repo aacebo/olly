@@ -40,11 +40,6 @@ var jsonSerializerOptions = new JsonSerializerOptions()
 };
 
 builder.Services.Configure<GithubSettings>(builder.Configuration.GetSection("Github"));
-builder.Services.Configure<HostOptions>(options =>
-{
-    options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
-});
-
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.DefaultIgnoreCondition = jsonSerializerOptions.DefaultIgnoreCondition;
@@ -90,12 +85,11 @@ builder.Services.AddSingleton<NetMQQueue<InstallEvent>>(); // installs.(create |
 builder.Services.AddSingleton<NetMQQueue<LogEvent>>(); // logs.create
 
 // Webhooks
-builder.Services.AddSingleton<WebhookEventProcessor, GithubInstallWebhook>();
+// builder.Services.AddSingleton<WebhookEventProcessor, GithubInstallWebhook>();
 builder.Services.AddSingleton<WebhookEventProcessor, GithubDiscussionWebhook>();
 
 // Workers
 builder.Services.AddHostedService<MessageWorker>();
-builder.Services.AddHostedService<AccountWorker>();
 builder.Services.AddHostedService<InstallWorker>();
 
 // Storage

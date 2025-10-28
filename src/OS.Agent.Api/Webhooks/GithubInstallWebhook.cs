@@ -20,7 +20,7 @@ public class GithubInstallWebhook(IServiceScopeFactory scopeFactory) : WebhookEv
         CancellationToken cancellationToken = default
     )
     {
-        await Task.Delay(1000, cancellationToken);
+        await Task.Delay(5000, cancellationToken);
 
         var scope = scopeFactory.CreateScope();
         var client = scope.ServiceProvider.GetRequiredService<GitHubClient>();

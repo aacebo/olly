@@ -7,13 +7,13 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github.Events;
 
-public abstract class GithubEvent(EntityType type, ActionType action) : Event(type, action)
+public abstract class GithubEvent(EntityType type, ActionType action, SourceType sourceType) : Event(type, action)
 {
     [JsonPropertyName("key")]
     public override string Key => $"{SourceType}.{Type}.{Action}";
 
     [JsonPropertyName("source_type")]
-    public SourceType SourceType { get; } = SourceType.Github;
+    public override SourceType SourceType { get; } = sourceType;
 
     [JsonPropertyName("tenant")]
     public required Tenant Tenant { get; init; }

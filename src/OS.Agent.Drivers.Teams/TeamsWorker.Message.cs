@@ -14,7 +14,7 @@ namespace OS.Agent.Drivers.Teams;
 
 public partial class TeamsWorker
 {
-    protected async Task OnMessageEvent(TeamsMessageEvent @event, TeamsClient client, CancellationToken cancellationToken = default)
+    protected async Task OnMessageEvent(TeamsMessageEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         if (@event.Action.IsCreate)
         {
@@ -40,7 +40,7 @@ public partial class TeamsWorker
         throw new Exception($"event '{@event.Key}' not found");
     }
 
-    protected async Task OnMessageCreateEvent(TeamsMessageEvent @event, TeamsClient client, CancellationToken cancellationToken = default)
+    protected async Task OnMessageCreateEvent(TeamsMessageEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         var model = client.Provider.GetRequiredService<OpenAIChatModel>();
         var githubPrompt = OpenAIChatPrompt.From(model, new GithubPrompt(client), new()
@@ -103,17 +103,17 @@ public partial class TeamsWorker
         await client.Send(res.Content);
     }
 
-    protected Task OnMessageUpdateEvent(TeamsMessageEvent @event, TeamsClient client, CancellationToken cancellationToken = default)
+    protected Task OnMessageUpdateEvent(TeamsMessageEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         return Task.CompletedTask;
     }
 
-    protected Task OnMessageDeleteEvent(TeamsMessageEvent @event, TeamsClient client, CancellationToken cancellationToken = default)
+    protected Task OnMessageDeleteEvent(TeamsMessageEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         return Task.CompletedTask;
     }
 
-    protected async Task OnMessageResumeEvent(TeamsMessageEvent @event, TeamsClient client, CancellationToken cancellationToken = default)
+    protected async Task OnMessageResumeEvent(TeamsMessageEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         var model = client.Provider.GetRequiredService<OpenAIChatModel>();
         var githubPrompt = OpenAIChatPrompt.From(model, new GithubPrompt(client), new()

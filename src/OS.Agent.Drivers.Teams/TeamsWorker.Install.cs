@@ -1,10 +1,11 @@
 using OS.Agent.Drivers.Teams.Events;
+using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Teams;
 
 public partial class TeamsWorker
 {
-    protected async Task OnInstallEvent(TeamsInstallEvent @event, TeamsClient client, CancellationToken cancellationToken = default)
+    protected async Task OnInstallEvent(TeamsInstallEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         if (@event.Action.IsCreate)
         {
@@ -25,17 +26,24 @@ public partial class TeamsWorker
         throw new Exception($"event '{@event.Key}' not found");
     }
 
-    protected Task OnInstallCreateEvent(TeamsInstallEvent @event, TeamsClient client, CancellationToken cancellationToken = default)
+    protected async Task OnInstallCreateEvent(TeamsInstallEvent @event, Client client, CancellationToken cancellationToken = default)
     {
-        return Task.CompletedTask;
+        var install = @event.Install.Copy();
+        install.Status = InstallStatus.Success;
+        install = await client.Storage.Installs.Update(install, cancellationToken: cancellationToken);
+
+        if (install.MessageId is not null)
+        {
+            await client.Services.Messages.Resume(install.MessageId.Value, cancellationToken);
+        }
     }
 
-    protected Task OnInstallUpdateEvent(TeamsInstallEvent @event, TeamsClient client, CancellationToken cancellationToken = default)
+    protected Task OnInstallUpdateEvent(TeamsInstallEvent @event, Client client, CancellationToken cancellationToken = default)
     {
-        return Task.CompletedTask;
+        return OnInstallCreateEvent(@event, client, cancellationToken);
     }
 
-    protected Task OnInstallDeleteEvent(TeamsInstallEvent @event, TeamsClient client, CancellationToken cancellationToken = default)
+    protected Task OnInstallDeleteEvent(TeamsInstallEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         return Task.CompletedTask;
     }

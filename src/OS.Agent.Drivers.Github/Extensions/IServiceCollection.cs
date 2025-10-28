@@ -13,6 +13,7 @@ using Octokit;
 
 using OS.Agent.Drivers.Github.Events;
 using OS.Agent.Drivers.Github.Settings;
+using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github.Extensions;
 
@@ -22,6 +23,16 @@ public static class IServiceCollectionExtensions
     {
         var provider = services.BuildServiceProvider();
         var jsonOptions = provider.GetRequiredService<JsonSerializerOptions>();
+
+        ClientRegistry.Register(SourceType.Github, (@event, provider, cancellationToken) =>
+        {
+            if (@event is not GithubEvent githubEvent)
+            {
+                throw new InvalidOperationException($"invalid event type '{@event.Key}'");
+            }
+
+            return new GithubClient(githubEvent, provider, cancellationToken);
+        });
 
         services.AddScoped<GithubService>();
         services.AddSingleton<NetMQQueue<GithubEvent>>();

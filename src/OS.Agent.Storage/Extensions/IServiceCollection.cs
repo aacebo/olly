@@ -31,6 +31,7 @@ public static class IServiceCollectionExtensions
         Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<SourceType>());
         Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<Models.LogLevel>());
         Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<LogType>());
+        Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<InstallStatus>());
         Dapper.SqlMapper.AddTypeHandler(typeof(List<Source>), new JsonArrayTypeHandler(jsonOptions));
         Dapper.SqlMapper.AddTypeHandler(typeof(Entities), new JsonArrayTypeHandler(jsonOptions));
         Dapper.SqlMapper.AddTypeHandler(typeof(List<Attachment>), new JsonArrayTypeHandler(jsonOptions));

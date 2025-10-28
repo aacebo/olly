@@ -9,9 +9,9 @@ public class CreateMessagesTable : Migration
     {
         Create.Table("messages")
             .WithColumn("id").AsGuid().PrimaryKey()
-            .WithColumn("chat_id").AsGuid().ForeignKey("chats", "id").NotNullable()
-            .WithColumn("account_id").AsGuid().ForeignKey("accounts", "id").Nullable()
-            .WithColumn("reply_to_id").AsGuid().ForeignKey("messages", "id").Nullable()
+            .WithColumn("chat_id").AsGuid().ForeignKey("chats", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
+            .WithColumn("account_id").AsGuid().ForeignKey("accounts", "id").OnDelete(System.Data.Rule.Cascade).Nullable()
+            .WithColumn("reply_to_id").AsGuid().ForeignKey("messages", "id").OnDelete(System.Data.Rule.Cascade).Nullable()
             .WithColumn("source_id").AsString().NotNullable()
             .WithColumn("source_type").AsString().NotNullable()
             .WithColumn("url").AsString().Nullable()

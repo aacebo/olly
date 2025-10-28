@@ -9,7 +9,7 @@ public class CreateTokensTable : Migration
     {
         Create.Table("tokens")
             .WithColumn("id").AsGuid().PrimaryKey()
-            .WithColumn("account_id").AsGuid().ForeignKey("accounts", "id").Nullable()
+            .WithColumn("account_id").AsGuid().ForeignKey("accounts", "id").OnDelete(System.Data.Rule.Cascade).Nullable()
             .WithColumn("type").AsString().Nullable()
             .WithColumn("access_token").AsString().Nullable()
             .WithColumn("refresh_token").AsString().Nullable()

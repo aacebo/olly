@@ -20,7 +20,6 @@ public abstract class Client
     public IStorage Storage { get; }
     public JsonSerializerOptions JsonSerializerOptions { get; }
     public CancellationToken CancellationToken { get; }
-    public SourceType Type { get; }
     public IReadOnlyList<TaskItem> Tasks => Response.TaskCard.Tasks.ToList();
 
     public abstract Tenant Tenant { get; }
@@ -32,10 +31,9 @@ public abstract class Client
     protected virtual ILogger<Client> Logger { get; }
     protected ClientResponse Response { get; } = new();
 
-    public Client(SourceType type, IServiceProvider provider, CancellationToken cancellationToken = default)
+    public Client(IServiceProvider provider, CancellationToken cancellationToken = default)
     {
         Provider = provider;
-        Type = type;
         Services = provider.GetRequiredService<IServices>();
         Storage = provider.GetRequiredService<IStorage>();
         JsonSerializerOptions = provider.GetRequiredService<JsonSerializerOptions>();

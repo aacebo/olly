@@ -9,8 +9,8 @@ public class CreateChatsTable : Migration
     {
         Create.Table("chats")
             .WithColumn("id").AsGuid().PrimaryKey()
-            .WithColumn("tenant_id").AsGuid().ForeignKey("tenants", "id").NotNullable()
-            .WithColumn("parent_id").AsGuid().ForeignKey("chats", "id").Nullable()
+            .WithColumn("tenant_id").AsGuid().ForeignKey("tenants", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
+            .WithColumn("parent_id").AsGuid().ForeignKey("chats", "id").OnDelete(System.Data.Rule.Cascade).Nullable()
             .WithColumn("source_id").AsString().NotNullable()
             .WithColumn("source_type").AsString().NotNullable()
             .WithColumn("url").AsString().Nullable()

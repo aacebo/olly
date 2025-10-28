@@ -7,9 +7,9 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Teams;
 
-public partial class TeamsClient(IServiceProvider provider, CancellationToken cancellationToken = default) : Client(SourceType.Teams, provider, cancellationToken)
+public partial class TeamsClient(TeamsEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default) : Client(provider, cancellationToken)
 {
-    public required TeamsEvent Event { get; init; }
+    public TeamsEvent Event { get; } = @event;
     public override Tenant Tenant => Event.Tenant;
     public override Account Account => Event.Account;
     public override User User => Event.CreatedBy ?? throw new NullReferenceException("created_by is null");

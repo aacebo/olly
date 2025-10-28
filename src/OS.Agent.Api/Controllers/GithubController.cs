@@ -98,6 +98,7 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
             {
                 UserId = user.Id,
                 AccountId = account.Id,
+                MessageId = message.Id,
                 SourceType = SourceType.Github,
                 SourceId = installationId.ToString(),
                 Url = githubInstall.HtmlUrl,
@@ -110,7 +111,7 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
                         AccessToken = githubAccessToken
                     }
                 ]
-            }, message, cancellationToken);
+            }, cancellationToken);
         }
         else
         {
@@ -162,7 +163,6 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
             await Tenants.Update(tenant, cancellationToken);
         }
 
-        await Messages.Resume(message.Id, cancellationToken);
         return Results.Ok();
     }
 }

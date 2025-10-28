@@ -7,5 +7,6 @@
     <ProjectReference Include="..\OS.Agent.Storage\OS.Agent.Storage.csproj" />
     <ProjectReference Include="..\OS.Agent.Services\OS.Agent.Services.csproj" />
     <ProjectReference Include="..\OS.Agent.Cards\OS.Agent.Cards.csproj" />
+    <ProjectReference Include="..\OS.Agent.Events\OS.Agent.Events.csproj" />
   </ItemGroup>
 </Project>

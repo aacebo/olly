@@ -5,13 +5,13 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Teams.Events;
 
-public abstract class TeamsEvent(EntityType type, ActionType action) : Event(type, action)
+public abstract class TeamsEvent(EntityType type, ActionType action, SourceType sourceType) : Event(type, action)
 {
     [JsonPropertyName("key")]
     public override string Key => $"{SourceType}.{Type}.{Action}";
 
     [JsonPropertyName("source_type")]
-    public SourceType SourceType { get; } = SourceType.Teams;
+    public override SourceType SourceType { get; } = sourceType;
 
     [JsonPropertyName("tenant")]
     public required Tenant Tenant { get; init; }

@@ -14,7 +14,7 @@ namespace OS.Agent.Drivers.Github;
 
 public partial class GithubWorker
 {
-    protected async Task OnMessageEvent(GithubMessageEvent @event, GithubClient client, CancellationToken cancellationToken = default)
+    protected async Task OnMessageEvent(GithubMessageEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         if (@event.Action.IsCreate)
         {
@@ -40,7 +40,7 @@ public partial class GithubWorker
         throw new Exception($"event '{@event.Key}' not found");
     }
 
-    protected async Task OnMessageCreateEvent(GithubMessageEvent @event, GithubClient client, CancellationToken cancellationToken = default)
+    protected async Task OnMessageCreateEvent(GithubMessageEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         var model = client.Provider.GetRequiredService<OpenAIChatModel>();
         var githubPrompt = OpenAIChatPrompt.From(model, new GithubPrompt(client), new()
@@ -103,17 +103,17 @@ public partial class GithubWorker
         await client.Send(res.Content);
     }
 
-    protected Task OnMessageUpdateEvent(GithubMessageEvent @event, GithubClient client, CancellationToken _ = default)
+    protected Task OnMessageUpdateEvent(GithubMessageEvent @event, Client client, CancellationToken _ = default)
     {
         return Task.CompletedTask;
     }
 
-    protected Task OnMessageDeleteEvent(GithubMessageEvent @event, GithubClient client, CancellationToken _ = default)
+    protected Task OnMessageDeleteEvent(GithubMessageEvent @event, Client client, CancellationToken _ = default)
     {
         return Task.CompletedTask;
     }
 
-    protected Task OnMessageResumeEvent(GithubMessageEvent @event, GithubClient client, CancellationToken _ = default)
+    protected Task OnMessageResumeEvent(GithubMessageEvent @event, Client client, CancellationToken _ = default)
     {
         return Task.CompletedTask;
     }

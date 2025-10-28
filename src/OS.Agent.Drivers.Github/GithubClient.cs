@@ -5,9 +5,9 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github;
 
-public partial class GithubClient(IServiceProvider provider, CancellationToken cancellationToken = default) : Client(SourceType.Github, provider, cancellationToken)
+public partial class GithubClient(GithubEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default) : Client(provider, cancellationToken)
 {
-    public required GithubEvent Event { get; init; }
+    public GithubEvent Event { get; } = @event;
     public override Tenant Tenant => Event.Tenant;
     public override Account Account => Event.Account;
     public override User User => Event.CreatedBy ?? throw new NullReferenceException("created_by is null");

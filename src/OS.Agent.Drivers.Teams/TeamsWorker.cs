@@ -10,44 +10,53 @@ using OS.Agent.Drivers.Teams.Events;
 
 namespace OS.Agent.Drivers.Teams;
 
-public partial class TeamsWorker(IServiceProvider provider, IServiceScopeFactory scopeFactory) : BackgroundService
+public partial class TeamsWorker(IServiceProvider provider, IServiceScopeFactory scopeFactory) : IHostedService
 {
-    private ILogger<TeamsWorker> Logger { get; init; } = provider.GetRequiredService<ILogger<TeamsWorker>>();
-    private NetMQQueue<TeamsEvent> Queue { get; init; } = provider.GetRequiredService<NetMQQueue<TeamsEvent>>();
-    private JsonSerializerOptions JsonSerializerOptions { get; init; } = provider.GetRequiredService<JsonSerializerOptions>();
+    private ILogger<TeamsWorker> Logger { get; } = provider.GetRequiredService<ILogger<TeamsWorker>>();
+    private NetMQQueue<TeamsEvent> Queue { get; } = provider.GetRequiredService<NetMQQueue<TeamsEvent>>();
+    private JsonSerializerOptions JsonSerializerOptions { get; } = provider.GetRequiredService<JsonSerializerOptions>();
+    private IHostApplicationLifetime Lifetime { get; } = provider.GetRequiredService<IHostApplicationLifetime>();
+    private NetMQPoller Poller { get; } = [];
 
-    protected override Task ExecuteAsync(CancellationToken cancellationToken)
+    public Task StartAsync(CancellationToken cancellationToken)
     {
-        return Task.Run(async () =>
-        {
-            Logger.LogInformation("starting...");
-
-            var scope = scopeFactory.CreateScope();
-
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                if (!Queue.TryDequeue(out var @event, TimeSpan.FromMilliseconds(200))) continue;
-                Logger.LogDebug("{}", JsonSerializer.Serialize(@event, JsonSerializerOptions));
-                var client = new TeamsClient(scope.ServiceProvider, cancellationToken)
-                {
-                    Event = @event
-                };
-
-                try
-                {
-                    await OnEvent(@event, client, cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError("{}", ex);
-                }
-            }
-
-            Logger.LogInformation("stopping...");
-        }, cancellationToken);
+        Logger.LogInformation("starting...");
+        Poller.Add(Queue);
+        Queue.ReceiveReady += async (_, args) => await OnStart(args.Queue, Lifetime.ApplicationStopping);
+        Poller.RunAsync();
+        Logger.LogInformation("started");
+        return Task.CompletedTask;
     }
 
-    protected async Task OnEvent(TeamsEvent @event, TeamsClient client, CancellationToken cancellationToken = default)
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        Logger.LogInformation("stopping...");
+        Poller.StopAsync();
+        Logger.LogInformation("stopped");
+        return Task.CompletedTask;
+    }
+
+    protected async Task OnStart(NetMQQueue<TeamsEvent> queue, CancellationToken cancellationToken)
+    {
+        var scope = scopeFactory.CreateScope();
+
+        while (queue.TryDequeue(out var @event, TimeSpan.FromMilliseconds(200)))
+        {
+            Logger.LogDebug("{}", JsonSerializer.Serialize(@event, JsonSerializerOptions));
+
+            try
+            {
+                var client = ClientRegistry.Get(@event.SourceType)(@event, scope.ServiceProvider, cancellationToken);
+                await OnEvent(@event, client, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError("{}", ex);
+            }
+        }
+    }
+
+    protected async Task OnEvent(TeamsEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         if (@event is TeamsInstallEvent install)
         {

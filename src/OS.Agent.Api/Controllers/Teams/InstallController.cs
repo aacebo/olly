@@ -74,7 +74,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
 
         if (chat is null)
         {
-            chat = await chats.Create(new()
+            await chats.Create(new()
             {
                 TenantId = tenant.Id,
                 SourceId = context.Activity.Conversation.Id,
@@ -102,7 +102,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
                 ServiceUrl = context.Activity.ServiceUrl
             });
 
-            chat = await chats.Update(chat, context.CancellationToken);
+            await chats.Update(chat, context.CancellationToken);
         }
 
         var install = await installs.GetBySourceId(SourceType.Teams, account.SourceId);
@@ -121,7 +121,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
                 SourceType = SourceType.Teams,
                 SourceId = account.SourceId,
                 Url = context.Activity.ServiceUrl
-            }, chat, context.CancellationToken);
+            }, context.CancellationToken);
         }
         else
         {

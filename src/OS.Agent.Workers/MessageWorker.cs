@@ -14,58 +14,70 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Workers;
 
-public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scopeFactory) : BackgroundService
+public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scopeFactory) : IHostedService
 {
     private ILogger<MessageWorker> Logger { get; init; } = provider.GetRequiredService<ILogger<MessageWorker>>();
     private NetMQQueue<MessageEvent> Queue { get; init; } = provider.GetRequiredService<NetMQQueue<MessageEvent>>();
     private NetMQQueue<TeamsEvent> TeamsQueue { get; init; } = provider.GetRequiredService<NetMQQueue<TeamsEvent>>();
     private NetMQQueue<GithubEvent> GithubQueue { get; init; } = provider.GetRequiredService<NetMQQueue<GithubEvent>>();
     private JsonSerializerOptions JsonSerializerOptions { get; init; } = provider.GetRequiredService<JsonSerializerOptions>();
+    private IHostApplicationLifetime Lifetime { get; } = provider.GetRequiredService<IHostApplicationLifetime>();
+    private NetMQPoller Poller { get; } = [];
 
-    protected override Task ExecuteAsync(CancellationToken cancellationToken)
+    public Task StartAsync(CancellationToken cancellationToken)
     {
-        return Task.Run(async () =>
+        Logger.LogInformation("starting...");
+        Poller.Add(Queue);
+        Queue.ReceiveReady += async (_, args) => await OnStart(args.Queue, Lifetime.ApplicationStopping);
+        Poller.RunAsync();
+        Logger.LogInformation("started");
+        return Task.CompletedTask;
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        Logger.LogInformation("stopping...");
+        Poller.StopAsync();
+        Logger.LogInformation("stopped");
+        return Task.CompletedTask;
+    }
+
+    protected async Task OnStart(NetMQQueue<MessageEvent> queue, CancellationToken cancellationToken)
+    {
+        var scope = scopeFactory.CreateScope();
+        var services = scope.ServiceProvider.GetRequiredService<IServices>();
+
+        while (queue.TryDequeue(out var @event, TimeSpan.FromMilliseconds(200)))
         {
-            Logger.LogInformation("starting...");
+            Logger.LogDebug("{}", JsonSerializer.Serialize(@event, JsonSerializerOptions));
 
-            var scope = scopeFactory.CreateScope();
-            var services = scope.ServiceProvider.GetRequiredService<IServices>();
-
-            while (!cancellationToken.IsCancellationRequested)
+            await services.Logs.Create(new()
             {
-                if (!Queue.TryDequeue(out var @event, TimeSpan.FromMilliseconds(200))) continue;
-                Logger.LogDebug("{}", JsonSerializer.Serialize(@event, JsonSerializerOptions));
+                TenantId = @event.Tenant.Id,
+                Type = LogType.Message,
+                TypeId = @event.Message.Id.ToString(),
+                Text = @event.Key,
+                Entities = [Entity.From(@event)]
+            }, cancellationToken);
 
+            try
+            {
+                await OnEvent(@event, scope, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError("{}", ex);
                 await services.Logs.Create(new()
                 {
                     TenantId = @event.Tenant.Id,
+                    Level = Storage.Models.LogLevel.Error,
                     Type = LogType.Message,
                     TypeId = @event.Message.Id.ToString(),
-                    Text = @event.Key,
+                    Text = ex.Message,
                     Entities = [Entity.From(@event)]
                 }, cancellationToken);
-
-                try
-                {
-                    await OnEvent(@event, scope, cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError("{}", ex);
-                    await services.Logs.Create(new()
-                    {
-                        TenantId = @event.Tenant.Id,
-                        Level = Storage.Models.LogLevel.Error,
-                        Type = LogType.Message,
-                        TypeId = @event.Message.Id.ToString(),
-                        Text = ex.Message,
-                        Entities = [Entity.From(@event)]
-                    }, cancellationToken);
-                }
             }
-
-            Logger.LogInformation("stopping...");
-        }, cancellationToken);
+        }
     }
 
     protected Task OnEvent(MessageEvent @event, IServiceScope scope, CancellationToken _ = default)

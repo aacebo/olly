@@ -18,8 +18,6 @@ public interface IInstallService
     Task<Install?> GetByAccountId(Guid accountId, CancellationToken cancellationToken = default);
     Task<Install?> GetBySourceId(SourceType type, string sourceId, CancellationToken cancellationToken = default);
     Task<Install> Create(Install value, CancellationToken cancellationToken = default);
-    Task<Install> Create(Install value, Chat chat, CancellationToken cancellationToken = default);
-    Task<Install> Create(Install value, Message message, CancellationToken cancellationToken = default);
     Task<Install> Update(Install value, CancellationToken cancellationToken = default);
     Task Delete(Guid id, CancellationToken cancellationToken = default);
 }
@@ -32,6 +30,7 @@ public class InstallService(IServiceProvider provider) : IInstallService
     private ITenantService Tenants { get; init; } = provider.GetRequiredService<ITenantService>();
     private IAccountService Accounts { get; init; } = provider.GetRequiredService<IAccountService>();
     private IChatService Chats { get; init; } = provider.GetRequiredService<IChatService>();
+    private IMessageService Messages { get; init; } = provider.GetRequiredService<IMessageService>();
     private IUserService Users { get; init; } = provider.GetRequiredService<IUserService>();
 
     public async Task<Install?> GetById(Guid id, CancellationToken cancellationToken = default)
@@ -80,44 +79,8 @@ public class InstallService(IServiceProvider provider) : IInstallService
         var account = await Accounts.GetById(value.AccountId, cancellationToken) ?? throw new Exception("account not found");
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var user = await Users.GetById(value.UserId, cancellationToken) ?? throw new Exception("user not found");
-        var install = await Storage.Create(value, cancellationToken: cancellationToken);
-
-        Events.Enqueue(new(ActionType.Create)
-        {
-            Tenant = tenant,
-            Account = account,
-            Install = install,
-            CreatedBy = user
-        });
-
-        return install;
-    }
-
-    public async Task<Install> Create(Install value, Chat chat, CancellationToken cancellationToken = default)
-    {
-        var account = await Accounts.GetById(value.AccountId, cancellationToken) ?? throw new Exception("account not found");
-        var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
-        var user = await Users.GetById(value.UserId, cancellationToken) ?? throw new Exception("user not found");
-        var install = await Storage.Create(value, cancellationToken: cancellationToken);
-
-        Events.Enqueue(new(ActionType.Create)
-        {
-            Tenant = tenant,
-            Account = account,
-            Install = install,
-            Chat = chat,
-            CreatedBy = user
-        });
-
-        return install;
-    }
-
-    public async Task<Install> Create(Install value, Message message, CancellationToken cancellationToken = default)
-    {
-        var account = await Accounts.GetById(value.AccountId, cancellationToken) ?? throw new Exception("account not found");
-        var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
-        var chat = await Chats.GetById(message.ChatId, cancellationToken) ?? throw new Exception("chat not found");
-        var user = await Users.GetById(value.UserId, cancellationToken) ?? throw new Exception("user not found");
+        var message = value.MessageId is not null ? await Messages.GetById(value.MessageId.Value, cancellationToken) : null;
+        var chat = message is not null ? await Chats.GetById(message.ChatId, cancellationToken) : null;
         var install = await Storage.Create(value, cancellationToken: cancellationToken);
 
         Events.Enqueue(new(ActionType.Create)
@@ -138,6 +101,8 @@ public class InstallService(IServiceProvider provider) : IInstallService
         var account = await Accounts.GetById(value.AccountId, cancellationToken) ?? throw new Exception("account not found");
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var user = await Users.GetById(value.UserId, cancellationToken) ?? throw new Exception("user not found");
+        var message = value.MessageId is not null ? await Messages.GetById(value.MessageId.Value, cancellationToken) : null;
+        var chat = message is not null ? await Chats.GetById(message.ChatId, cancellationToken) : null;
         var install = await Storage.Update(value, cancellationToken: cancellationToken);
 
         Events.Enqueue(new(ActionType.Update)
@@ -145,6 +110,8 @@ public class InstallService(IServiceProvider provider) : IInstallService
             Tenant = tenant,
             Account = account,
             Install = install,
+            Chat = chat,
+            Message = message,
             CreatedBy = user
         });
 
@@ -157,6 +124,8 @@ public class InstallService(IServiceProvider provider) : IInstallService
         var account = await Accounts.GetById(install.AccountId, cancellationToken) ?? throw new Exception("account not found");
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var user = await Users.GetById(install.UserId, cancellationToken) ?? throw new Exception("user not found");
+        var message = install.MessageId is not null ? await Messages.GetById(install.MessageId.Value, cancellationToken) : null;
+        var chat = message is not null ? await Chats.GetById(message.ChatId, cancellationToken) : null;
 
         await Storage.Delete(id, cancellationToken: cancellationToken);
 
@@ -165,6 +134,8 @@ public class InstallService(IServiceProvider provider) : IInstallService
             Tenant = tenant,
             Account = account,
             Install = install,
+            Chat = chat,
+            Message = message,
             CreatedBy = user
         });
     }

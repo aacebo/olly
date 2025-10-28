@@ -5,12 +5,12 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Teams.Events;
 
-public class TeamsInstallEvent(ActionType action) : TeamsEvent(EntityType.Install, action)
+public class TeamsInstallEvent(ActionType action, SourceType sourceType) : TeamsEvent(EntityType.Install, action, sourceType)
 {
     [JsonPropertyName("message")]
     public Message? Message { get; init; }
 
-    public static TeamsInstallEvent From(InstallEvent @event) => new(@event.Action)
+    public static TeamsInstallEvent From(InstallEvent @event) => new(@event.Action, @event.SourceType ?? @event.Message?.SourceType ?? @event.Chat?.SourceType ?? @event.Install.SourceType)
     {
         Id = @event.Id,
         Type = @event.Type,

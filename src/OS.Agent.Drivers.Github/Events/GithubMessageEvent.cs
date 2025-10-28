@@ -7,7 +7,7 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github.Events;
 
-public class GithubMessageEvent(ActionType action) : GithubEvent(EntityType.Message, action)
+public class GithubMessageEvent(ActionType action, SourceType sourceType) : GithubEvent(EntityType.Message, action, sourceType)
 {
     [JsonPropertyName("chat")]
     public required Chat Chat { get; init; }
@@ -15,7 +15,7 @@ public class GithubMessageEvent(ActionType action) : GithubEvent(EntityType.Mess
     [JsonPropertyName("message")]
     public required Message Message { get; init; }
 
-    public static GithubMessageEvent From(MessageEvent @event, IServiceScope scope) => new(@event.Action)
+    public static GithubMessageEvent From(MessageEvent @event, IServiceScope scope) => new(@event.Action, @event.SourceType ?? @event.Message.SourceType)
     {
         Id = @event.Id,
         Type = @event.Type,
