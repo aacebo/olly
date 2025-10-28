@@ -36,6 +36,7 @@ public class RecordService(IServiceProvider provider) : IRecordService
     private IRecordStorage Storage { get; init; } = provider.GetRequiredService<IRecordStorage>();
     private ITenantService Tenants { get; init; } = provider.GetRequiredService<ITenantService>();
     private IAccountService Accounts { get; init; } = provider.GetRequiredService<IAccountService>();
+    private IInstallService Installs { get; init; } = provider.GetRequiredService<IInstallService>();
     private IChatService Chats { get; init; } = provider.GetRequiredService<IChatService>();
     private IUserService Users { get; init; } = provider.GetRequiredService<IUserService>();
 
@@ -123,13 +124,15 @@ public class RecordService(IServiceProvider provider) : IRecordService
     public async Task<Record> Create(Account account, Record value, CancellationToken cancellationToken = default)
     {
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
-        var user = account.UserId is not null ? await Users.GetById(account.UserId.Value, cancellationToken) : null;
+        var install = await Installs.GetByAccountId(account.Id, cancellationToken);
+        var user = install is not null ? await Users.GetById(install.UserId, cancellationToken) : null;
         var record = await Storage.Create(account, value, cancellationToken: cancellationToken);
 
         Events.Enqueue(new(ActionType.Create)
         {
             Tenant = tenant,
             Account = account,
+            Install = install,
             Record = record,
             CreatedBy = user
         });
@@ -157,7 +160,8 @@ public class RecordService(IServiceProvider provider) : IRecordService
         var chat = await Chats.GetById(message.ChatId, cancellationToken) ?? throw new Exception("chat not found");
         var tenant = await Tenants.GetById(chat.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var account = message.AccountId is not null ? await Accounts.GetById(message.AccountId.Value, cancellationToken) : null;
-        var user = account?.UserId is not null ? await Users.GetById(account.UserId.Value, cancellationToken) : null;
+        var install = account is not null ? await Installs.GetByAccountId(account.Id, cancellationToken) : null;
+        var user = install is not null ? await Users.GetById(install.UserId, cancellationToken) : null;
         var record = await Storage.Create(message, value, cancellationToken: cancellationToken);
 
         Events.Enqueue(new(ActionType.Create)
@@ -166,6 +170,7 @@ public class RecordService(IServiceProvider provider) : IRecordService
             Account = account,
             Chat = chat,
             Message = message,
+            Install = install,
             Record = record,
             CreatedBy = user
         });

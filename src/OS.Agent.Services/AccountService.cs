@@ -25,7 +25,6 @@ public class AccountService(IServiceProvider provider) : IAccountService
     private NetMQQueue<AccountEvent> Events { get; init; } = provider.GetRequiredService<NetMQQueue<AccountEvent>>();
     private IAccountStorage Storage { get; init; } = provider.GetRequiredService<IAccountStorage>();
     private ITenantService Tenants { get; init; } = provider.GetRequiredService<ITenantService>();
-    private IUserService Users { get; init; } = provider.GetRequiredService<IUserService>();
 
     public async Task<Account?> GetById(Guid id, CancellationToken cancellationToken = default)
     {

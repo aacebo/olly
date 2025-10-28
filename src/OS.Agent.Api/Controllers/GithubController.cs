@@ -23,6 +23,7 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
     private IMessageService Messages => accessor.HttpContext!.RequestServices.GetRequiredService<IMessageService>();
     private IInstallService Installs => accessor.HttpContext!.RequestServices.GetRequiredService<IInstallService>();
     private ITokenService Tokens => accessor.HttpContext!.RequestServices.GetRequiredService<ITokenService>();
+    private IUserService Users => accessor.HttpContext!.RequestServices.GetRequiredService<IUserService>();
 
     [HttpGet("redirect")]
     public async Task<IResult> OnRedirect([FromQuery] string code, [FromQuery] string state, [FromQuery(Name = "installation_id")] long installationId, CancellationToken cancellationToken)
@@ -47,9 +48,8 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
             )
         };
 
-        var app = await AppClient.GitHubApps.GetCurrent();
-        var user = await client.User.Current();
-        var account = await Accounts.GetBySourceId(tenant.Id, SourceType.Github, user.NodeId, cancellationToken);
+        var githubUser = await client.User.Current();
+        var account = await Accounts.GetBySourceId(tenant.Id, SourceType.Github, githubUser.NodeId, cancellationToken);
         var message = await Messages.GetById(tokenState.MessageId, cancellationToken) ?? throw HttpException.NotFound();
         var chat = await Chats.GetById(message.ChatId, cancellationToken) ?? throw HttpException.NotFound();
 
@@ -60,12 +60,11 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
         {
             account = await Accounts.Create(new()
             {
-                UserId = tokenState.UserId,
                 TenantId = tenant.Id,
                 SourceType = SourceType.Github,
-                SourceId = user.NodeId,
-                Url = user.Url,
-                Name = user.Login,
+                SourceId = githubUser.NodeId,
+                Url = githubUser.Url,
+                Name = githubUser.Login,
                 Entities = [
                     new GithubUserEntity()
                     {
@@ -89,8 +88,14 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
 
         if (install is null)
         {
+            var user = await Users.Create(new()
+            {
+                Name = githubUser.Login
+            }, cancellationToken);
+
             install = await Installs.Create(new()
             {
+                UserId = user.Id,
                 AccountId = account.Id,
                 SourceType = SourceType.Github,
                 SourceId = installationId.ToString(),

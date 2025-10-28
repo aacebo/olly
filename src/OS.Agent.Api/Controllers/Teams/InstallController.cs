@@ -40,15 +40,9 @@ public class InstallController(IServiceScopeFactory scopeFactory)
 
         if (account is null)
         {
-            var user = await users.Create(new()
-            {
-                Name = context.Activity.From.Name
-            }, context.CancellationToken);
-
             account = await accounts.Create(new()
             {
                 TenantId = tenant.Id,
-                UserId = user.Id,
                 Name = context.Activity.From.Name,
                 SourceId = context.Activity.From.Id,
                 SourceType = SourceType.Teams,
@@ -115,8 +109,14 @@ public class InstallController(IServiceScopeFactory scopeFactory)
 
         if (install is null)
         {
+            var user = await users.Create(new()
+            {
+                Name = context.Activity.From.Name
+            }, context.CancellationToken);
+
             await installs.Create(new()
             {
+                UserId = user.Id,
                 AccountId = account.Id,
                 SourceType = SourceType.Teams,
                 SourceId = account.SourceId,

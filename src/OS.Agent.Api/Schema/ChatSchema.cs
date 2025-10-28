@@ -56,7 +56,7 @@ public class ChatSchema(Storage.Models.Chat chat) : ModelSchema
     }
 
     [GraphQLName("messages")]
-    public async Task<IEnumerable<MessageSchema>> GetChats([Service] IMessageService messageService, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<MessageSchema>> GetMessages([Service] IMessageService messageService, CancellationToken cancellationToken = default)
     {
         var messages = await messageService.GetByChatId(
             Id,

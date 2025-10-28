@@ -15,6 +15,9 @@ public class RecordEvent(ActionType action) : Event(EntityType.Record, action)
     [JsonPropertyName("account")]
     public Account? Account { get; init; }
 
+    [JsonPropertyName("install")]
+    public Install? Install { get; init; }
+
     [JsonPropertyName("chat")]
     public Chat? Chat { get; init; }
 

@@ -27,12 +27,6 @@ public class MessageController(IServiceScopeFactory scopeFactory)
         var account = await accounts.GetBySourceId(tenant.Id, SourceType.Teams, context.Activity.From.Id, context.CancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
         var chat = await chats.GetBySourceId(tenant.Id, SourceType.Teams, context.Activity.Conversation.Id, context.CancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("chat not found");
 
-        if (account.UserId is null)
-        {
-            await context.Send("Please install the Teams App to continue...");
-            return;
-        }
-
         var message = new Storage.Models.Message()
         {
             AccountId = account.Id,

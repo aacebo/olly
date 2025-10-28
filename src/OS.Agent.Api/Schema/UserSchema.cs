@@ -1,3 +1,5 @@
+using OS.Agent.Services;
+
 namespace OS.Agent.Api.Schema;
 
 [GraphQLName("User")]
@@ -14,4 +16,11 @@ public class UserSchema(Storage.Models.User user) : ModelSchema
 
     [GraphQLName("updated_at")]
     public DateTimeOffset UpdatedAt { get; set; } = user.UpdatedAt;
+
+    [GraphQLName("installs")]
+    public async Task<IEnumerable<InstallSchema>> GetInstalls([Service] IInstallService installService, CancellationToken cancellationToken = default)
+    {
+        var installs = await installService.GetByUserId(Id, cancellationToken: cancellationToken);
+        return installs.Select(install => new InstallSchema(install));
+    }
 }

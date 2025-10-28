@@ -186,7 +186,7 @@ public class GithubPrompt(Client client)
             var install = await client.Services.Installs.GetByAccountId(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account install not found");
             var githubService = client.Provider.GetRequiredService<GithubService>();
             var github = await githubService.GetGraphConnection(install, client.CancellationToken);
-            var query = new Query()
+            var query = new Octokit.GraphQL.Query()
                 .RepositoryOwner(account.Name)
                 .Repository(repositoryName)
                 .Discussions()

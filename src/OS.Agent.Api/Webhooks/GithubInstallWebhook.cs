@@ -26,6 +26,7 @@ public class GithubInstallWebhook(IServiceScopeFactory scopeFactory) : WebhookEv
         var client = scope.ServiceProvider.GetRequiredService<GitHubClient>();
         var tenants = scope.ServiceProvider.GetRequiredService<ITenantService>();
         var accounts = scope.ServiceProvider.GetRequiredService<IAccountService>();
+        var users = scope.ServiceProvider.GetRequiredService<IUserService>();
         var installs = scope.ServiceProvider.GetRequiredService<IInstallService>();
         var chats = scope.ServiceProvider.GetRequiredService<IChatService>();
         var install = await installs.GetBySourceId(SourceType.Github, @event.Installation.Id.ToString(), cancellationToken);
@@ -87,8 +88,14 @@ public class GithubInstallWebhook(IServiceScopeFactory scopeFactory) : WebhookEv
 
         if (install is null)
         {
+            var user = await users.Create(new()
+            {
+                Name = @event.Installation.Account.Login
+            }, cancellationToken);
+
             await installs.Create(new()
             {
+                UserId = user.Id,
                 AccountId = account.Id,
                 SourceType = SourceType.Github,
                 SourceId = @event.Installation.Id.ToString(),

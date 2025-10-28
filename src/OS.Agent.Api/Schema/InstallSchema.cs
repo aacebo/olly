@@ -38,4 +38,17 @@ public class InstallSchema(Storage.Models.Install install) : ModelSchema
 
         return new(account);
     }
+
+    [GraphQLName("user")]
+    public async Task<UserSchema> GetUser([Service] IUserService userService, CancellationToken cancellationToken = default)
+    {
+        var user = await userService.GetById(install.UserId, cancellationToken);
+
+        if (user is null)
+        {
+            throw new InvalidDataException();
+        }
+
+        return new(user);
+    }
 }

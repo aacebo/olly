@@ -26,12 +26,7 @@ public class CreateInstallsTable : Migration
 
         Create.UniqueConstraint()
             .OnTable("installs")
-            .Columns("user_id", "source_id", "source_type");
-
-        Create.Index()
-            .OnTable("installs")
-            .OnColumn("user_id").Ascending()
-            .OnColumn("source_type").Ascending();
+            .Columns("source_id", "source_type");
     }
 
     public override void Down()
