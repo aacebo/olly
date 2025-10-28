@@ -30,6 +30,8 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
     {
         var tokenState = Token.State.Decode(state);
         var tenant = await Tenants.GetById(tokenState.TenantId, cancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("tenant not found");
+        var user = await Users.GetById(tokenState.UserId, cancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("user not found");
+        var message = await Messages.GetById(tokenState.MessageId, cancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("message not found");
         var res = await AppClient.Oauth.CreateAccessToken(new(Settings.ClientId, Settings.ClientSecret, code)
         {
             RedirectUri = new Uri(Settings.RedirectUrl)
@@ -50,11 +52,15 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
 
         var githubUser = await client.User.Current();
         var account = await Accounts.GetBySourceId(tenant.Id, SourceType.Github, githubUser.NodeId, cancellationToken);
-        var message = await Messages.GetById(tokenState.MessageId, cancellationToken) ?? throw HttpException.NotFound();
         var chat = await Chats.GetById(message.ChatId, cancellationToken) ?? throw HttpException.NotFound();
-
         var githubInstall = await AppClient.GitHubApps.GetInstallationForCurrent(installationId);
         var githubAccessToken = await AppClient.GitHubApps.CreateInstallationToken(installationId);
+
+        if (user.Name is null)
+        {
+            user.Name = githubUser.Login;
+            user = await Users.Update(user, cancellationToken);
+        }
 
         if (account is null)
         {
@@ -88,11 +94,6 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
 
         if (install is null)
         {
-            var user = await Users.Create(new()
-            {
-                Name = githubUser.Login
-            }, cancellationToken);
-
             install = await Installs.Create(new()
             {
                 UserId = user.Id,

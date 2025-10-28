@@ -22,7 +22,7 @@ public class GithubInstallEvent(ActionType action) : GithubEvent(EntityType.Inst
         Tenant = @event.Tenant,
         Account = @event.Account,
         Install = @event.Install,
-        Chat = @event.Chat ?? throw new Exception("chat is required"),
+        Chat = @event.Chat,
         Message = @event.Message,
         Scope = scope,
         CreatedBy = @event.CreatedBy,

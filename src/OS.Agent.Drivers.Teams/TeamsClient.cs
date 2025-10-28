@@ -7,22 +7,16 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Teams;
 
-public partial class TeamsClient : Client
+public partial class TeamsClient(IServiceProvider provider, CancellationToken cancellationToken = default) : Client(SourceType.Teams, provider, cancellationToken)
 {
-    public TeamsEvent Event { get; }
+    public required TeamsEvent Event { get; init; }
     public override Tenant Tenant => Event.Tenant;
     public override Account Account => Event.Account;
     public override User User => Event.CreatedBy ?? throw new NullReferenceException("created_by is null");
     public override Chat Chat => Event.Chat;
     public override Message Message => Event.GetMessage() ?? throw new NullReferenceException("message is null");
 
-    protected App Teams { get; }
-
-    public TeamsClient(TeamsEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default) : base(SourceType.Teams, provider, cancellationToken)
-    {
-        Event = @event;
-        Teams = provider.GetRequiredService<App>();
-    }
+    protected App Teams { get; } = provider.GetRequiredService<App>();
 
     public override async Task SignIn(string url, string state)
     {

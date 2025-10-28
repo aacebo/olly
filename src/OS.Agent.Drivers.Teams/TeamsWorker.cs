@@ -28,7 +28,10 @@ public partial class TeamsWorker(IServiceProvider provider, IServiceScopeFactory
             {
                 if (!Queue.TryDequeue(out var @event, TimeSpan.FromMilliseconds(200))) continue;
                 Logger.LogDebug("{}", JsonSerializer.Serialize(@event, JsonSerializerOptions));
-                var client = new TeamsClient(@event, scope.ServiceProvider, cancellationToken);
+                var client = new TeamsClient(scope.ServiceProvider, cancellationToken)
+                {
+                    Event = @event
+                };
 
                 try
                 {

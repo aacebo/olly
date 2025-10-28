@@ -28,7 +28,10 @@ public partial class GithubWorker(IServiceProvider provider, IServiceScopeFactor
             {
                 if (!Queue.TryDequeue(out var @event, TimeSpan.FromMilliseconds(200))) continue;
                 Logger.LogDebug("{}", JsonSerializer.Serialize(@event, JsonSerializerOptions));
-                var client = new GithubClient(@event, scope.ServiceProvider, cancellationToken);
+                var client = new GithubClient(scope.ServiceProvider, cancellationToken)
+                {
+                    Event = @event
+                };
 
                 try
                 {

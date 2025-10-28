@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
+using OS.Agent.Cards.Progress;
 using OS.Agent.Drivers.Github.Events;
 using OS.Agent.Drivers.Github.Models;
 using OS.Agent.Services;
@@ -35,11 +36,29 @@ public partial class GithubWorker
         var githubService = @event.Scope.ServiceProvider.GetRequiredService<GithubService>();
         var services = @event.Scope.ServiceProvider.GetRequiredService<IServices>();
         var github = new Octokit.GitHubClient(await githubService.GetRestConnection(@event.Install, cancellationToken));
+
+        if (client.Event.GetChat() is not null)
+        {
+            await client.Send("I see you've installed a new app, please wait while I import it...");
+        }
+
+        var task = await client.SendTask(new()
+        {
+            Title = "Github",
+            Message = "fetching repositories..."
+        });
+
         var repositories = await github.GitHubApps.Installation.GetAllRepositoriesForCurrent();
 
         // upsert installed repositories
         foreach (var repository in repositories.Repositories)
         {
+            var repositoryTask = await client.SendTask(new()
+            {
+                Title = $"Github Repository: {repository.Name}",
+                Message = "importing repository..."
+            });
+
             var record = await services.Records.GetBySourceId(SourceType.Github, repository.NodeId, cancellationToken);
 
             if (record is null)
@@ -65,6 +84,11 @@ public partial class GithubWorker
                 record.Entities = [new GithubEntity(repository)];
                 record = await services.Records.Update(record, cancellationToken);
             }
+
+            var issuesTask = await client.SendTask(new()
+            {
+                Message = "fetching issues..."
+            });
 
             // upsert repository issues
             var issues = await github.Issue.GetAllForRepository(repository.Id);
@@ -98,6 +122,11 @@ public partial class GithubWorker
                     issueRecord = await services.Records.Update(issueRecord, cancellationToken);
                 }
 
+                await client.SendTask(issuesTask.Id, new()
+                {
+                    Message = "fetching comments..."
+                });
+
                 var comments = await github.Issue.Comment.GetAllForIssue(repository.Owner.Login, repository.Name, issue.Number);
 
                 foreach (var comment in comments)
@@ -127,8 +156,26 @@ public partial class GithubWorker
                         await services.Records.Update(commentRecord, cancellationToken);
                     }
                 }
+
+                await client.SendTask(issuesTask.Id, new()
+                {
+                    Style = ProgressStyle.Success,
+                    Message = "fetching issues success!"
+                });
             }
+
+            await client.SendTask(repositoryTask.Id, new()
+            {
+                Style = ProgressStyle.Success,
+                Message = "importing repository success!"
+            });
         }
+
+        await client.SendTask(task.Id, new()
+        {
+            Style = ProgressStyle.Success,
+            Message = "importing success!"
+        });
     }
 
     protected Task OnInstallUpdateEvent(GithubInstallEvent @event, GithubClient client, CancellationToken cancellationToken = default)
