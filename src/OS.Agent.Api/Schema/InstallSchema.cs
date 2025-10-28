@@ -51,4 +51,11 @@ public class InstallSchema(Storage.Models.Install install) : ModelSchema
 
         return new(user);
     }
+
+    [GraphQLName("message")]
+    public async Task<MessageSchema?> GetMessage([Service] IMessageService messageService, CancellationToken cancellationToken = default)
+    {
+        var message = install.MessageId is not null ? await messageService.GetById(install.MessageId.Value, cancellationToken) : null;
+        return message is null ? null : new(message);
+    }
 }

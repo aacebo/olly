@@ -40,6 +40,13 @@ var jsonSerializerOptions = new JsonSerializerOptions()
 };
 
 builder.Services.Configure<GithubSettings>(builder.Configuration.GetSection("Github"));
+builder.Services.Configure<HostOptions>(options =>
+{
+    options.ServicesStartConcurrently = true;
+    options.ServicesStopConcurrently = true;
+    options.ShutdownTimeout = TimeSpan.FromSeconds(5);
+});
+
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.DefaultIgnoreCondition = jsonSerializerOptions.DefaultIgnoreCondition;
@@ -47,7 +54,6 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 builder.Services.AddSingleton(provider => jsonSerializerOptions);
-builder.Services.AddOpenApi();
 builder.Services.AddHttpLogging();
 builder.Services.AddPostgres();
 builder.Services.AddMemoryCache();
@@ -117,11 +123,6 @@ builder.Services.AddScoped<IRecordService, RecordService>();
 builder.Services.AddScoped<IInstallService, InstallService>();
 
 var app = builder.Build();
-
-if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Local"))
-{
-    app.MapOpenApi();
-}
 
 app.UseStaticFiles(new StaticFileOptions()
 {

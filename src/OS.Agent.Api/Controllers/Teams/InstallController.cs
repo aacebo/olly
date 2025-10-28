@@ -105,7 +105,11 @@ public class InstallController(IServiceScopeFactory scopeFactory)
             await chats.Update(chat, context.CancellationToken);
         }
 
-        var install = await installs.GetBySourceId(SourceType.Teams, account.SourceId);
+        var install = await installs.GetBySourceId(
+            SourceType.Teams,
+            account.SourceId,
+            context.CancellationToken
+        );
 
         if (install is null)
         {

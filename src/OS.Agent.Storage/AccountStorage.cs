@@ -50,9 +50,8 @@ public class AccountStorage(ILogger<IAccountStorage> logger, QueryFactory db) : 
     {
         logger.LogDebug("GetByTenantId");
         return await db
-            .Query()
+            .Query("accounts")
             .Select("*")
-            .From("accounts")
             .Where("tenant_id", "=", tenantId)
             .GetAsync<Account>(cancellationToken: cancellationToken);
     }

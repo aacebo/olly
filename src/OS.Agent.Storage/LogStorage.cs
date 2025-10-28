@@ -48,9 +48,8 @@ public class LogStorage(ILogger<ILogStorage> logger, QueryFactory db) : ILogStor
     {
         logger.LogDebug("GetByTenantId");
         return await db
-            .Query()
+            .Query("logs")
             .Select("*")
-            .From("logs")
             .Where("tenant_id", "=", tenantId)
             .GetAsync<Log>(cancellationToken: cancellationToken);
     }

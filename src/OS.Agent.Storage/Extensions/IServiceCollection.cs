@@ -63,15 +63,22 @@ public static class IServiceCollectionExtensions
             );
 
         // add database connection
-        services.AddTransient(provider =>
+        services.AddSingleton<PostgresCompiler>();
+        services.AddSingleton(provider =>
         {
             var config = provider.GetRequiredService<IConfiguration>();
 
             return new NpgsqlDataSourceBuilder(config.GetConnectionString("Postgres"))
                     .EnableDynamicJson()
                     .ConfigureJsonOptions(jsonOptions)
-                    .Build()
-                    .CreateConnection();
+                    .UseLoggerFactory(provider.GetRequiredService<ILoggerFactory>())
+                    .Build();
+        });
+
+        services.AddScoped(provider =>
+        {
+            var dataSource = provider.GetRequiredService<NpgsqlDataSource>();
+            return dataSource.OpenConnection();
         });
 
         // add query factory
@@ -79,16 +86,9 @@ public static class IServiceCollectionExtensions
         {
             var logger = provider.GetRequiredService<ILogger<QueryFactory>>();
             var connection = provider.GetRequiredService<NpgsqlConnection>();
+            var compiler = provider.GetRequiredService<PostgresCompiler>();
             var jsonSerializerOptions = provider.GetRequiredService<JsonSerializerOptions>();
-
-            if (connection.State != ConnectionState.Open)
-            {
-                logger.LogInformation("opening connection...");
-                connection.Open();
-                logger.LogInformation("opened successfully!");
-            }
-
-            var factory = new QueryFactory(connection, new PostgresCompiler());
+            var factory = new QueryFactory(connection, compiler);
             factory.Logger = q => logger.LogDebug("{}", q.RawSql);
             return factory;
         });

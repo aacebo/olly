@@ -40,9 +40,8 @@ public class ChatStorage(ILogger<IChatStorage> logger, QueryFactory db) : IChatS
         logger.LogDebug("GetByTenantId");
         page ??= new();
         var query = db
-            .Query()
+            .Query("chats")
             .Select("*")
-            .From("chats")
             .Where("tenant_id", "=", tenantId);
 
         return await page.Invoke<Chat>(query, cancellationToken);
