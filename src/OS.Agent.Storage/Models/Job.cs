@@ -55,6 +55,39 @@ public class Job : Model
     {
         return (Job)MemberwiseClone();
     }
+
+    public Job Start()
+    {
+        Status = JobStatus.Running;
+        Message = null;
+        StartedAt = DateTimeOffset.UtcNow;
+        EndedAt = null;
+        return this;
+    }
+
+    public Job Success()
+    {
+        Status = JobStatus.Success;
+        Message = null;
+        EndedAt = DateTimeOffset.UtcNow;
+        return this;
+    }
+
+    public Job Error(string message)
+    {
+        Status = JobStatus.Error;
+        Message = message;
+        EndedAt = DateTimeOffset.UtcNow;
+        return this;
+    }
+
+    public Job Error(Exception ex)
+    {
+        Status = JobStatus.Error;
+        Message = ex.Message;
+        EndedAt = DateTimeOffset.UtcNow;
+        return this;
+    }
 }
 
 [JsonConverter(typeof(Converter<JobStatus>))]

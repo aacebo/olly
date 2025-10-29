@@ -1,4 +1,9 @@
+using Microsoft.Extensions.DependencyInjection;
+
+using OS.Agent.Drivers.Github.Models;
 using OS.Agent.Events;
+using OS.Agent.Services;
+using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github;
 
@@ -20,13 +25,69 @@ public partial class GithubWorker
         throw new Exception($"event '{@event.Key}' not found");
     }
 
-    protected Task OnJobCreateEvent(JobEvent @event, IServiceProvider provider, CancellationToken _ = default)
+    protected async Task OnJobCreateEvent(JobEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default)
     {
-        return Task.CompletedTask;
+        var services = provider.GetRequiredService<IServices>();
+        var job = await services.Jobs.Update(@event.Job.Start(), cancellationToken);
+
+        try
+        {
+            await services.Logs.Create(new()
+            {
+                TenantId = job.TenantId,
+                Type = LogType.Job,
+                TypeId = job.Id.ToString(),
+                Text = "starting",
+                Entities = job.Entities
+            }, cancellationToken);
+
+            // job logic...
+            if (job.Name == "github.repository.index")
+            {
+                await OnIndexRepositoryJobEvent(@event, provider, cancellationToken);
+            }
+
+            await services.Logs.Create(new()
+            {
+                TenantId = job.TenantId,
+                Type = LogType.Job,
+                TypeId = job.Id.ToString(),
+                Text = "stopping",
+                Entities = job.Entities
+            }, cancellationToken);
+
+            await services.Jobs.Update(job.Success(), cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            await services.Jobs.Update(job.Error(ex), cancellationToken);
+        }
     }
 
-    protected Task OnJobUpdateEvent(JobEvent @event, IServiceProvider provider, CancellationToken _ = default)
+    protected async Task OnJobUpdateEvent(JobEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default)
     {
-        return Task.CompletedTask;
+        var services = provider.GetRequiredService<IServices>();
+
+        await services.Logs.Create(new()
+        {
+            TenantId = @event.Job.TenantId,
+            Level = @event.Job.Status.IsError
+                ? LogLevel.Error
+                : LogLevel.Info,
+            Type = LogType.Job,
+            TypeId = @event.Job.Id.ToString(),
+            Text = @event.Job.Message ?? @event.Job.Status,
+            Entities = @event.Job.Entities
+        }, cancellationToken);
+    }
+
+    protected async Task OnIndexRepositoryJobEvent(JobEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default)
+    {
+        var services = provider.GetRequiredService<IServices>();
+        var entity = @event.Job.Entities.GetRequired<GithubEntity>();
+        var repository = entity.Repository ?? throw new InvalidOperationException("repository not found");
+        var settings = entity.Settings ?? throw new InvalidOperationException("repository settings not found");
+        var record = await services.Records.GetBySourceId(SourceType.Github, repository.NodeId, cancellationToken)
+            ?? throw new InvalidOperationException("record not found");
     }
 }
