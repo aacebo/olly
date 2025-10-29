@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 using Microsoft.Extensions.DependencyInjection;
 
 using OS.Agent.Cards.Progress;
@@ -131,7 +129,7 @@ public partial class GithubWorker
         {
             record.Name = repository.Name;
             record.Url = repository.Url;
-            record.Entities = [new GithubEntity(repository)];
+            record.Entities.Put(new GithubEntity(repository));
             record = await client.Services.Records.Update(record, cancellationToken);
         }
 
@@ -139,10 +137,8 @@ public partial class GithubWorker
 
         if (settings is not null)
         {
-            Console.WriteLine(JsonSerializer.Serialize(settings, new JsonSerializerOptions()
-            {
-                WriteIndented = true
-            }));
+            record.Entities.Put(Entity.From(settings));
+            record = await client.Services.Records.Update(record, cancellationToken);
         }
 
         var issuesTask = await client.SendTask(new()
