@@ -7,7 +7,7 @@ using OS.Agent.Drivers;
 
 namespace OS.Agent.Prompts;
 
-[Prompt("Olly Agent")]
+[Prompt("Olly")]
 [Prompt.Description("An agent that delegates tasks to sub-agents")]
 [Prompt.Instructions(
     "<agent>",
