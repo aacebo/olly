@@ -138,7 +138,8 @@ public partial class GithubWorker
 
         if (settings is not null)
         {
-            record.Entities.Put(Entity.From(settings));
+            var entity = record.Entities.GetRequired<GithubEntity>();
+            entity.Settings = settings;
             record = await client.Services.Records.Update(record, cancellationToken);
         }
 

@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 
 using OS.Agent.Drivers.Github.Json;
+using OS.Agent.Drivers.Github.Settings;
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github.Models;
@@ -14,6 +15,9 @@ public class GithubEntity : Entity
     [JsonPropertyName("repository")]
     [JsonConverter(typeof(GithubJsonConverter<Octokit.Repository>))]
     public Octokit.Repository? Repository { get; set; }
+
+    [JsonPropertyName("settings")]
+    public GithubRepositorySettings? Settings { get; set; }
 
     [JsonPropertyName("issue")]
     [JsonConverter(typeof(GithubJsonConverter<Octokit.IssueUpdate>))]
