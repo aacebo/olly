@@ -141,6 +141,13 @@ public partial class GithubWorker
             var entity = record.Entities.GetRequired<GithubEntity>();
             entity.Settings = settings;
             record = await client.Services.Records.Update(record, cancellationToken);
+
+            await client.Services.Jobs.Create(new()
+            {
+                TenantId = client.Tenant.Id,
+                Name = "github.repository.index",
+                Entities = [entity]
+            }, client.CancellationToken);
         }
 
         var issuesTask = await client.SendTask(new()

@@ -87,4 +87,10 @@ public class LogType(string value) : StringEnum(value)
 
     public static readonly LogType Install = new("install");
     public bool IsInstall => Install.Equals(Value);
+
+    public static readonly LogType Record = new("record");
+    public bool IsRecord => Record.Equals(Value);
+
+    public static readonly LogType Job = new("job");
+    public bool IsJob => Job.Equals(Value);
 }

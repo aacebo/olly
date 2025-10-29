@@ -13,6 +13,7 @@ public interface IStorage
     ILogStorage Logs { get; }
     IRecordStorage Records { get; }
     IInstallStorage Installs { get; }
+    IJobStorage Jobs { get; }
 }
 
 public class Storage : IStorage
@@ -26,6 +27,7 @@ public class Storage : IStorage
     public ILogStorage Logs { get; }
     public IRecordStorage Records { get; }
     public IInstallStorage Installs { get; }
+    public IJobStorage Jobs { get; }
 
     public Storage(IServiceScopeFactory factory) : this(factory.CreateScope())
     {
@@ -43,5 +45,6 @@ public class Storage : IStorage
         Logs = scope.ServiceProvider.GetRequiredService<ILogStorage>();
         Records = scope.ServiceProvider.GetRequiredService<IRecordStorage>();
         Installs = scope.ServiceProvider.GetRequiredService<IInstallStorage>();
+        Jobs = scope.ServiceProvider.GetRequiredService<IJobStorage>();
     }
 }

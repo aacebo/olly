@@ -72,6 +72,11 @@ public partial class GithubWorker(IServiceProvider provider, IServiceScopeFactor
             await OnMessageEvent(message, client, cancellationToken);
             return;
         }
+        else if (@event is JobEvent job)
+        {
+            await OnJobEvent(job, provider, cancellationToken);
+            return;
+        }
 
         throw new Exception($"event '{@event.Key}' not found");
     }
