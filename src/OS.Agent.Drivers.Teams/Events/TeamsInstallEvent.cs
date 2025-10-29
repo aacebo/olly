@@ -13,7 +13,6 @@ public class TeamsInstallEvent(ActionType action, SourceType sourceType) : Teams
         Account = @event.Account,
         Install = @event.Install,
         Chat = @event.Chat ?? throw new Exception("chat is required"),
-        Message = @event.Message ?? throw new Exception("message is required"),
         CreatedBy = @event.CreatedBy,
         CreatedAt = @event.CreatedAt
     };

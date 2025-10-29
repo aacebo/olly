@@ -79,7 +79,7 @@ public static class IServiceCollectionExtensions
             var logger = provider.GetRequiredService<ILogger<QueryFactory>>();
             var dataSource = provider.GetRequiredService<NpgsqlDataSource>();
             var jsonSerializerOptions = provider.GetRequiredService<JsonSerializerOptions>();
-            
+
             return new QueryFactory(dataSource.OpenConnection(), new PostgresCompiler())
             {
                 Logger = q => logger.LogDebug("{}", q.RawSql)

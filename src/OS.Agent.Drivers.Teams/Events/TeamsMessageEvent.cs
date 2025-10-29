@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 using OS.Agent.Events;
 using OS.Agent.Storage.Models;
 
@@ -5,6 +7,9 @@ namespace OS.Agent.Drivers.Teams.Events;
 
 public class TeamsMessageEvent(ActionType action, SourceType sourceType) : TeamsEvent(EntityType.Message, action, sourceType)
 {
+    [JsonPropertyName("message")]
+    public required Message Message { get; init; }
+
     public static TeamsMessageEvent From(MessageEvent @event) => new(@event.Action, @event.SourceType ?? @event.Message.SourceType)
     {
         Id = @event.Id,

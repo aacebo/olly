@@ -24,7 +24,4 @@ public abstract class TeamsEvent(EntityType type, ActionType action, SourceType 
 
     [JsonPropertyName("chat")]
     public required Chat Chat { get; init; }
-
-    [JsonPropertyName("message")]
-    public required Message Message { get; init; }
 }

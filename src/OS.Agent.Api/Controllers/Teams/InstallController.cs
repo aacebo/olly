@@ -5,7 +5,6 @@ using Microsoft.Teams.Apps.Annotations;
 
 using OS.Agent.Drivers.Teams.Models;
 using OS.Agent.Services;
-using OS.Agent.Storage;
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Api.Controllers.Teams;
@@ -21,7 +20,6 @@ public class InstallController(IHttpContextAccessor accessor)
         var accounts = accessor.HttpContext!.RequestServices.GetRequiredService<IAccountService>();
         var chats = accessor.HttpContext!.RequestServices.GetRequiredService<IChatService>();
         var installs = accessor.HttpContext!.RequestServices.GetRequiredService<IInstallService>();
-        var messages = accessor.HttpContext!.RequestServices.GetRequiredService<IMessageStorage>();
         var tenantId = context.Activity.Conversation.TenantId ?? context.TenantId;
         var tenant = await tenants.GetBySourceId(
             SourceType.Teams,
@@ -114,22 +112,6 @@ public class InstallController(IHttpContextAccessor accessor)
 
         if (install is null)
         {
-            var activity = await context.Send("Hello! Is there anything I can help you with?");
-            var message = await messages.Create(new()
-            {
-                ChatId = chat.Id,
-                SourceType = SourceType.Teams,
-                SourceId = activity.Id,
-                Text = activity.Text,
-                Url = $"{context.Activity.ServiceUrl}v3/conversations/{context.Activity.Conversation.Id}/activities/{activity.Id}",
-                Entities = [
-                    new TeamsMessageEntity()
-                    {
-                        Activity = activity
-                    }
-                ]
-            }, cancellationToken: context.CancellationToken);
-
             var user = await users.Create(new()
             {
                 Name = context.Activity.From.Name
@@ -139,11 +121,10 @@ public class InstallController(IHttpContextAccessor accessor)
             {
                 UserId = user.Id,
                 AccountId = account.Id,
-                MessageId = message.Id,
                 SourceType = SourceType.Teams,
                 SourceId = account.SourceId,
                 Url = context.Activity.ServiceUrl
-            }, context.CancellationToken);
+            }, chat, context.CancellationToken);
         }
         else
         {
