@@ -11,8 +11,8 @@ using NetMQ;
 
 using Octokit;
 
-using OS.Agent.Drivers.Github.Events;
 using OS.Agent.Drivers.Github.Settings;
+using OS.Agent.Events;
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github.Extensions;
@@ -26,16 +26,21 @@ public static class IServiceCollectionExtensions
 
         ClientRegistry.Register(SourceType.Github, (@event, provider, cancellationToken) =>
         {
-            if (@event is not GithubEvent githubEvent)
+            if (@event is InstallEvent install)
             {
-                throw new InvalidOperationException($"invalid event type '{@event.Key}'");
+                return new GithubClient(install, provider, cancellationToken);
             }
 
-            return new GithubClient(githubEvent, provider, cancellationToken);
+            if (@event is MessageEvent message)
+            {
+                return new GithubClient(message, provider, cancellationToken);
+            }
+
+            throw new InvalidOperationException($"event type '{@event.Key}' is not supported for client type 'Github'");
         });
 
         services.AddScoped<GithubService>();
-        services.AddSingleton<NetMQQueue<GithubEvent>>();
+        services.AddKeyedSingleton<NetMQQueue<Event>>(SourceType.Github.ToString());
         services.AddHostedService<GithubWorker>();
         services.AddSingleton(provider =>
         {

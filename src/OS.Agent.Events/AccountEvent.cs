@@ -6,9 +6,6 @@ namespace OS.Agent.Events;
 
 public class AccountEvent(ActionType action) : Event(EntityType.Account, action)
 {
-    [JsonPropertyName("source_type")]
-    public override SourceType? SourceType => Account.SourceType;
-
     [JsonPropertyName("tenant")]
     public required Tenant Tenant { get; init; }
 

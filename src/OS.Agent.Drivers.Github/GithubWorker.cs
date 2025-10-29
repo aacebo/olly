@@ -6,14 +6,15 @@ using Microsoft.Extensions.Logging;
 
 using NetMQ;
 
-using OS.Agent.Drivers.Github.Events;
+using OS.Agent.Events;
+using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github;
 
 public partial class GithubWorker(IServiceProvider provider, IServiceScopeFactory scopeFactory) : IHostedService
 {
     private ILogger<GithubWorker> Logger { get; } = provider.GetRequiredService<ILogger<GithubWorker>>();
-    private NetMQQueue<GithubEvent> Queue { get; } = provider.GetRequiredService<NetMQQueue<GithubEvent>>();
+    private NetMQQueue<Event> Queue { get; } = provider.GetRequiredKeyedService<NetMQQueue<Event>>(SourceType.Github.ToString());
     private JsonSerializerOptions JsonSerializerOptions { get; } = provider.GetRequiredService<JsonSerializerOptions>();
     private IHostApplicationLifetime Lifetime { get; } = provider.GetRequiredService<IHostApplicationLifetime>();
     private NetMQPoller Poller { get; } = [];
@@ -36,7 +37,7 @@ public partial class GithubWorker(IServiceProvider provider, IServiceScopeFactor
         return Task.CompletedTask;
     }
 
-    protected async Task OnStart(NetMQQueue<GithubEvent> queue, CancellationToken cancellationToken)
+    protected async Task OnStart(NetMQQueue<Event> queue, CancellationToken cancellationToken)
     {
         await using var scope = scopeFactory.CreateAsyncScope();
 
@@ -46,8 +47,7 @@ public partial class GithubWorker(IServiceProvider provider, IServiceScopeFactor
 
             try
             {
-                var client = ClientRegistry.Get(@event.SourceType)(@event, scope.ServiceProvider, cancellationToken);
-                await OnEvent(@event, client, cancellationToken);
+                await OnEvent(@event, scope.ServiceProvider, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -56,15 +56,19 @@ public partial class GithubWorker(IServiceProvider provider, IServiceScopeFactor
         }
     }
 
-    protected async Task OnEvent(GithubEvent @event, Client client, CancellationToken cancellationToken = default)
+    protected async Task OnEvent(Event @event, IServiceProvider provider, CancellationToken cancellationToken = default)
     {
-        if (@event is GithubInstallEvent install)
+        if (@event is InstallEvent install)
         {
+            var factory = ClientRegistry.Get(install.Chat?.SourceType ?? install.Install.SourceType);
+            var client = factory(@event, provider, cancellationToken);
             await OnInstallEvent(install, client, cancellationToken);
             return;
         }
-        else if (@event is GithubMessageEvent message)
+        else if (@event is MessageEvent message)
         {
+            var factory = ClientRegistry.Get(message.Chat.SourceType);
+            var client = factory(@event, provider, cancellationToken);
             await OnMessageEvent(message, client, cancellationToken);
             return;
         }

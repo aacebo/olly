@@ -24,9 +24,10 @@ public abstract class Client
 
     public abstract Tenant Tenant { get; }
     public abstract Account Account { get; }
-    public abstract User User { get; }
+    public abstract User? User { get; }
+    public abstract Install Install { get; }
     public abstract Chat Chat { get; }
-    public abstract Message Message { get; }
+    public abstract Message? Message { get; }
 
     protected virtual ILogger<Client> Logger { get; }
     protected ClientResponse Response { get; } = new();

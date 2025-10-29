@@ -6,7 +6,7 @@ using Microsoft.Teams.AI;
 using Microsoft.Teams.AI.Messages;
 using Microsoft.Teams.AI.Models.OpenAI;
 
-using OS.Agent.Drivers.Github.Events;
+using OS.Agent.Events;
 using OS.Agent.Prompts;
 using OS.Agent.Storage;
 
@@ -14,7 +14,7 @@ namespace OS.Agent.Drivers.Github;
 
 public partial class GithubWorker
 {
-    protected async Task OnMessageEvent(GithubMessageEvent @event, Client client, CancellationToken cancellationToken = default)
+    protected async Task OnMessageEvent(MessageEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         if (@event.Action.IsCreate)
         {
@@ -40,7 +40,7 @@ public partial class GithubWorker
         throw new Exception($"event '{@event.Key}' not found");
     }
 
-    protected async Task OnMessageCreateEvent(GithubMessageEvent @event, Client client, CancellationToken cancellationToken = default)
+    protected async Task OnMessageCreateEvent(MessageEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         var model = client.Provider.GetRequiredService<OpenAIChatModel>();
         var githubPrompt = OpenAIChatPrompt.From(model, new GithubPrompt(client), new()
@@ -66,7 +66,7 @@ public partial class GithubWorker
                     Request = new()
                     {
                         Temperature = 0,
-                        EndUserId = client.User.Id.ToString()
+                        EndUserId = client.User?.Id.ToString()
                     }
                 }, null, cancellationToken);
                 return res.Content;
@@ -95,7 +95,7 @@ public partial class GithubWorker
             Request = new()
             {
                 Temperature = 0,
-                EndUserId = client.User.Id.ToString()
+                EndUserId = client.User?.Id.ToString()
             }
         }, null, cancellationToken);
 
@@ -103,17 +103,17 @@ public partial class GithubWorker
         await client.Send(res.Content);
     }
 
-    protected Task OnMessageUpdateEvent(GithubMessageEvent @event, Client client, CancellationToken _ = default)
+    protected Task OnMessageUpdateEvent(MessageEvent @event, Client client, CancellationToken _ = default)
     {
         return Task.CompletedTask;
     }
 
-    protected Task OnMessageDeleteEvent(GithubMessageEvent @event, Client client, CancellationToken _ = default)
+    protected Task OnMessageDeleteEvent(MessageEvent @event, Client client, CancellationToken _ = default)
     {
         return Task.CompletedTask;
     }
 
-    protected Task OnMessageResumeEvent(GithubMessageEvent @event, Client client, CancellationToken _ = default)
+    protected Task OnMessageResumeEvent(MessageEvent @event, Client client, CancellationToken _ = default)
     {
         return Task.CompletedTask;
     }

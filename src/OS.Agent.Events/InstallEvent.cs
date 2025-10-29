@@ -6,9 +6,6 @@ namespace OS.Agent.Events;
 
 public class InstallEvent(ActionType action) : Event(EntityType.Install, action)
 {
-    [JsonPropertyName("source_type")]
-    public override SourceType? SourceType => Message?.SourceType ?? Chat?.SourceType ?? Install.SourceType;
-
     [JsonPropertyName("tenant")]
     public required Tenant Tenant { get; init; }
 

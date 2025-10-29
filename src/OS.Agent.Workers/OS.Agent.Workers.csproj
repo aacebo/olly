@@ -14,7 +14,5 @@
     <ProjectReference Include="..\OS.Agent.Events\OS.Agent.Events.csproj" />
     <ProjectReference Include="..\OS.Agent.Storage\OS.Agent.Storage.csproj" />
     <ProjectReference Include="..\OS.Agent.Services\OS.Agent.Services.csproj" />
-    <ProjectReference Include="..\OS.Agent.Drivers.Teams\OS.Agent.Drivers.Teams.csproj" />
-    <ProjectReference Include="..\OS.Agent.Drivers.Github\OS.Agent.Drivers.Github.csproj" />
   </ItemGroup>
 </Project>

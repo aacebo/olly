@@ -1,11 +1,11 @@
-using OS.Agent.Drivers.Teams.Events;
+using OS.Agent.Events;
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Teams;
 
 public partial class TeamsWorker
 {
-    protected async Task OnInstallEvent(TeamsInstallEvent @event, Client client, CancellationToken cancellationToken = default)
+    protected async Task OnInstallEvent(InstallEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         if (@event.Action.IsCreate)
         {
@@ -26,7 +26,7 @@ public partial class TeamsWorker
         throw new Exception($"event '{@event.Key}' not found");
     }
 
-    protected async Task OnInstallCreateEvent(TeamsInstallEvent @event, Client client, CancellationToken cancellationToken = default)
+    protected async Task OnInstallCreateEvent(InstallEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         var install = @event.Install.Copy();
         install.Status = InstallStatus.Success;
@@ -45,12 +45,12 @@ public partial class TeamsWorker
         ]));
     }
 
-    protected Task OnInstallUpdateEvent(TeamsInstallEvent @event, Client client, CancellationToken cancellationToken = default)
+    protected Task OnInstallUpdateEvent(InstallEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         return OnInstallCreateEvent(@event, client, cancellationToken);
     }
 
-    protected Task OnInstallDeleteEvent(TeamsInstallEvent @event, Client client, CancellationToken cancellationToken = default)
+    protected Task OnInstallDeleteEvent(InstallEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         return Task.CompletedTask;
     }

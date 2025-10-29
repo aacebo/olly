@@ -6,9 +6,6 @@ namespace OS.Agent.Events;
 
 public class MessageEvent(ActionType action) : Event(EntityType.Message, action)
 {
-    [JsonPropertyName("source_type")]
-    public override SourceType? SourceType => Message.SourceType;
-
     [JsonPropertyName("tenant")]
     public required Tenant Tenant { get; init; }
 

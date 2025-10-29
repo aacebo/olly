@@ -6,14 +6,15 @@ using Microsoft.Extensions.Logging;
 
 using NetMQ;
 
-using OS.Agent.Drivers.Teams.Events;
+using OS.Agent.Events;
+using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Teams;
 
 public partial class TeamsWorker(IServiceProvider provider, IServiceScopeFactory scopeFactory) : IHostedService
 {
     private ILogger<TeamsWorker> Logger { get; } = provider.GetRequiredService<ILogger<TeamsWorker>>();
-    private NetMQQueue<TeamsEvent> Queue { get; } = provider.GetRequiredService<NetMQQueue<TeamsEvent>>();
+    private NetMQQueue<Event> Queue { get; } = provider.GetRequiredKeyedService<NetMQQueue<Event>>(SourceType.Teams.ToString());
     private JsonSerializerOptions JsonSerializerOptions { get; } = provider.GetRequiredService<JsonSerializerOptions>();
     private IHostApplicationLifetime Lifetime { get; } = provider.GetRequiredService<IHostApplicationLifetime>();
     private NetMQPoller Poller { get; } = [];
@@ -36,7 +37,7 @@ public partial class TeamsWorker(IServiceProvider provider, IServiceScopeFactory
         return Task.CompletedTask;
     }
 
-    protected async Task OnStart(NetMQQueue<TeamsEvent> queue, CancellationToken cancellationToken)
+    protected async Task OnStart(NetMQQueue<Event> queue, CancellationToken cancellationToken)
     {
         await using var scope = scopeFactory.CreateAsyncScope();
 
@@ -46,8 +47,7 @@ public partial class TeamsWorker(IServiceProvider provider, IServiceScopeFactory
 
             try
             {
-                var client = ClientRegistry.Get(@event.SourceType)(@event, scope.ServiceProvider, cancellationToken);
-                await OnEvent(@event, client, cancellationToken);
+                await OnEvent(@event, scope.ServiceProvider, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -56,15 +56,19 @@ public partial class TeamsWorker(IServiceProvider provider, IServiceScopeFactory
         }
     }
 
-    protected async Task OnEvent(TeamsEvent @event, Client client, CancellationToken cancellationToken = default)
+    protected async Task OnEvent(Event @event, IServiceProvider provider, CancellationToken cancellationToken = default)
     {
-        if (@event is TeamsInstallEvent install)
+        if (@event is InstallEvent install)
         {
+            var factory = ClientRegistry.Get(install.Chat?.SourceType ?? install.Install.SourceType);
+            var client = factory(@event, provider, cancellationToken);
             await OnInstallEvent(install, client, cancellationToken);
             return;
         }
-        else if (@event is TeamsMessageEvent message)
+        else if (@event is MessageEvent message)
         {
+            var factory = ClientRegistry.Get(message.Chat.SourceType);
+            var client = factory(@event, provider, cancellationToken);
             await OnMessageEvent(message, client, cancellationToken);
             return;
         }

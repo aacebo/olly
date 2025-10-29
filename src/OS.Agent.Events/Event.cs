@@ -19,9 +19,6 @@ public abstract class Event(EntityType type, ActionType action)
     [JsonPropertyName("action")]
     public ActionType Action { get; init; } = action;
 
-    [JsonPropertyName("source_type")]
-    public virtual SourceType? SourceType { get; }
-
     [JsonPropertyName("created_at")]
     public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
 

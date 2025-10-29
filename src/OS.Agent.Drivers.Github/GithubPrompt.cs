@@ -40,6 +40,11 @@ public class GithubPrompt(Client client)
     [Function.Description("prompt the user to signin to their Github account")]
     public async Task<string> SignIn()
     {
+        if (client.User is null || client.Message is null)
+        {
+            throw new InvalidOperationException("cannot prompt user for sign in, no user or message present");
+        }
+
         var state = new Token.State()
         {
             TenantId = client.Tenant.Id,

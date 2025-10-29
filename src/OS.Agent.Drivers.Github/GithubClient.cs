@@ -1,18 +1,43 @@
 using Microsoft.Extensions.DependencyInjection;
 
-using OS.Agent.Drivers.Github.Events;
+using OS.Agent.Events;
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github;
 
-public partial class GithubClient(GithubEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default) : Client(provider, cancellationToken)
+public partial class GithubClient : Client
 {
-    public GithubEvent Event { get; } = @event;
-    public override Tenant Tenant => Event.Tenant;
-    public override Account Account => Event.Account;
-    public override User User => Event.CreatedBy ?? throw new NullReferenceException("created_by is null");
-    public override Chat Chat => Event.GetChat() ?? throw new NullReferenceException("chat is null");
-    public override Message Message => Event.GetMessage() ?? throw new NullReferenceException("message is null");
+    public override Tenant Tenant { get; }
+    public override Account Account { get; }
+    public override User? User { get; }
+    public override Install Install { get; }
+    public override Chat Chat { get; }
+    public override Message? Message { get; }
 
-    protected GithubService Github { get; } = provider.GetRequiredService<GithubService>();
+    protected Event Event { get; }
+    protected GithubService Github { get; }
+
+    public GithubClient(InstallEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default) : base(provider, cancellationToken)
+    {
+        Event = @event;
+        Tenant = @event.Tenant;
+        Account = @event.Account;
+        User = @event.CreatedBy;
+        Install = @event.Install;
+        Chat = @event.Chat ?? throw new Exception("install event must have a chat");
+        Message = @event.Message;
+        Github = provider.GetRequiredService<GithubService>();
+    }
+
+    public GithubClient(MessageEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default) : base(provider, cancellationToken)
+    {
+        Event = @event;
+        Tenant = @event.Tenant;
+        Account = @event.Account;
+        User = @event.CreatedBy;
+        Install = @event.Install;
+        Chat = @event.Chat;
+        Message = @event.Message;
+        Github = provider.GetRequiredService<GithubService>();
+    }
 }

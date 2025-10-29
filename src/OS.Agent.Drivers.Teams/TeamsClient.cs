@@ -2,38 +2,61 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Teams.Apps;
 
 using OS.Agent.Cards.Extensions;
-using OS.Agent.Drivers.Teams.Events;
+using OS.Agent.Events;
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Teams;
 
-public partial class TeamsClient(TeamsEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default) : Client(provider, cancellationToken)
+public partial class TeamsClient : Client
 {
-    public TeamsEvent Event { get; } = @event;
-    public override Tenant Tenant => Event.Tenant;
-    public override Account Account => Event.Account;
-    public override User User => Event.CreatedBy ?? throw new NullReferenceException("created_by is null");
-    public override Chat Chat => Event.Chat;
-    public override Message Message => Event is TeamsMessageEvent messageEvent
-        ? messageEvent.Message
-        : throw new NullReferenceException("message is null");
+    public override Tenant Tenant { get; }
+    public override Account Account { get; }
+    public override User? User { get; }
+    public override Install Install { get; }
+    public override Chat Chat { get; }
+    public override Message? Message { get; }
 
-    protected App Teams { get; } = provider.GetRequiredService<App>();
+    protected Event Event { get; }
+    protected App Teams { get; }
+
+    public TeamsClient(InstallEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default) : base(provider, cancellationToken)
+    {
+        Event = @event;
+        Tenant = @event.Tenant;
+        Account = @event.Account;
+        User = @event.CreatedBy;
+        Install = @event.Install;
+        Chat = @event.Chat ?? throw new Exception("install event must have a chat");
+        Message = @event.Message;
+        Teams = provider.GetRequiredService<App>();
+    }
+
+    public TeamsClient(MessageEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default) : base(provider, cancellationToken)
+    {
+        Event = @event;
+        Tenant = @event.Tenant;
+        Account = @event.Account;
+        User = @event.CreatedBy;
+        Install = @event.Install;
+        Chat = @event.Chat;
+        Message = @event.Message;
+        Teams = provider.GetRequiredService<App>();
+    }
 
     public override async Task SignIn(string url, string state)
     {
-        var chatType = Event.Chat.Type is null ? Microsoft.Teams.Api.ConversationType.Personal : new(Event.Chat.Type);
+        var chatType = Chat.Type is null ? Microsoft.Teams.Api.ConversationType.Personal : new(Chat.Type);
 
         await Teams.Send(
-            Event.Chat.SourceId,
+            Chat.SourceId,
             new Microsoft.Teams.Api.Activities.MessageActivity()
             {
                 InputHint = Microsoft.Teams.Api.InputHint.AcceptingInput,
                 Conversation = new()
                 {
-                    Id = Event.Chat.SourceId,
+                    Id = Chat.SourceId,
                     Type = chatType,
-                    Name = Event.Chat.Name
+                    Name = Chat.Name
                 }
             }.AddAttachment(
                 Cards.Authentication.SignInCard.Github($"{url}&state={state}")
@@ -41,7 +64,7 @@ public partial class TeamsClient(TeamsEvent @event, IServiceProvider provider, C
                     .ToAdaptiveCard()
             ),
             chatType,
-            Event.Chat.Url,
+            Chat.Url,
             CancellationToken
         );
     }

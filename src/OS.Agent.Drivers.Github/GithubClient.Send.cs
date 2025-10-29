@@ -10,13 +10,11 @@ public partial class GithubClient
 {
     public override async Task<Message> Send(string text)
     {
-        var chat = Event.GetChat() ?? throw new Exception("chat not found");
-        var message = Event.GetMessage();
-        var client = await Github.GetGraphConnection(Event.Install, CancellationToken);
+        var client = await Github.GetGraphConnection(Install, CancellationToken);
         var query = new Mutation()
             .AddDiscussionComment(new AddDiscussionCommentInput()
             {
-                DiscussionId = new ID(chat.SourceId),
+                DiscussionId = new ID(Chat.SourceId),
                 Body = text
             })
             .Select(res => new GithubDiscussionComment()
@@ -35,9 +33,9 @@ public partial class GithubClient
 
         var response = new Message()
         {
-            ChatId = chat.Id,
-            AccountId = Event.Account.Id,
-            ReplyToId = message?.Id,
+            ChatId = Chat.Id,
+            AccountId = Account.Id,
+            ReplyToId = Message?.Id,
             SourceId = comment.Id.ToString(),
             SourceType = SourceType.Github,
             Url = comment.Url,
@@ -65,12 +63,12 @@ public partial class GithubClient
 
     public override async Task<Message> SendUpdate(Guid id, string? text, params Attachment[] attachments)
     {
-        var message = Event.GetMessage() ?? throw new Exception("message not found");
+        var message = Message ?? throw new Exception("message not found");
 
         message.Text = text ?? message.Text;
         message.Attachments = attachments.Length > 0 ? attachments.ToList() : message.Attachments;
 
-        var client = await Github.GetGraphConnection(Event.Install, CancellationToken);
+        var client = await Github.GetGraphConnection(Install, CancellationToken);
         var query = new Mutation()
             .UpdateDiscussionComment(new UpdateDiscussionCommentInput()
             {

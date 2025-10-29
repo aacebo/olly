@@ -6,9 +6,6 @@ namespace OS.Agent.Events;
 
 public class RecordEvent(ActionType action) : Event(EntityType.Record, action)
 {
-    [JsonPropertyName("source_type")]
-    public override SourceType? SourceType => Message?.SourceType ?? Chat?.SourceType ?? Install?.SourceType ?? Account?.SourceType ?? Record.SourceType;
-
     [JsonPropertyName("record")]
     public required Record Record { get; init; }
 

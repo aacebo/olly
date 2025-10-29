@@ -6,7 +6,7 @@ using Microsoft.Teams.AI.Messages;
 using Microsoft.Teams.AI.Models.OpenAI;
 
 using OS.Agent.Drivers.Github;
-using OS.Agent.Drivers.Teams.Events;
+using OS.Agent.Events;
 using OS.Agent.Prompts;
 using OS.Agent.Storage;
 
@@ -14,7 +14,7 @@ namespace OS.Agent.Drivers.Teams;
 
 public partial class TeamsWorker
 {
-    protected async Task OnMessageEvent(TeamsMessageEvent @event, Client client, CancellationToken cancellationToken = default)
+    protected async Task OnMessageEvent(MessageEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         if (@event.Action.IsCreate)
         {
@@ -40,7 +40,7 @@ public partial class TeamsWorker
         throw new Exception($"event '{@event.Key}' not found");
     }
 
-    protected async Task OnMessageCreateEvent(TeamsMessageEvent @event, Client client, CancellationToken cancellationToken = default)
+    protected async Task OnMessageCreateEvent(MessageEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         var model = client.Provider.GetRequiredService<OpenAIChatModel>();
         var githubPrompt = OpenAIChatPrompt.From(model, new GithubPrompt(client), new()
@@ -66,7 +66,7 @@ public partial class TeamsWorker
                     Request = new()
                     {
                         Temperature = 0,
-                        EndUserId = client.User.Id.ToString()
+                        EndUserId = client.User?.Id.ToString()
                     }
                 }, null, cancellationToken);
                 return res.Content;
@@ -95,7 +95,7 @@ public partial class TeamsWorker
             Request = new()
             {
                 Temperature = 0,
-                EndUserId = client.User.Id.ToString()
+                EndUserId = client.User?.Id.ToString()
             }
         }, null, cancellationToken);
 
@@ -103,17 +103,17 @@ public partial class TeamsWorker
         await client.Send(res.Content);
     }
 
-    protected Task OnMessageUpdateEvent(TeamsMessageEvent @event, Client client, CancellationToken cancellationToken = default)
+    protected Task OnMessageUpdateEvent(MessageEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         return Task.CompletedTask;
     }
 
-    protected Task OnMessageDeleteEvent(TeamsMessageEvent @event, Client client, CancellationToken cancellationToken = default)
+    protected Task OnMessageDeleteEvent(MessageEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         return Task.CompletedTask;
     }
 
-    protected async Task OnMessageResumeEvent(TeamsMessageEvent @event, Client client, CancellationToken cancellationToken = default)
+    protected async Task OnMessageResumeEvent(MessageEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         var model = client.Provider.GetRequiredService<OpenAIChatModel>();
         var githubPrompt = OpenAIChatPrompt.From(model, new GithubPrompt(client), new()
@@ -139,7 +139,7 @@ public partial class TeamsWorker
                     Request = new()
                     {
                         Temperature = 0,
-                        EndUserId = client.User.Id.ToString()
+                        EndUserId = client.User?.Id.ToString()
                     }
                 }, null, cancellationToken);
                 return res.Content;
@@ -168,7 +168,7 @@ public partial class TeamsWorker
             Request = new()
             {
                 Temperature = 0,
-                EndUserId = client.User.Id.ToString()
+                EndUserId = client.User?.Id.ToString()
             }
         }, null, cancellationToken);
 

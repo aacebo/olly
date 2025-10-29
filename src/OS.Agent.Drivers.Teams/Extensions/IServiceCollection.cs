@@ -2,7 +2,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using NetMQ;
 
-using OS.Agent.Drivers.Teams.Events;
+using OS.Agent.Events;
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Teams.Extensions;
@@ -13,15 +13,20 @@ public static class IServiceCollectionExtensions
     {
         ClientRegistry.Register(SourceType.Teams, (@event, provider, cancellationToken) =>
         {
-            if (@event is not TeamsEvent teamsEvent)
+            if (@event is InstallEvent install)
             {
-                throw new InvalidOperationException($"invalid event type '{@event.Key}'");
+                return new TeamsClient(install, provider, cancellationToken);
             }
 
-            return new TeamsClient(teamsEvent, provider, cancellationToken);
+            if (@event is MessageEvent message)
+            {
+                return new TeamsClient(message, provider, cancellationToken);
+            }
+
+            throw new InvalidOperationException($"event type '{@event.Key}' is not supported for client type 'Teams'");
         });
 
-        services.AddSingleton<NetMQQueue<TeamsEvent>>();
+        services.AddKeyedSingleton<NetMQQueue<Event>>(SourceType.Teams.ToString());
         services.AddHostedService<TeamsWorker>();
         return services;
     }

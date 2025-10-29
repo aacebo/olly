@@ -1,8 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 
 using OS.Agent.Cards.Progress;
-using OS.Agent.Drivers.Github.Events;
 using OS.Agent.Drivers.Github.Models;
+using OS.Agent.Events;
 using OS.Agent.Services;
 using OS.Agent.Storage.Models;
 
@@ -10,7 +10,7 @@ namespace OS.Agent.Drivers.Github;
 
 public partial class GithubWorker
 {
-    protected async Task OnInstallEvent(GithubInstallEvent @event, Client client, CancellationToken cancellationToken = default)
+    protected async Task OnInstallEvent(InstallEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         if (@event.Action.IsCreate)
         {
@@ -31,11 +31,11 @@ public partial class GithubWorker
         throw new Exception($"event '{@event.Key}' not found");
     }
 
-    protected async Task OnInstallCreateEvent(GithubInstallEvent @event, Client client, CancellationToken cancellationToken = default)
+    protected async Task OnInstallCreateEvent(InstallEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         var install = @event.Install.Copy();
-        var githubService = @event.Scope.ServiceProvider.GetRequiredService<GithubService>();
-        var services = @event.Scope.ServiceProvider.GetRequiredService<IServices>();
+        var githubService = client.Provider.GetRequiredService<GithubService>();
+        var services = client.Provider.GetRequiredService<IServices>();
         var github = new Octokit.GitHubClient(await githubService.GetRestConnection(@event.Install, cancellationToken));
 
         try
@@ -203,12 +203,12 @@ public partial class GithubWorker
         }
     }
 
-    protected Task OnInstallUpdateEvent(GithubInstallEvent @event, Client client, CancellationToken _ = default)
+    protected Task OnInstallUpdateEvent(InstallEvent @event, Client client, CancellationToken _ = default)
     {
         return Task.CompletedTask;
     }
 
-    protected Task OnInstallDeleteEvent(GithubInstallEvent @event, Client client, CancellationToken _ = default)
+    protected Task OnInstallDeleteEvent(InstallEvent @event, Client client, CancellationToken _ = default)
     {
         return Task.CompletedTask;
     }

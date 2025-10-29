@@ -1,6 +1,5 @@
 using Microsoft.Teams.Api.Activities;
 
-using OS.Agent.Drivers.Teams.Events;
 using OS.Agent.Drivers.Teams.Models;
 using OS.Agent.Storage.Models;
 
@@ -10,22 +9,22 @@ public partial class TeamsClient
 {
     public override async Task Typing(string? text = null)
     {
-        var chatType = Event.Chat.Type is null ? Microsoft.Teams.Api.ConversationType.Personal : new(Event.Chat.Type);
+        var chatType = Chat.Type is null ? Microsoft.Teams.Api.ConversationType.Personal : new(Chat.Type);
 
         await Teams.Send(
-            Event.Chat.SourceId,
+            Chat.SourceId,
             new TypingActivity()
             {
                 Text = text,
                 Conversation = new()
                 {
-                    Id = Event.Chat.SourceId,
+                    Id = Chat.SourceId,
                     Type = chatType,
-                    Name = Event.Chat.Name
+                    Name = Chat.Name
                 }
             },
             chatType,
-            Event.Chat.Url,
+            Chat.Url,
             CancellationToken
         );
     }
@@ -42,16 +41,16 @@ public partial class TeamsClient
 
     public override async Task<Message> Send(string text, params Attachment[] attachments)
     {
-        var chatType = Event.Chat.Type is null ? Microsoft.Teams.Api.ConversationType.Personal : new(Event.Chat.Type);
+        var chatType = Chat.Type is null ? Microsoft.Teams.Api.ConversationType.Personal : new(Chat.Type);
         var activity = await Send(
             new MessageActivity()
             {
                 Text = text,
                 Conversation = new()
                 {
-                    Id = Event.Chat.SourceId,
+                    Id = Chat.SourceId,
                     Type = chatType,
-                    Name = Event.Chat.Name
+                    Name = Chat.Name
                 },
                 Attachments = attachments.Select(attachment => new Microsoft.Teams.Api.Attachment()
                 {
@@ -65,11 +64,11 @@ public partial class TeamsClient
 
         var message = new Message()
         {
-            ChatId = Event.Chat.Id,
-            AccountId = Event.Account.Id,
+            ChatId = Chat.Id,
+            AccountId = Account.Id,
             SourceId = activity.Id,
             SourceType = SourceType.Teams,
-            Url = $"{Event.Chat.Url}v3/conversations/{Event.Chat.SourceId}/activities/{activity.Id}",
+            Url = $"{Chat.Url}v3/conversations/{Chat.SourceId}/activities/{activity.Id}",
             Text = activity.Text,
             Attachments = attachments.ToList(),
             Entities = [
@@ -104,10 +103,10 @@ public partial class TeamsClient
             };
 
         await Teams.Send(
-            Event.Chat.SourceId,
+            Chat.SourceId,
             activity,
-            new(Event.Chat.Type ?? "personal"),
-            Event.Chat.Url,
+            new(Chat.Type ?? "personal"),
+            Chat.Url,
             CancellationToken
         );
 
@@ -126,16 +125,19 @@ public partial class TeamsClient
 
     public override async Task<Message> SendReply(string text, params Attachment[] attachments)
     {
-        if (Event is not TeamsMessageEvent messageEvent) throw new InvalidOperationException("no message to reply to");
+        if (Message is null)
+        {
+            throw new InvalidOperationException("no message to reply to");
+        }
 
-        var replyTo = messageEvent.Message.Entities.GetRequired<TeamsMessageEntity>();
+        var replyTo = Message.Entities.GetRequired<TeamsMessageEntity>();
 
         text = string.Join("\n", [
             replyTo.Activity.ToQuoteReply(),
             text != string.Empty ? $"<p>{text}</p>" : string.Empty
         ]);
 
-        var chatType = messageEvent.Chat.Type is null ? Microsoft.Teams.Api.ConversationType.Personal : new(messageEvent.Chat.Type);
+        var chatType = Chat.Type is null ? Microsoft.Teams.Api.ConversationType.Personal : new(Chat.Type);
         var activity = await Send(
             new MessageActivity()
             {
@@ -143,9 +145,9 @@ public partial class TeamsClient
                 ReplyToId = replyTo.Activity.Id,
                 Conversation = new()
                 {
-                    Id = messageEvent.Chat.SourceId,
+                    Id = Chat.SourceId,
                     Type = chatType,
-                    Name = messageEvent.Chat.Name
+                    Name = Chat.Name
                 },
                 Attachments = attachments.Select(attachment => new Microsoft.Teams.Api.Attachment()
                 {
@@ -159,12 +161,12 @@ public partial class TeamsClient
 
         var message = new Message()
         {
-            ChatId = messageEvent.Chat.Id,
-            AccountId = messageEvent.Account.Id,
-            ReplyToId = messageEvent.Message.Id,
+            ChatId = Chat.Id,
+            AccountId = Account.Id,
+            ReplyToId = Message.Id,
             SourceId = activity.Id,
             SourceType = SourceType.Teams,
-            Url = $"{messageEvent.Chat.Url}v3/conversations/{messageEvent.Chat.SourceId}/activities/{activity.Id}",
+            Url = $"{Chat.Url}v3/conversations/{Chat.SourceId}/activities/{activity.Id}",
             Text = activity.Text,
             Attachments = attachments.ToList(),
             Entities = [
@@ -182,25 +184,25 @@ public partial class TeamsClient
 
     public async Task<MessageActivity> Send(MessageActivity activity)
     {
-        var chatType = Event.Chat.Type is null
+        var chatType = Chat.Type is null
             ? Microsoft.Teams.Api.ConversationType.Personal
-            : new(Event.Chat.Type);
+            : new(Chat.Type);
 
         var attachments = activity.Attachments?.ToList();
 
         activity.Attachments = null;
         activity = await Teams.Send(
-            Event.Chat.SourceId,
+            Chat.SourceId,
             activity,
             chatType,
-            Event.Chat.Url,
+            Chat.Url,
             CancellationToken
         );
 
         if (attachments is not null && attachments.Count != 0)
         {
             await Teams.Send(
-                Event.Chat.SourceId,
+                Chat.SourceId,
                 new MessageActivity()
                 {
                     Id = activity.Id,
@@ -208,7 +210,7 @@ public partial class TeamsClient
                     Attachments = attachments
                 }.AddAIGenerated().AddFeedback().ToMessage(),
                 chatType,
-                Event.Chat.Url,
+                Chat.Url,
                 CancellationToken
             );
 

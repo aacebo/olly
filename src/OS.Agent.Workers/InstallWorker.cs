@@ -6,8 +6,6 @@ using Microsoft.Extensions.Logging;
 
 using NetMQ;
 
-using OS.Agent.Drivers.Github.Events;
-using OS.Agent.Drivers.Teams.Events;
 using OS.Agent.Events;
 using OS.Agent.Services;
 using OS.Agent.Storage.Models;
@@ -18,8 +16,8 @@ public class InstallWorker(IServiceProvider provider, IServiceScopeFactory scope
 {
     private ILogger<InstallWorker> Logger { get; init; } = provider.GetRequiredService<ILogger<InstallWorker>>();
     private NetMQQueue<InstallEvent> Queue { get; init; } = provider.GetRequiredService<NetMQQueue<InstallEvent>>();
-    private NetMQQueue<TeamsEvent> TeamsQueue { get; init; } = provider.GetRequiredService<NetMQQueue<TeamsEvent>>();
-    private NetMQQueue<GithubEvent> GithubQueue { get; init; } = provider.GetRequiredService<NetMQQueue<GithubEvent>>();
+    private NetMQQueue<Event> TeamsQueue { get; init; } = provider.GetRequiredKeyedService<NetMQQueue<Event>>(SourceType.Teams.ToString());
+    private NetMQQueue<Event> GithubQueue { get; init; } = provider.GetRequiredKeyedService<NetMQQueue<Event>>(SourceType.Github.ToString());
     private JsonSerializerOptions JsonSerializerOptions { get; init; } = provider.GetRequiredService<JsonSerializerOptions>();
     private IHostApplicationLifetime Lifetime { get; } = provider.GetRequiredService<IHostApplicationLifetime>();
     private NetMQPoller Poller { get; } = [];
@@ -62,7 +60,7 @@ public class InstallWorker(IServiceProvider provider, IServiceScopeFactory scope
 
             try
             {
-                await OnEvent(@event, scope, cancellationToken);
+                await OnEvent(@event, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -80,16 +78,16 @@ public class InstallWorker(IServiceProvider provider, IServiceScopeFactory scope
         }
     }
 
-    protected Task OnEvent(InstallEvent @event, IServiceScope scope, CancellationToken _ = default)
+    protected Task OnEvent(InstallEvent @event, CancellationToken _ = default)
     {
         if (@event.Install.SourceType.IsTeams)
         {
-            TeamsQueue.Enqueue(TeamsInstallEvent.From(@event));
+            TeamsQueue.Enqueue(@event);
             return Task.CompletedTask;
         }
         else if (@event.Install.SourceType.IsGithub)
         {
-            GithubQueue.Enqueue(GithubInstallEvent.From(@event, scope));
+            GithubQueue.Enqueue(@event);
             return Task.CompletedTask;
         }
 

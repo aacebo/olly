@@ -6,8 +6,6 @@ using Microsoft.Extensions.Logging;
 
 using NetMQ;
 
-using OS.Agent.Drivers.Github.Events;
-using OS.Agent.Drivers.Teams.Events;
 using OS.Agent.Events;
 using OS.Agent.Services;
 using OS.Agent.Storage.Models;
@@ -18,8 +16,8 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
 {
     private ILogger<MessageWorker> Logger { get; init; } = provider.GetRequiredService<ILogger<MessageWorker>>();
     private NetMQQueue<MessageEvent> Queue { get; init; } = provider.GetRequiredService<NetMQQueue<MessageEvent>>();
-    private NetMQQueue<TeamsEvent> TeamsQueue { get; init; } = provider.GetRequiredService<NetMQQueue<TeamsEvent>>();
-    private NetMQQueue<GithubEvent> GithubQueue { get; init; } = provider.GetRequiredService<NetMQQueue<GithubEvent>>();
+    private NetMQQueue<Event> TeamsQueue { get; init; } = provider.GetRequiredKeyedService<NetMQQueue<Event>>(SourceType.Teams.ToString());
+    private NetMQQueue<Event> GithubQueue { get; init; } = provider.GetRequiredKeyedService<NetMQQueue<Event>>(SourceType.Github.ToString());
     private JsonSerializerOptions JsonSerializerOptions { get; init; } = provider.GetRequiredService<JsonSerializerOptions>();
     private IHostApplicationLifetime Lifetime { get; } = provider.GetRequiredService<IHostApplicationLifetime>();
     private NetMQPoller Poller { get; } = [];
@@ -63,7 +61,7 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
             try
             {
                 if (@event.Message.AccountId is null) continue;
-                await OnEvent(@event, scope, cancellationToken);
+                await OnEvent(@event, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -81,16 +79,16 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
         }
     }
 
-    protected Task OnEvent(MessageEvent @event, IServiceScope scope, CancellationToken _ = default)
+    protected Task OnEvent(MessageEvent @event, CancellationToken _ = default)
     {
         if (@event.Message.SourceType.IsTeams)
         {
-            TeamsQueue.Enqueue(TeamsMessageEvent.From(@event));
+            TeamsQueue.Enqueue(@event);
             return Task.CompletedTask;
         }
         else if (@event.Message.SourceType.IsGithub)
         {
-            GithubQueue.Enqueue(GithubMessageEvent.From(@event, scope));
+            GithubQueue.Enqueue(@event);
             return Task.CompletedTask;
         }
 
