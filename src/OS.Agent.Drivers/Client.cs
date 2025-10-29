@@ -102,8 +102,8 @@ public abstract class Client
         throw new NotImplementedException();
     }
 
-    public virtual Task<TaskItem> Finish()
+    public virtual Task Finish()
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask;
     }
 }

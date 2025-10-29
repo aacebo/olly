@@ -18,6 +18,9 @@ public class Page
     [JsonPropertyName("where")]
     public IList<Condition> Where { get; set; } = [];
 
+    [JsonIgnore]
+    public QueryBuilderFactory? Factory { get; set; }
+
     public Task<PaginationResult<T>> Invoke<T>(SqlKata.Query query, CancellationToken cancellationToken = default)
     {
         if (Sort is not null)
@@ -30,6 +33,11 @@ public class Page
             query = query.Where(condition.Left, condition.Op, condition.Right);
         }
 
+        if (Factory is not null)
+        {
+            query = Factory(query);
+        }
+
         return query.PaginateAsync<T>(Index + 1, Size, cancellationToken: cancellationToken);
     }
 
@@ -40,6 +48,7 @@ public class Page
         private int _index = 0;
         private int _size = 20;
         private Sort? _sort;
+        private QueryBuilderFactory? _factory;
         private readonly IList<Condition> _where = [];
 
         public PageBuilder Index(int index)
@@ -89,6 +98,12 @@ public class Page
             return this;
         }
 
+        public PageBuilder Factory(QueryBuilderFactory factory)
+        {
+            _factory = factory;
+            return this;
+        }
+
         public Page Build()
         {
             return new()
@@ -96,7 +111,8 @@ public class Page
                 Index = _index,
                 Size = _size,
                 Sort = _sort,
-                Where = _where
+                Where = _where,
+                Factory = _factory
             };
         }
     }

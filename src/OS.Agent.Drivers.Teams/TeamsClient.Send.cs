@@ -65,7 +65,7 @@ public partial class TeamsClient
         var message = new Message()
         {
             ChatId = Chat.Id,
-            AccountId = Account.Id,
+            // AccountId = Account.Id,
             SourceId = activity.Id,
             SourceType = SourceType.Teams,
             Url = $"{Chat.Url}v3/conversations/{Chat.SourceId}/activities/{activity.Id}",
@@ -162,7 +162,6 @@ public partial class TeamsClient
         var message = new Message()
         {
             ChatId = Chat.Id,
-            AccountId = Account.Id,
             ReplyToId = Message.Id,
             SourceId = activity.Id,
             SourceType = SourceType.Teams,

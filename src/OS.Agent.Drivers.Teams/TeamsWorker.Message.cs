@@ -54,7 +54,7 @@ public partial class TeamsWorker
         });
 
         prompt.Function(
-            "Github",
+            githubPrompt.Name,
             githubPrompt.Description,
             new JsonSchemaBuilder().Type(SchemaValueType.Object).Properties(
                 ("message", new JsonSchemaBuilder().Type(SchemaValueType.String).Description("message to send"))
@@ -127,7 +127,7 @@ public partial class TeamsWorker
         });
 
         prompt.Function(
-            "Github",
+            githubPrompt.Name,
             githubPrompt.Description,
             new JsonSchemaBuilder().Type(SchemaValueType.Object).Properties(
                 ("message", new JsonSchemaBuilder().Type(SchemaValueType.String).Description("message to send"))
@@ -150,7 +150,7 @@ public partial class TeamsWorker
 
         var messages = await client.Services.Messages.GetByChatId(
             client.Chat.Id,
-            Page.Create().Sort(SortDirection.Desc, "created_at").Build(),
+            Page.Create().Sort(SortDirection.Asc, "created_at").Build(),
             client.CancellationToken
         );
 

@@ -12,6 +12,9 @@ public class Query
     [JsonPropertyName("where")]
     public IList<Condition> Where { get; set; } = [];
 
+    [JsonIgnore]
+    public QueryBuilderFactory? Factory { get; set; }
+
     public Task<IEnumerable<T>> Invoke<T>(SqlKata.Query query, CancellationToken cancellationToken = default)
     {
         if (Sort is not null)
@@ -24,6 +27,11 @@ public class Query
             query = query.Where(condition.Left, condition.Op, condition.Right);
         }
 
+        if (Factory is not null)
+        {
+            query = Factory(query);
+        }
+
         return query.GetAsync<T>(cancellationToken: cancellationToken);
     }
 
@@ -33,6 +41,7 @@ public class Query
     {
         private Sort? _sort;
         private readonly IList<Condition> _where = [];
+        private QueryBuilderFactory? _factory;
 
         public QueryBuilder Sort(Sort sort)
         {
@@ -69,12 +78,19 @@ public class Query
             return this;
         }
 
+        public QueryBuilder Factory(QueryBuilderFactory factory)
+        {
+            _factory = factory;
+            return this;
+        }
+
         public Query Build()
         {
             return new()
             {
                 Sort = _sort,
-                Where = _where
+                Where = _where,
+                Factory = _factory
             };
         }
     }
@@ -134,8 +150,13 @@ public enum SortDirection
 
 public class Condition
 {
+    [JsonPropertyName("left")]
     public string Left { get; }
+
+    [JsonPropertyName("op")]
     public string Op { get; }
+
+    [JsonPropertyName("right")]
     public object Right { get; }
 
     public Condition(string left, object right)
@@ -152,3 +173,5 @@ public class Condition
         Right = right;
     }
 }
+
+public delegate SqlKata.Query QueryBuilderFactory(SqlKata.Query query);

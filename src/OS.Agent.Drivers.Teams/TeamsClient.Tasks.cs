@@ -39,15 +39,20 @@ public partial class TeamsClient
         return task;
     }
 
-    public override async Task<TaskItem> Finish()
+    public override async Task Finish()
     {
+        if (Response.TaskCard.Current is null)
+        {
+            return;
+        }
+
         var errors = Response.TaskCard.Tasks.Count(t => t.Style.IsError);
         var warnings = Response.TaskCard.Tasks.Count(t => t.Style.IsWarning);
         var task = Response.TaskCard.Current is not null
             ? Response.TaskCard.Current
             : Response.TaskCard.Add(new()
             {
-                Style = ProgressStyle.InProgress,
+                Style = ProgressStyle.Success,
                 Title = "✅ Done!",
                 Message = "Success!"
             });
@@ -66,6 +71,5 @@ public partial class TeamsClient
         });
 
         await Typing();
-        return task;
     }
 }

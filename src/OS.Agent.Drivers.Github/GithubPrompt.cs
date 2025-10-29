@@ -14,10 +14,10 @@ using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Drivers.Github;
 
-[Prompt]
+[Prompt("GithubAgent")]
 [Prompt.Description(
-    "an agent that can perform get/create/update/delete operations",
-    "on Github data"
+    "An agent that can help answer questions, fetch data, or create/update/delete data in Github.",
+    "GithubAgent supports adding a Github account type for the user."
 )]
 [Prompt.Instructions(
     "<agent>",
@@ -43,6 +43,24 @@ public class GithubPrompt(Client client)
         if (client.User is null || client.Message is null)
         {
             throw new InvalidOperationException("cannot prompt user for sign in, no user or message present");
+        }
+
+        var installs = await client.Services.Installs.GetByUserId(
+            client.User.Id,
+            Storage.Query.Create()
+                .Where("source_type", "=", SourceType.Github)
+                .Build(),
+            client.CancellationToken
+        );
+
+        if (installs.Any(install => install.Status == InstallStatus.InProgress))
+        {
+            return "<user has already been prompted to install, wait patiently for them to sign in>";
+        }
+
+        if (installs.Any(install => install.Status == InstallStatus.Success))
+        {
+            return "<user already has a Github account installed>";
         }
 
         var state = new Token.State()
