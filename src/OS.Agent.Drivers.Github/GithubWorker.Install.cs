@@ -61,6 +61,7 @@ public partial class GithubWorker
 
             await client.SendTask(task.Id, new()
             {
+                Title = "Github",
                 Style = ProgressStyle.Success,
                 Message = "importing success!",
                 EndedAt = DateTimeOffset.UtcNow
@@ -143,6 +144,7 @@ public partial class GithubWorker
 
         var issuesTask = await client.SendTask(new()
         {
+            Title = $"Github Repository: {repository.Name}",
             Message = "importing issues..."
         });
 
@@ -156,6 +158,7 @@ public partial class GithubWorker
 
         await client.SendTask(issuesTask.Id, new()
         {
+            Title = $"Github Repository: {repository.Name}",
             Style = ProgressStyle.Success,
             Message = "importing issues success!",
             EndedAt = DateTimeOffset.UtcNow
@@ -163,6 +166,7 @@ public partial class GithubWorker
 
         await client.SendTask(task.Id, new()
         {
+            Title = $"Github Repository: {repository.Name}",
             Style = ProgressStyle.Success,
             Message = "importing repository success!",
             EndedAt = DateTimeOffset.UtcNow
@@ -200,6 +204,7 @@ public partial class GithubWorker
 
         await client.SendTask(task.Id, new()
         {
+            Title = $"Github Repository: {repository.Name}",
             Message = "importing issue comments..."
         });
 
@@ -212,6 +217,7 @@ public partial class GithubWorker
 
         await client.SendTask(task.Id, new()
         {
+            Title = $"Github Repository: {repository.Name}",
             Style = ProgressStyle.Success,
             Message = "importing issue comments success!"
         });
