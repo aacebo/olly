@@ -11,16 +11,15 @@ using OS.Agent.Storage.Models;
 namespace OS.Agent.Api.Controllers.Teams;
 
 [TeamsController]
-public class MessageController(IServiceScopeFactory scopeFactory)
+public class MessageController(IHttpContextAccessor accessor)
 {
     [Message]
     public async Task OnMessage(IContext<MessageActivity> context)
     {
-        var scope = scopeFactory.CreateScope();
-        var tenants = scope.ServiceProvider.GetRequiredService<ITenantService>();
-        var accounts = scope.ServiceProvider.GetRequiredService<IAccountService>();
-        var chats = scope.ServiceProvider.GetRequiredService<IChatService>();
-        var messages = scope.ServiceProvider.GetRequiredService<IMessageService>();
+        var tenants = accessor.HttpContext!.RequestServices.GetRequiredService<ITenantService>();
+        var accounts = accessor.HttpContext!.RequestServices.GetRequiredService<IAccountService>();
+        var chats = accessor.HttpContext!.RequestServices.GetRequiredService<IChatService>();
+        var messages = accessor.HttpContext!.RequestServices.GetRequiredService<IMessageService>();
         var tenantId = context.Activity.Conversation.TenantId ?? context.TenantId;
 
         var tenant = await tenants.GetBySourceId(SourceType.Teams, tenantId, context.CancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("tenant not found");

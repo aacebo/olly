@@ -22,7 +22,7 @@ public class GithubInstallWebhook(IServiceScopeFactory scopeFactory) : WebhookEv
     {
         await Task.Delay(5000, cancellationToken);
 
-        var scope = scopeFactory.CreateScope();
+        await using var scope = scopeFactory.CreateAsyncScope();
         var client = scope.ServiceProvider.GetRequiredService<GitHubClient>();
         var tenants = scope.ServiceProvider.GetRequiredService<ITenantService>();
         var accounts = scope.ServiceProvider.GetRequiredService<IAccountService>();

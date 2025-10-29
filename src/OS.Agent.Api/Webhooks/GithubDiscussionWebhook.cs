@@ -20,7 +20,7 @@ public class GithubDiscussionWebhook(IServiceScopeFactory scopeFactory) : Webhoo
     )
     {
         var installLite = @event.Installation ?? throw HttpException.UnAuthorized().AddMessage("installation not found");
-        var scope = scopeFactory.CreateScope();
+        await using var scope = scopeFactory.CreateAsyncScope();
         var tenants = scope.ServiceProvider.GetRequiredService<ITenantService>();
         var accounts = scope.ServiceProvider.GetRequiredService<IAccountService>();
         var chats = scope.ServiceProvider.GetRequiredService<IChatService>();

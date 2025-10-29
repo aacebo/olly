@@ -23,7 +23,6 @@ public class LogService(IServiceProvider provider) : ILogService
     private NetMQQueue<LogEvent> Events { get; init; } = provider.GetRequiredService<NetMQQueue<LogEvent>>();
     private ILogStorage Storage { get; init; } = provider.GetRequiredService<ILogStorage>();
     private ITenantService Tenants { get; init; } = provider.GetRequiredService<ITenantService>();
-    private IAccountService Accounts { get; init; } = provider.GetRequiredService<IAccountService>();
 
     public async Task<Log?> GetById(Guid id, CancellationToken cancellationToken = default)
     {

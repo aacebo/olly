@@ -38,7 +38,7 @@ public partial class GithubWorker(IServiceProvider provider, IServiceScopeFactor
 
     protected async Task OnStart(NetMQQueue<GithubEvent> queue, CancellationToken cancellationToken)
     {
-        var scope = scopeFactory.CreateScope();
+        await using var scope = scopeFactory.CreateAsyncScope();
 
         while (queue.TryDequeue(out var @event, TimeSpan.FromMilliseconds(200)))
         {

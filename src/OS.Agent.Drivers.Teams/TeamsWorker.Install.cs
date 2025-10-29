@@ -32,9 +32,9 @@ public partial class TeamsWorker
         install.Status = InstallStatus.Success;
         install = await client.Storage.Installs.Update(install, cancellationToken: cancellationToken);
 
-        if (install.MessageId is not null)
+        if (@event.Message.AccountId is not null)
         {
-            await client.Services.Messages.Resume(install.MessageId.Value, cancellationToken);
+            await client.Services.Messages.Resume(@event.Message.Id, cancellationToken);
         }
     }
 

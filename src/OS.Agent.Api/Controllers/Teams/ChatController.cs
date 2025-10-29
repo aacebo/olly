@@ -10,15 +10,14 @@ using OS.Agent.Storage.Models;
 namespace OS.Agent.Api.Controllers.Teams;
 
 [TeamsController]
-public class ChatController(IServiceScopeFactory scopeFactory)
+public class ChatController(IHttpContextAccessor accessor)
 {
     [Conversation.Update]
     public async Task OnUpdate(IContext<ConversationUpdateActivity> context)
     {
-        var scope = scopeFactory.CreateScope();
-        var tenants = scope.ServiceProvider.GetRequiredService<ITenantService>();
-        var accounts = scope.ServiceProvider.GetRequiredService<IAccountService>();
-        var chats = scope.ServiceProvider.GetRequiredService<IChatService>();
+        var tenants = accessor.HttpContext!.RequestServices.GetRequiredService<ITenantService>();
+        var accounts = accessor.HttpContext!.RequestServices.GetRequiredService<IAccountService>();
+        var chats = accessor.HttpContext!.RequestServices.GetRequiredService<IChatService>();
         var tenantId = context.Activity.Conversation.TenantId ?? context.TenantId;
         var tenant = await tenants.GetBySourceId(
             SourceType.Teams,

@@ -44,7 +44,7 @@ public class InstallWorker(IServiceProvider provider, IServiceScopeFactory scope
 
     protected async Task OnStart(NetMQQueue<InstallEvent> queue, CancellationToken cancellationToken)
     {
-        var scope = scopeFactory.CreateScope();
+        await using var scope = scopeFactory.CreateAsyncScope();
         var services = scope.ServiceProvider.GetRequiredService<IServices>();
 
         while (queue.TryDequeue(out var @event, TimeSpan.FromMilliseconds(200)))

@@ -5,22 +5,23 @@ using Microsoft.Teams.Apps.Annotations;
 
 using OS.Agent.Drivers.Teams.Models;
 using OS.Agent.Services;
+using OS.Agent.Storage;
 using OS.Agent.Storage.Models;
 
 namespace OS.Agent.Api.Controllers.Teams;
 
 [TeamsController]
-public class InstallController(IServiceScopeFactory scopeFactory)
+public class InstallController(IHttpContextAccessor accessor)
 {
     [Install]
     public async Task OnInstall(IContext<InstallUpdateActivity> context)
     {
-        var scope = scopeFactory.CreateScope();
-        var users = scope.ServiceProvider.GetRequiredService<IUserService>();
-        var tenants = scope.ServiceProvider.GetRequiredService<ITenantService>();
-        var accounts = scope.ServiceProvider.GetRequiredService<IAccountService>();
-        var chats = scope.ServiceProvider.GetRequiredService<IChatService>();
-        var installs = scope.ServiceProvider.GetRequiredService<IInstallService>();
+        var users = accessor.HttpContext!.RequestServices.GetRequiredService<IUserService>();
+        var tenants = accessor.HttpContext!.RequestServices.GetRequiredService<ITenantService>();
+        var accounts = accessor.HttpContext!.RequestServices.GetRequiredService<IAccountService>();
+        var chats = accessor.HttpContext!.RequestServices.GetRequiredService<IChatService>();
+        var installs = accessor.HttpContext!.RequestServices.GetRequiredService<IInstallService>();
+        var messages = accessor.HttpContext!.RequestServices.GetRequiredService<IMessageStorage>();
         var tenantId = context.Activity.Conversation.TenantId ?? context.TenantId;
         var tenant = await tenants.GetBySourceId(
             SourceType.Teams,
@@ -74,7 +75,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
 
         if (chat is null)
         {
-            await chats.Create(new()
+            chat = await chats.Create(new()
             {
                 TenantId = tenant.Id,
                 SourceId = context.Activity.Conversation.Id,
@@ -102,7 +103,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
                 ServiceUrl = context.Activity.ServiceUrl
             });
 
-            await chats.Update(chat, context.CancellationToken);
+            chat = await chats.Update(chat, context.CancellationToken);
         }
 
         var install = await installs.GetBySourceId(
@@ -113,6 +114,22 @@ public class InstallController(IServiceScopeFactory scopeFactory)
 
         if (install is null)
         {
+            var activity = await context.Send("Hello! Is there anything I can help you with?");
+            var message = await messages.Create(new()
+            {
+                ChatId = chat.Id,
+                SourceType = SourceType.Teams,
+                SourceId = activity.Id,
+                Text = activity.Text,
+                Url = $"{context.Activity.ServiceUrl}v3/conversations/{context.Activity.Conversation.Id}/activities/{activity.Id}",
+                Entities = [
+                    new TeamsMessageEntity()
+                    {
+                        Activity = activity
+                    }
+                ]
+            }, cancellationToken: context.CancellationToken);
+
             var user = await users.Create(new()
             {
                 Name = context.Activity.From.Name
@@ -122,6 +139,7 @@ public class InstallController(IServiceScopeFactory scopeFactory)
             {
                 UserId = user.Id,
                 AccountId = account.Id,
+                MessageId = message.Id,
                 SourceType = SourceType.Teams,
                 SourceId = account.SourceId,
                 Url = context.Activity.ServiceUrl
@@ -132,7 +150,5 @@ public class InstallController(IServiceScopeFactory scopeFactory)
             install.Url = context.Activity.ServiceUrl;
             await installs.Update(install, context.CancellationToken);
         }
-
-        await context.Send("Hello! Is there anything I can help you with?");
     }
 }

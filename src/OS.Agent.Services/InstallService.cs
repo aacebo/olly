@@ -30,7 +30,7 @@ public class InstallService(IServiceProvider provider) : IInstallService
     private ITenantService Tenants { get; init; } = provider.GetRequiredService<ITenantService>();
     private IAccountService Accounts { get; init; } = provider.GetRequiredService<IAccountService>();
     private IChatService Chats { get; init; } = provider.GetRequiredService<IChatService>();
-    private IMessageService Messages { get; init; } = provider.GetRequiredService<IMessageService>();
+    private IMessageStorage Messages { get; init; } = provider.GetRequiredService<IMessageStorage>();
     private IUserService Users { get; init; } = provider.GetRequiredService<IUserService>();
 
     public async Task<Install?> GetById(Guid id, CancellationToken cancellationToken = default)

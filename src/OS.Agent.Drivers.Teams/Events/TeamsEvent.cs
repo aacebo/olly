@@ -25,12 +25,6 @@ public abstract class TeamsEvent(EntityType type, ActionType action, SourceType 
     [JsonPropertyName("chat")]
     public required Chat Chat { get; init; }
 
-    public Message? GetMessage()
-    {
-        return this is TeamsInstallEvent install
-            ? install.Message
-            : this is TeamsMessageEvent message
-                ? message.Message
-                : null;
-    }
+    [JsonPropertyName("message")]
+    public required Message Message { get; init; }
 }

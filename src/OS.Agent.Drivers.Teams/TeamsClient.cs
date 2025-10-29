@@ -14,7 +14,7 @@ public partial class TeamsClient(TeamsEvent @event, IServiceProvider provider, C
     public override Account Account => Event.Account;
     public override User User => Event.CreatedBy ?? throw new NullReferenceException("created_by is null");
     public override Chat Chat => Event.Chat;
-    public override Message Message => Event.GetMessage() ?? throw new NullReferenceException("message is null");
+    public override Message Message => Event.Message;
 
     protected App Teams { get; } = provider.GetRequiredService<App>();
 

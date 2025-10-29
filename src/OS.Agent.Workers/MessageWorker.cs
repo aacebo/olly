@@ -44,7 +44,7 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
 
     protected async Task OnStart(NetMQQueue<MessageEvent> queue, CancellationToken cancellationToken)
     {
-        var scope = scopeFactory.CreateScope();
+        await using var scope = scopeFactory.CreateAsyncScope();
         var services = scope.ServiceProvider.GetRequiredService<IServices>();
 
         while (queue.TryDequeue(out var @event, TimeSpan.FromMilliseconds(200)))
@@ -62,6 +62,7 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
 
             try
             {
+                if (@event.Message.AccountId is null) continue;
                 await OnEvent(@event, scope, cancellationToken);
             }
             catch (Exception ex)
