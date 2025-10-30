@@ -86,16 +86,18 @@ public class RecordsPrompt
     }
 
     [Function]
-    [Function.Description("get a page of Records for a given tenantId")]
-    public async Task<string> GetTenantRecords([Param] Guid tenantId, [Param] int page = 1)
+    [Function.Description("Get a page of Records for a given tenantId.")]
+    public async Task<string> GetRecordsByTenantId([Param] Guid tenantId, [Param] int page = 1)
     {
+        var tenant = await Client.Services.Tenants.GetById(tenantId) ?? throw new Exception($"tenant with id {tenantId} not found");
+
         if (page < 1)
         {
-            throw new Exception("page must be >= 1");
+            page = 1;
         }
 
         var res = await Client.Services.Records.GetByTenantId(
-            tenantId,
+            tenant.Id,
             Page.Create()
                 .Index(page - 1)
                 .Size(10)
@@ -112,27 +114,34 @@ public class RecordsPrompt
             data = res.List.Select(record => new
             {
                 id = record.Id,
-                parent_id = record.ParentId,
-                source_id = record.SourceId,
-                source_type = record.SourceType,
-                url = record.Url,
-                type = record.Type,
-                name = record.Name
+                type = "record",
+                data = new
+                {
+                    id = record.Id,
+                    parent_id = record.ParentId,
+                    source_id = record.SourceId,
+                    source_type = record.SourceType,
+                    url = record.Url,
+                    type = record.Type,
+                    name = record.Name
+                }
             })
         }, Client.JsonSerializerOptions);
     }
 
     [Function]
     [Function.Description("get a page of Records for a given accountId")]
-    public async Task<string> GetAccountRecords([Param] Guid accountId, [Param] int page = 1)
+    public async Task<string> GetRecordsByAccountId([Param] Guid accountId, [Param] int page = 1)
     {
+        var account = await Client.Services.Accounts.GetById(accountId) ?? throw new Exception($"account with id {accountId} not found");
+
         if (page < 1)
         {
-            throw new Exception("page must be >= 1");
+            page = 1;
         }
 
         var res = await Client.Services.Records.GetByAccountId(
-            accountId,
+            account.Id,
             Page.Create()
                 .Index(page - 1)
                 .Size(10)
@@ -149,12 +158,60 @@ public class RecordsPrompt
             data = res.List.Select(record => new
             {
                 id = record.Id,
-                parent_id = record.ParentId,
-                source_id = record.SourceId,
-                source_type = record.SourceType,
-                url = record.Url,
-                type = record.Type,
-                name = record.Name
+                type = "record",
+                data = new
+                {
+                    id = record.Id,
+                    parent_id = record.ParentId,
+                    source_id = record.SourceId,
+                    source_type = record.SourceType,
+                    url = record.Url,
+                    type = record.Type,
+                    name = record.Name
+                }
+            })
+        }, Client.JsonSerializerOptions);
+    }
+
+    [Function]
+    [Function.Description("get a page of Documents for a given recordId")]
+    public async Task<string> GetDocumentsByRecordId([Param] Guid recordId, [Param] int page = 1)
+    {
+        var record = await Client.Services.Records.GetById(recordId) ?? throw new Exception($"record with id {recordId} not found");
+
+        if (page < 1)
+        {
+            page = 1;
+        }
+
+        var res = await Client.Services.Documents.GetByRecordId(
+            record.Id,
+            Page.Create()
+                .Index(page - 1)
+                .Size(10)
+                .Build(),
+            Client.CancellationToken
+        );
+
+        return JsonSerializer.Serialize(new
+        {
+            count = res.Count,
+            page_count = res.TotalPages,
+            page = res.Page,
+            page_size = res.PerPage,
+            data = res.List.Select(document => new
+            {
+                id = document.Id,
+                type = "document",
+                data = new
+                {
+                    id = document.Id,
+                    name = document.Name,
+                    path = document.Path,
+                    url = document.Url,
+                    size = document.Size,
+                    content = document.Content
+                }
             })
         }, Client.JsonSerializerOptions);
     }
@@ -179,11 +236,16 @@ public class RecordsPrompt
         return JsonSerializer.Serialize(documents.Select(document => new
         {
             id = document.Id,
-            name = document.Name,
-            path = document.Path,
-            url = document.Url,
-            size = document.Size,
-            content = document.Content
+            type = "document",
+            data = new
+            {
+                id = document.Id,
+                name = document.Name,
+                path = document.Path,
+                url = document.Url,
+                size = document.Size,
+                content = document.Content
+            }
         }), Client.JsonSerializerOptions);
     }
 }

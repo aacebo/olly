@@ -84,7 +84,7 @@ public class ChatsPrompt
     {
         if (page < 1)
         {
-            throw new Exception("page must be >= 1");
+            page = 1;
         }
 
         var chats = await Client.Services.Chats.GetByTenantId(

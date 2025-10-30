@@ -119,7 +119,7 @@ public class OllyPrompt(Client client)
     {
         if (page < 1)
         {
-            throw new Exception("page must be >= 1");
+            page = 1;
         }
 
         var res = await client.Services.Messages.GetByChatId(
