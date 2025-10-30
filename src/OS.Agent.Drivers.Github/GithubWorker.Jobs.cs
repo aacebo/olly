@@ -155,7 +155,7 @@ public partial class GithubWorker
                         RecordId = record.Id,
                         Name = item.Name,
                         Path = item.Path,
-                        Url = item.Url,
+                        Url = item.HtmlUrl,
                         Size = item.Size,
                         Encoding = item.Encoding,
                         Content = contentUtf8,

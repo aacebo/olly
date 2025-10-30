@@ -129,7 +129,7 @@ public partial class GithubWorker
         else
         {
             record.Name = repository.Name;
-            record.Url = repository.Url;
+            record.Url = repository.HtmlUrl;
             record.Entities.Put(new GithubEntity(repository));
             record = await client.Services.Records.Update(record, cancellationToken);
         }

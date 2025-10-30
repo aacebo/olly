@@ -36,6 +36,9 @@ namespace OS.Agent.Drivers.Github;
     "</tasks>",
     "<search>",
         "When asked questions about a repository or its code/contents, ask the RecordsAgent for help!",
+        "Github Discussions/Issues/PullRequests are represented as Chats in our system.",
+        "Github Repositories are represented as Records in our system.",
+        "Github Repository Contents (ie files/folders) are represented as Documents in our system",
     "</search>"
 )]
 public class GithubPrompt
