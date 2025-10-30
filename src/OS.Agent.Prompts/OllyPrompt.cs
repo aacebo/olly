@@ -1,9 +1,12 @@
 using System.Text.Json;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Teams.AI.Annotations;
+using Microsoft.Teams.AI.Models.OpenAI;
 
 using OS.Agent.Cards.Progress;
 using OS.Agent.Drivers;
+using OS.Agent.Prompts.Extensions;
 
 namespace OS.Agent.Prompts;
 
@@ -25,6 +28,48 @@ namespace OS.Agent.Prompts;
 )]
 public class OllyPrompt(Client client)
 {
+    public static OpenAIChatPrompt Create(Client client, IServiceProvider provider, CancellationToken cancellationToken = default)
+    {
+        var model = provider.GetRequiredService<OpenAIChatModel>();
+        var logger = provider.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>();
+
+        return OpenAIChatPrompt.From(model, new OllyPrompt(client), new()
+        {
+            Logger = logger
+        })
+        .AddPrompt(AccountsPrompt.Create(client, provider), cancellationToken)
+        .AddPrompt(ChatsPrompt.Create(client, provider), cancellationToken)
+        .AddPrompt(RecordsPrompt.Create(client, provider), cancellationToken);
+    }
+
+    [Function]
+    [Function.Description("get the current Tenant")]
+    public string GetCurrentTenant()
+    {
+        return JsonSerializer.Serialize(client.Tenant, client.JsonSerializerOptions);
+    }
+
+    [Function]
+    [Function.Description("get the current User")]
+    public string GetCurrentUser()
+    {
+        return JsonSerializer.Serialize(client.User, client.JsonSerializerOptions);
+    }
+
+    [Function]
+    [Function.Description("get the current User Account")]
+    public string GetCurrentAccount()
+    {
+        return JsonSerializer.Serialize(client.Account, client.JsonSerializerOptions);
+    }
+
+    [Function]
+    [Function.Description("get the current Chat")]
+    public string GetCurrentChat()
+    {
+        return JsonSerializer.Serialize(client.Chat, client.JsonSerializerOptions);
+    }
+
     [Function]
     [Function.Description("Get the task list")]
     public string GetTasks()
@@ -65,20 +110,6 @@ public class OllyPrompt(Client client)
     }
 
     [Function]
-    [Function.Description("Get the current users chat information")]
-    public Task<string> GetCurrentChat()
-    {
-        return Task.FromResult(JsonSerializer.Serialize(client.Chat, client.JsonSerializerOptions));
-    }
-
-    [Function]
-    [Function.Description("Get the current users account information")]
-    public Task<string> GetCurrentAccount()
-    {
-        return Task.FromResult(JsonSerializer.Serialize(client.Account, client.JsonSerializerOptions));
-    }
-
-    [Function]
     [Function.Description(
         "Get the current users chat history for this conversation.",
         "Messages with a role of 'assistant' were sent by you, any with role 'user' were ",
@@ -86,6 +117,11 @@ public class OllyPrompt(Client client)
     )]
     public async Task<string> GetCurrentChatMessages([Param] int page = 1)
     {
+        if (page < 1)
+        {
+            throw new Exception("page must be >= 1");
+        }
+
         var res = await client.Services.Messages.GetByChatId(
             client.Chat.Id,
             Storage.Page.Create()

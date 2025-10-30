@@ -1,7 +1,5 @@
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Teams.AI;
 using Microsoft.Teams.AI.Messages;
-using Microsoft.Teams.AI.Models.OpenAI;
 
 using OS.Agent.Drivers.Github;
 using OS.Agent.Events;
@@ -41,26 +39,8 @@ public partial class TeamsWorker
 
     protected async Task OnMessageCreateEvent(MessageEvent @event, Client client, CancellationToken cancellationToken = default)
     {
-        var model = client.Provider.GetRequiredService<OpenAIChatModel>();
-        var logger = client.Provider.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>();
-        var recordsPrompt = OpenAIChatPrompt.From(model, new RecordsPrompt(client), new()
-        {
-            Logger = logger
-        });
-
-        var githubPrompt = OpenAIChatPrompt.From(model, new GithubPrompt(client), new()
-        {
-            Logger = logger
-        });
-
-        var prompt = OpenAIChatPrompt.From(model, new OllyPrompt(client), new()
-        {
-            Logger = logger
-        });
-
-        prompt = prompt
-            .AddPrompt(githubPrompt, client.CancellationToken)
-            .AddPrompt(recordsPrompt, client.CancellationToken);
+        var prompt = OllyPrompt.Create(client, provider, cancellationToken)
+            .AddPrompt(GithubPrompt.Create(client, provider), cancellationToken);
 
         await client.Typing();
 
@@ -104,26 +84,8 @@ public partial class TeamsWorker
 
     protected async Task OnMessageResumeEvent(MessageEvent @event, Client client, CancellationToken cancellationToken = default)
     {
-        var model = client.Provider.GetRequiredService<OpenAIChatModel>();
-        var logger = client.Provider.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>();
-        var recordsPrompt = OpenAIChatPrompt.From(model, new RecordsPrompt(client), new()
-        {
-            Logger = logger
-        });
-
-        var githubPrompt = OpenAIChatPrompt.From(model, new GithubPrompt(client), new()
-        {
-            Logger = logger
-        });
-
-        var prompt = OpenAIChatPrompt.From(model, new OllyPrompt(client), new()
-        {
-            Logger = logger
-        });
-
-        prompt = prompt
-            .AddPrompt(githubPrompt, client.CancellationToken)
-            .AddPrompt(recordsPrompt, client.CancellationToken);
+        var prompt = OllyPrompt.Create(client, provider, cancellationToken)
+            .AddPrompt(GithubPrompt.Create(client, provider), cancellationToken);
 
         await client.Typing();
 

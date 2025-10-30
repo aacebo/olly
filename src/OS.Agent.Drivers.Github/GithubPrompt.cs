@@ -1,16 +1,17 @@
 using System.Text.Json;
 
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Teams.AI.Annotations;
-using Microsoft.Teams.AI.Models.OpenAI.Extensions;
+using Microsoft.Teams.AI.Models.OpenAI;
 
 using Octokit.GraphQL;
 
 using OS.Agent.Cards.Progress;
 using OS.Agent.Drivers.Github.Settings;
 using OS.Agent.Errors;
+using OS.Agent.Prompts;
+using OS.Agent.Prompts.Extensions;
 using OS.Agent.Storage;
 using OS.Agent.Storage.Models;
 
@@ -32,20 +33,33 @@ namespace OS.Agent.Drivers.Github;
         "You should break complex jobs into a series of incremental, single responsibility tasks.",
         "You are __REQUIRED__ to call StartTask whenever you start a new task.",
         "You are __REQUIRED__ to call EndTask whenever you complete an in progress task.",
-    "</tasks>"
+    "</tasks>",
+    "<search>",
+        "When asked questions about a repository or its code/contents, ask the RecordsAgent for help!",
+    "</search>"
 )]
 public class GithubPrompt
 {
     private GithubSettings Settings { get; }
     private Client Client { get; }
-    private OpenAI.OpenAIClient OpenAI { get; }
+
+    public static OpenAIChatPrompt Create(Client client, IServiceProvider provider, CancellationToken cancellationToken = default)
+    {
+        var model = provider.GetRequiredService<OpenAIChatModel>();
+        var logger = provider.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>();
+
+        return OpenAIChatPrompt.From(model, new GithubPrompt(client), new()
+        {
+            Logger = logger
+        })
+        .AddPrompt(AccountsPrompt.Create(client, provider), cancellationToken)
+        .AddPrompt(ChatsPrompt.Create(client, provider), cancellationToken)
+        .AddPrompt(RecordsPrompt.Create(client, provider), cancellationToken);
+    }
 
     public GithubPrompt(Client client)
     {
-        var openAiSettings = client.Provider.GetRequiredService<IConfiguration>().GetOpenAI();
-
         Client = client;
-        OpenAI = new OpenAI.OpenAIClient(openAiSettings.ApiKey);
         Settings = client.Provider.GetRequiredService<IOptions<GithubSettings>>().Value;
     }
 
@@ -257,33 +271,5 @@ public class GithubPrompt
 
             throw new Exception(ex.Message, ex);
         }
-    }
-
-    [Function]
-    [Function.Description("search a repositories contents, returning matching documents")]
-    public async Task<string> SearchRepositoryContents([Param] Guid recordId, [Param] string text)
-    {
-        var record = await Client.Services.Records.GetById(recordId, Client.CancellationToken) ?? throw new Exception("record not found");
-        var client = OpenAI.GetEmbeddingClient("text-embedding-3-small");
-        var res = await client.GenerateEmbeddingAsync(text, new()
-        {
-            EndUserId = Client.User?.Id.ToString()
-        }, Client.CancellationToken);
-
-        var documents = await Client.Services.Documents.Search(
-            record.Id,
-            res.Value.ToFloats().ToArray(),
-            cancellationToken: Client.CancellationToken
-        );
-
-        return JsonSerializer.Serialize(documents.Select(document => new
-        {
-            id = document.Id,
-            name = document.Name,
-            path = document.Path,
-            url = document.Url,
-            size = document.Size,
-            content = document.Content
-        }), Client.JsonSerializerOptions);
     }
 }
