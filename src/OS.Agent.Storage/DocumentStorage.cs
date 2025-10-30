@@ -19,6 +19,7 @@ public interface IDocumentStorage
     Task<Document?> GetById(Guid id, CancellationToken cancellationToken = default);
     Task<Document?> GetByPath(Guid recordId, string path, CancellationToken cancellationToken = default);
     Task<PaginationResult<Document>> GetByRecordId(Guid recordId, Page? page = null, CancellationToken cancellationToken = default);
+    Task<IEnumerable<Document>> Search(float[] embedding, int limit = 10, CancellationToken cancellationToken = default);
     Task<IEnumerable<Document>> Search(Guid recordId, float[] embedding, int limit = 10, CancellationToken cancellationToken = default);
     Task<Document> Create(Document value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
     Task<Document> Update(Document value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
@@ -60,6 +61,17 @@ public class DocumentStorage(ILogger<IDocumentStorage> logger, QueryFactory db) 
         return await page.Invoke<Document>(query, cancellationToken);
     }
 
+    public async Task<IEnumerable<Document>> Search(float[] embedding, int limit = 10, CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("Search");
+        return await db
+            .Query("documents")
+            .Select("*")
+            .OrderByRaw("1 - (embedding <=> ?) DESC", new Vector(embedding))
+            .Limit(limit)
+            .GetAsync<Document>(cancellationToken: cancellationToken);
+    }
+
     public async Task<IEnumerable<Document>> Search(Guid recordId, float[] embedding, int limit = 10, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Search");
@@ -67,7 +79,6 @@ public class DocumentStorage(ILogger<IDocumentStorage> logger, QueryFactory db) 
             .Query("documents")
             .Select("*")
             .Where("record_id", "=", recordId)
-            .WhereRaw("(1 - (embedding <=> ?)) > 0.5", new Vector(embedding)) // cosine similarity = 1 - (cosine distinace)
             .OrderByRaw("1 - (embedding <=> ?) DESC", new Vector(embedding))
             .Limit(limit)
             .GetAsync<Document>(cancellationToken: cancellationToken);

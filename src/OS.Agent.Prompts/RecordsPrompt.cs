@@ -19,6 +19,7 @@ namespace OS.Agent.Prompts;
 [Prompt.Instructions(
     "<agent>",
         "You are an agent that is an expert at Record/Document data retrieval.",
+        "Anytime you receive a request/question about code, check for relevant repositories/documents and answer accurately!",
     "</agent>",
     "<definitions>",
         "<record>represents any unit of data stored in Olly's database that was originally from an external system.</record>",
@@ -229,6 +230,37 @@ public class RecordsPrompt
 
         var documents = await Client.Services.Documents.Search(
             record.Id,
+            res.Value.ToFloats().ToArray(),
+            cancellationToken: Client.CancellationToken
+        );
+
+        return JsonSerializer.Serialize(documents.Select(document => new
+        {
+            id = document.Id,
+            type = "document",
+            data = new
+            {
+                id = document.Id,
+                name = document.Name,
+                path = document.Path,
+                url = document.Url,
+                size = document.Size,
+                content = document.Content
+            }
+        }), Client.JsonSerializerOptions);
+    }
+
+    [Function]
+    [Function.Description("search for documents/files/code")]
+    public async Task<string> Search([Param] string text)
+    {
+        var client = OpenAI.GetEmbeddingClient("text-embedding-3-small");
+        var res = await client.GenerateEmbeddingAsync(text, new()
+        {
+            EndUserId = Client.User?.Id.ToString()
+        }, Client.CancellationToken);
+
+        var documents = await Client.Services.Documents.Search(
             res.Value.ToFloats().ToArray(),
             cancellationToken: Client.CancellationToken
         );

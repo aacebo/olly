@@ -16,6 +16,7 @@ public interface IDocumentService
     Task<Document?> GetById(Guid id, CancellationToken cancellationToken = default);
     Task<Document?> GetByPath(Guid recordId, string path, CancellationToken cancellationToken = default);
     Task<PaginationResult<Document>> GetByRecordId(Guid recordId, Page? page = null, CancellationToken cancellationToken = default);
+    Task<IEnumerable<Document>> Search(float[] embedding, int limit = 10, CancellationToken cancellationToken = default);
     Task<IEnumerable<Document>> Search(Guid recordId, float[] embedding, int limit = 10, CancellationToken cancellationToken = default);
     Task<Document> Create(Document value, CancellationToken cancellationToken = default);
     Task<Document> Update(Document value, CancellationToken cancellationToken = default);
@@ -63,6 +64,11 @@ public class DocumentService(IServiceProvider provider) : IDocumentService
     public async Task<PaginationResult<Document>> GetByRecordId(Guid recordId, Page? page = null, CancellationToken cancellationToken = default)
     {
         return await Storage.GetByRecordId(recordId, page, cancellationToken);
+    }
+
+    public async Task<IEnumerable<Document>> Search(float[] embedding, int limit = 10, CancellationToken cancellationToken = default)
+    {
+        return await Storage.Search(embedding, limit, cancellationToken);
     }
 
     public async Task<IEnumerable<Document>> Search(Guid recordId, float[] embedding, int limit = 10, CancellationToken cancellationToken = default)

@@ -99,7 +99,9 @@ public partial class GithubWorker
         var openaiSettings = provider.GetRequiredService<IConfiguration>().GetOpenAI();
         var openai = new OpenAI.OpenAIClient(openaiSettings.ApiKey).GetEmbeddingClient("text-embedding-3-small");
         var matcher = new Matcher();
-        matcher.AddIncludePatterns(settings.Index);
+
+        matcher.AddIncludePatterns(settings.Index.Include);
+        matcher.AddExcludePatterns(settings.Index.Exclude);
 
         var githubService = provider.GetRequiredService<GithubService>();
         var github = new Octokit.GitHubClient(await githubService.GetRestConnection(@event.Install, cancellationToken));
@@ -127,20 +129,28 @@ public partial class GithubWorker
 
                 if (!matcher.Match(item.Path).HasMatches)
                 {
-                    Logger.LogWarning("skipping {}...", item.Path);
+                    Logger.LogDebug("skipping {}...", item.Path);
                     continue;
                 }
 
-                Logger.LogDebug("indexing {}...", item.Path);
                 var content = await github.Repository.Content.GetRawContent(repository.Owner.Login, repository.Name, item.Path);
+
+                // max embeddings size for current model
+                if (content.Length > 8285)
+                {
+                    Logger.LogWarning("file too large, skipping {}...", item.Path);
+                    continue;
+                }
+
                 var contentUtf8 = Encoding.UTF8.GetString(content);
 
                 if (string.IsNullOrEmpty(contentUtf8))
                 {
-                    Logger.LogWarning("skipping {}...", item.Path);
+                    Logger.LogDebug("skipping {}...", item.Path);
                     continue;
                 }
 
+                Logger.LogDebug("indexing {}...", item.Path);
                 var document = await services.Documents.GetByPath(record.Id, item.Path, cancellationToken);
 
                 if (document is null)

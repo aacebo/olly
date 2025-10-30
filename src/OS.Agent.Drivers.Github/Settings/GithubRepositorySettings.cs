@@ -60,7 +60,7 @@ public class GithubRepositorySettings
     /// </summary>
     [YamlMember(Alias = "index")]
     [JsonPropertyName("index")]
-    public IList<string> Index { get; set; } = [];
+    public GithubRepositoryIndexes Index { get; set; } = new();
 }
 
 [YamlSerializable]
@@ -77,4 +77,16 @@ public class GithubRepositoryFeatures
     [YamlMember(Alias = "pull_requests")]
     [JsonPropertyName("pull_requests")]
     public bool PullRequests { get; set; } = false;
+}
+
+[YamlSerializable]
+public class GithubRepositoryIndexes
+{
+    [YamlMember(Alias = "include")]
+    [JsonPropertyName("include")]
+    public IList<string> Include { get; set; } = [];
+
+    [YamlMember(Alias = "exclude")]
+    [JsonPropertyName("exclude")]
+    public IList<string> Exclude { get; set; } = [];
 }
