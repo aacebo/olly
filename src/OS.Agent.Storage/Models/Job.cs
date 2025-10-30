@@ -11,9 +11,9 @@ public class Job : Model
     [JsonPropertyName("id")]
     public Guid Id { get; init; } = Guid.NewGuid();
 
-    [Column("tenant_id")]
-    [JsonPropertyName("tenant_id")]
-    public required Guid TenantId { get; init; }
+    [Column("install_id")]
+    [JsonPropertyName("install_id")]
+    public required Guid InstallId { get; init; }
 
     [Column("parent_id")]
     [JsonPropertyName("parent_id")]

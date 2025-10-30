@@ -113,7 +113,7 @@ public partial class GithubWorker
         if (record is null)
         {
             record = await client.Services.Records.Create(
-                @event.Tenant,
+                @event.Account,
                 new()
                 {
                     SourceType = SourceType.Github,
@@ -144,7 +144,7 @@ public partial class GithubWorker
 
             await client.Services.Jobs.Create(new()
             {
-                TenantId = client.Tenant.Id,
+                InstallId = @event.Install.Id,
                 Name = "github.repository.index",
                 Entities = [entity]
             }, client.CancellationToken);

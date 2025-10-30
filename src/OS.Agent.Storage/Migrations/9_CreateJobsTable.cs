@@ -9,7 +9,7 @@ public class CreateJobsTable : Migration
     {
         Create.Table("jobs")
             .WithColumn("id").AsGuid().PrimaryKey()
-            .WithColumn("tenant_id").AsGuid().ForeignKey("tenants", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
+            .WithColumn("install_id").AsGuid().ForeignKey("installs", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
             .WithColumn("parent_id").AsGuid().ForeignKey("jobs", "id").OnDelete(System.Data.Rule.Cascade).Nullable()
             .WithColumn("name").AsString().NotNullable()
             .WithColumn("status").AsString().NotNullable()

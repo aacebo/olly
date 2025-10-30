@@ -167,6 +167,13 @@ public class RecordStorage(ILogger<IRecordStorage> logger, QueryFactory db) : IR
     {
         value = await Create(value, tx, cancellationToken);
 
+        await db.Query("tenants_records").InsertAsync(new
+        {
+            tenant_id = account.TenantId,
+            record_id = value.Id,
+            created_at = DateTimeOffset.UtcNow
+        }, tx, cancellationToken: cancellationToken);
+
         await db.Query("accounts_records").InsertAsync(new
         {
             account_id = account.Id,
@@ -181,6 +188,13 @@ public class RecordStorage(ILogger<IRecordStorage> logger, QueryFactory db) : IR
     {
         value = await Create(value, tx, cancellationToken);
 
+        await db.Query("tenants_records").InsertAsync(new
+        {
+            tenant_id = chat.TenantId,
+            record_id = value.Id,
+            created_at = DateTimeOffset.UtcNow
+        }, tx, cancellationToken: cancellationToken);
+
         await db.Query("chats_records").InsertAsync(new
         {
             chat_id = chat.Id,
@@ -194,6 +208,23 @@ public class RecordStorage(ILogger<IRecordStorage> logger, QueryFactory db) : IR
     public async Task<Record> Create(Message message, Record value, IDbTransaction? tx = null, CancellationToken cancellationToken = default)
     {
         value = await Create(value, tx, cancellationToken);
+
+        await db.Query("chats_records").InsertAsync(new
+        {
+            chat_id = message.ChatId,
+            record_id = value.Id,
+            created_at = DateTimeOffset.UtcNow
+        }, tx, cancellationToken: cancellationToken);
+
+        if (message.AccountId is not null)
+        {
+            await db.Query("accounts_records").InsertAsync(new
+            {
+                account_id = message.AccountId,
+                record_id = value.Id,
+                created_at = DateTimeOffset.UtcNow
+            }, tx, cancellationToken: cancellationToken);
+        }
 
         await db.Query("messages_records").InsertAsync(new
         {

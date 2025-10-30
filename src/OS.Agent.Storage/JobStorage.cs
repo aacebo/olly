@@ -15,7 +15,7 @@ namespace OS.Agent.Storage;
 public interface IJobStorage
 {
     Task<Job?> GetById(Guid id, CancellationToken cancellationToken = default);
-    Task<PaginationResult<Job>> GetByTenantId(Guid tenantId, Page? page = null, CancellationToken cancellationToken = default);
+    Task<PaginationResult<Job>> GetByInstallId(Guid installId, Page? page = null, CancellationToken cancellationToken = default);
     Task<IEnumerable<Job>> GetByParentId(Guid parentId, CancellationToken cancellationToken = default);
     Task<Job> Create(Job value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
     Task<Job> Update(Job value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
@@ -33,14 +33,14 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
             .FirstOrDefaultAsync<Job?>(cancellationToken: cancellationToken);
     }
 
-    public async Task<PaginationResult<Job>> GetByTenantId(Guid tenantId, Page? page = null, CancellationToken cancellationToken = default)
+    public async Task<PaginationResult<Job>> GetByInstallId(Guid installId, Page? page = null, CancellationToken cancellationToken = default)
     {
-        logger.LogDebug("GetByTenantId");
+        logger.LogDebug("GetByInstallId");
         page ??= new();
         var query = db
             .Query("jobs")
             .Select("*")
-            .Where("tenant_id", "=", tenantId);
+            .Where("install_id", "=", installId);
 
         return await page.Invoke<Job>(query, cancellationToken);
     }
@@ -61,7 +61,7 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
         using var cmd = new NpgsqlCommand(
         """
             INSERT INTO jobs
-            (id, tenant_id, parent_id, name, status, message, entities, started_at, ended_at, created_at, updated_at)
+            (id, install_id, parent_id, name, status, message, entities, started_at, ended_at, created_at, updated_at)
             VALUES
             ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         """, (NpgsqlConnection)db.Connection)
@@ -69,7 +69,7 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
             Parameters =
             {
                 new() { Value = value.Id, NpgsqlDbType = NpgsqlDbType.Uuid },
-                new() { Value = value.TenantId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.InstallId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.ParentId is null ? DBNull.Value : value.ParentId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.Name, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Status.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
@@ -93,7 +93,7 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
         using var cmd = new NpgsqlCommand(
         """
             UPDATE jobs SET
-                tenant_id = $2,
+                install_id = $2,
                 parent_id = $3,
                 name = $4,
                 status = $5,
@@ -109,7 +109,7 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
             Parameters =
             {
                 new() { Value = value.Id, NpgsqlDbType = NpgsqlDbType.Uuid },
-                new() { Value = value.TenantId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.InstallId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.ParentId is null ? DBNull.Value : value.ParentId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.Name, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Status.ToString(), NpgsqlDbType = NpgsqlDbType.Text },

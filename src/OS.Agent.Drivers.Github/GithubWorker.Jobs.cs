@@ -34,7 +34,7 @@ public partial class GithubWorker
         {
             await services.Logs.Create(new()
             {
-                TenantId = job.TenantId,
+                TenantId = @event.Tenant.Id,
                 Type = LogType.Job,
                 TypeId = job.Id.ToString(),
                 Text = "starting",
@@ -49,7 +49,7 @@ public partial class GithubWorker
 
             await services.Logs.Create(new()
             {
-                TenantId = job.TenantId,
+                TenantId = @event.Tenant.Id,
                 Type = LogType.Job,
                 TypeId = job.Id.ToString(),
                 Text = "stopping",
@@ -70,7 +70,7 @@ public partial class GithubWorker
 
         await services.Logs.Create(new()
         {
-            TenantId = @event.Job.TenantId,
+            TenantId = @event.Tenant.Id,
             Level = @event.Job.Status.IsError
                 ? LogLevel.Error
                 : LogLevel.Info,
@@ -89,5 +89,14 @@ public partial class GithubWorker
         var settings = entity.Settings ?? throw new InvalidOperationException("repository settings not found");
         var record = await services.Records.GetBySourceId(SourceType.Github, repository.NodeId, cancellationToken)
             ?? throw new InvalidOperationException("record not found");
+
+        var githubService = provider.GetRequiredService<GithubService>();
+        var github = new Octokit.GitHubClient(await githubService.GetRestConnection(@event.Install, cancellationToken));
+        var res = await github.Repository.Content.GetAllContents(repository.Id);
+
+        foreach (var item in res)
+        {
+
+        }
     }
 }
