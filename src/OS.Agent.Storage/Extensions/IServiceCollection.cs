@@ -67,11 +67,12 @@ public static class IServiceCollectionExtensions
         services.AddSingleton(provider =>
         {
             var config = provider.GetRequiredService<IConfiguration>();
-
-            return new NpgsqlDataSourceBuilder(config.GetConnectionString("Postgres"))
+            var builder = new NpgsqlDataSourceBuilder(config.GetConnectionString("Postgres"))
                     .EnableDynamicJson()
-                    .ConfigureJsonOptions(jsonOptions)
-                    .Build();
+                    .ConfigureJsonOptions(jsonOptions);
+
+            builder.UseVector();
+            return builder.Build();
         });
 
         // add query factory

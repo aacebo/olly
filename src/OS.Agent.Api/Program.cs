@@ -90,6 +90,7 @@ builder.Services.AddSingleton<NetMQQueue<RecordEvent>>(); // records.(create | u
 builder.Services.AddSingleton<NetMQQueue<InstallEvent>>(); // installs.(create | update | delete)
 builder.Services.AddSingleton<NetMQQueue<LogEvent>>(); // logs.create
 builder.Services.AddSingleton<NetMQQueue<JobEvent>>(); // jobs.(create | update)
+builder.Services.AddSingleton<NetMQQueue<DocumentEvent>>(); // documents.(create | update | delete)
 
 // Webhooks
 // builder.Services.AddSingleton<WebhookEventProcessor, GithubInstallWebhook>();
@@ -112,6 +113,7 @@ builder.Services.AddScoped<ILogStorage, LogStorage>();
 builder.Services.AddScoped<IRecordStorage, RecordStorage>();
 builder.Services.AddScoped<IInstallStorage, InstallStorage>();
 builder.Services.AddScoped<IJobStorage, JobStorage>();
+builder.Services.AddScoped<IDocumentStorage, DocumentStorage>();
 
 // Services
 builder.Services.AddScoped<IServices, Services>();
@@ -125,6 +127,7 @@ builder.Services.AddScoped<ILogService, LogService>();
 builder.Services.AddScoped<IRecordService, RecordService>();
 builder.Services.AddScoped<IInstallService, InstallService>();
 builder.Services.AddScoped<IJobService, JobService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
 
 var app = builder.Build();
 

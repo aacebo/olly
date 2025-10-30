@@ -61,6 +61,9 @@ public class EntityType(string value) : StringEnum(value)
 
     public static readonly EntityType Job = new("job");
     public bool IsJob => Job.Equals(Value);
+
+    public static readonly EntityType Document = new("document");
+    public bool IsDocument => Document.Equals(Value);
 }
 
 [JsonConverter(typeof(Converter<ActionType>))]

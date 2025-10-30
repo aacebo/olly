@@ -84,7 +84,7 @@ public class Job : Model
     public Job Error(Exception ex)
     {
         Status = JobStatus.Error;
-        Message = ex.Message;
+        Message = ex.ToString();
         EndedAt = DateTimeOffset.UtcNow;
         return this;
     }

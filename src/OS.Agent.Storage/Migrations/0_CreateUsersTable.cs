@@ -7,6 +7,7 @@ public class CreateUsersTable : Migration
 {
     public override void Up()
     {
+        Execute.Sql("CREATE EXTENSION IF NOT EXISTS vector;");
         Create.Table("users")
             .WithColumn("id").AsGuid().PrimaryKey()
             .WithColumn("name").AsString().Nullable()

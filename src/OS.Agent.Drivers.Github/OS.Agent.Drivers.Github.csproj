@@ -4,6 +4,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.10" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.10" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="9.0.10" />
   </ItemGroup>
 
   <ItemGroup>
@@ -19,6 +20,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Teams.AI" Version="2.*" />
     <PackageReference Include="Microsoft.Teams.AI.Models.OpenAI" Version="2.*" />
+    <PackageReference Include="Microsoft.Teams.Extensions.Hosting" Version="2.*" />
   </ItemGroup>
 
   <ItemGroup>

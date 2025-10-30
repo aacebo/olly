@@ -14,6 +14,7 @@ public interface IServices
     IRecordService Records { get; }
     IInstallService Installs { get; }
     IJobService Jobs { get; }
+    IDocumentService Documents { get; }
 }
 
 public class Services : IServices
@@ -28,6 +29,7 @@ public class Services : IServices
     public IRecordService Records { get; }
     public IInstallService Installs { get; }
     public IJobService Jobs { get; }
+    public IDocumentService Documents { get; }
 
     public Services(IServiceScopeFactory factory) : this(factory.CreateScope())
     {
@@ -46,5 +48,6 @@ public class Services : IServices
         Records = scope.ServiceProvider.GetRequiredService<IRecordService>();
         Installs = scope.ServiceProvider.GetRequiredService<IInstallService>();
         Jobs = scope.ServiceProvider.GetRequiredService<IJobService>();
+        Documents = scope.ServiceProvider.GetRequiredService<IDocumentService>();
     }
 }
