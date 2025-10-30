@@ -14,6 +14,7 @@ public interface IAccountService
     Task<Account?> GetById(Guid id, CancellationToken cancellationToken = default);
     Task<Account?> GetBySourceId(Guid tenantId, SourceType type, string sourceId, CancellationToken cancellationToken = default);
     Task<IEnumerable<Account>> GetByTenantId(Guid tenantId, CancellationToken cancellationToken = default);
+    Task<IEnumerable<Account>> GetByUserId(Guid userId, CancellationToken cancellationToken = default);
     Task<Account> Create(Account value, CancellationToken cancellationToken = default);
     Task<Account> Update(Account value, CancellationToken cancellationToken = default);
     Task Delete(Guid id, CancellationToken cancellationToken = default);
@@ -60,6 +61,11 @@ public class AccountService(IServiceProvider provider) : IAccountService
     public async Task<IEnumerable<Account>> GetByTenantId(Guid tenantId, CancellationToken cancellationToken = default)
     {
         return await Storage.GetByTenantId(tenantId, cancellationToken);
+    }
+
+    public async Task<IEnumerable<Account>> GetByUserId(Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await Storage.GetByUserId(userId, cancellationToken);
     }
 
     public async Task<Account> Create(Account value, CancellationToken cancellationToken = default)

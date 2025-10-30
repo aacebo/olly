@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
 
+using Pgvector;
+
 using SqlKata;
 
 namespace OS.Agent.Storage.Models;
@@ -41,7 +43,7 @@ public class Document : Model
 
     [Column("embedding")]
     [JsonPropertyName("embedding")]
-    public float[]? Embedding { get; set; }
+    public Vector? Embedding { get; set; }
 
     [Column("created_at")]
     [JsonPropertyName("created_at")]

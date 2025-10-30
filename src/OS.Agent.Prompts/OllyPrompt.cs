@@ -23,7 +23,7 @@ namespace OS.Agent.Prompts;
         "You are __REQUIRED__ to call EndTask whenever you complete an in progress task.",
     "</tasks>"
 )]
-public class MainPrompt(Client client)
+public class OllyPrompt(Client client)
 {
     [Function]
     [Function.Description("Get the task list")]

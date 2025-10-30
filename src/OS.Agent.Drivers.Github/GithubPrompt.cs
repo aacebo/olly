@@ -1,8 +1,10 @@
 using System.Text.Json;
 
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Teams.AI.Annotations;
+using Microsoft.Teams.AI.Models.OpenAI.Extensions;
 
 using Octokit.GraphQL;
 
@@ -32,25 +34,36 @@ namespace OS.Agent.Drivers.Github;
         "You are __REQUIRED__ to call EndTask whenever you complete an in progress task.",
     "</tasks>"
 )]
-public class GithubPrompt(Client client)
+public class GithubPrompt
 {
-    public GithubSettings Settings => client.Provider.GetRequiredService<IOptions<GithubSettings>>().Value;
+    private GithubSettings Settings { get; }
+    private Client Client { get; }
+    private OpenAI.OpenAIClient OpenAI { get; }
+
+    public GithubPrompt(Client client)
+    {
+        var openAiSettings = client.Provider.GetRequiredService<IConfiguration>().GetOpenAI();
+
+        Client = client;
+        OpenAI = new OpenAI.OpenAIClient(openAiSettings.ApiKey);
+        Settings = client.Provider.GetRequiredService<IOptions<GithubSettings>>().Value;
+    }
 
     [Function]
     [Function.Description("prompt the user to signin to their Github account")]
     public async Task<string> SignIn()
     {
-        if (client.User is null || client.Message is null)
+        if (Client.User is null || Client.Message is null)
         {
             throw new InvalidOperationException("cannot prompt user for sign in, no user or message present");
         }
 
-        var installs = await client.Services.Installs.GetByUserId(
-            client.User.Id,
+        var installs = await Client.Services.Installs.GetByUserId(
+            Client.User.Id,
             Storage.Query.Create()
                 .Where("source_type", "=", SourceType.Github)
                 .Build(),
-            client.CancellationToken
+            Client.CancellationToken
         );
 
         if (installs.Any(install => install.Status == InstallStatus.InProgress))
@@ -65,12 +78,12 @@ public class GithubPrompt(Client client)
 
         var state = new Token.State()
         {
-            TenantId = client.Tenant.Id,
-            UserId = client.User.Id,
-            MessageId = client.Message.Id
+            TenantId = Client.Tenant.Id,
+            UserId = Client.User.Id,
+            MessageId = Client.Message.Id
         };
 
-        await client.SignIn(Settings.InstallUrl, state.Encode());
+        await Client.SignIn(Settings.InstallUrl, state.Encode());
         return "<user was prompted to login to Github>";
     }
 
@@ -78,21 +91,21 @@ public class GithubPrompt(Client client)
     [Function.Description("Get the task list")]
     public string GetTasks()
     {
-        return JsonSerializer.Serialize(client.Tasks, client.JsonSerializerOptions);
+        return JsonSerializer.Serialize(Client.Tasks, Client.JsonSerializerOptions);
     }
 
     [Function]
     [Function.Description("This function sends an update to the user indicating that you have started a new task.")]
     public async Task<string> StartTask([Param] string? title, [Param] string message)
     {
-        var task = await client.SendTask(new()
+        var task = await Client.SendTask(new()
         {
             Style = ProgressStyle.InProgress,
             Title = title,
             Message = message
         });
 
-        return JsonSerializer.Serialize(task, client.JsonSerializerOptions);
+        return JsonSerializer.Serialize(task, Client.JsonSerializerOptions);
     }
 
     [Function]
@@ -102,7 +115,7 @@ public class GithubPrompt(Client client)
     )]
     public async Task<string> EndTask([Param] Guid taskId, [Param] string? style, [Param] string? title, [Param] string? message)
     {
-        var task = await client.SendTask(taskId, new()
+        var task = await Client.SendTask(taskId, new()
         {
             Style = style is not null ? new(style) : null,
             Title = title,
@@ -110,14 +123,14 @@ public class GithubPrompt(Client client)
             EndedAt = DateTimeOffset.UtcNow
         });
 
-        return JsonSerializer.Serialize(task, client.JsonSerializerOptions);
+        return JsonSerializer.Serialize(task, Client.JsonSerializerOptions);
     }
 
     [Function]
     [Function.Description("get a list of connected Github data source accounts for the user")]
     public async Task<string> GetAllGithubAccounts()
     {
-        var task = await client.SendTask(new()
+        var task = await Client.SendTask(new()
         {
             Title = "Github",
             Message = "fetching accounts..."
@@ -125,23 +138,23 @@ public class GithubPrompt(Client client)
 
         try
         {
-            var accounts = await client.Services.Accounts.GetByTenantId(
-                client.Tenant.Id,
-                client.CancellationToken
+            var accounts = await Client.Services.Accounts.GetByTenantId(
+                Client.Tenant.Id,
+                Client.CancellationToken
             );
 
-            await client.SendTask(task.Id, new()
+            await Client.SendTask(task.Id, new()
             {
                 Style = ProgressStyle.Success,
                 Message = $"found {accounts.Count()} accounts",
                 EndedAt = DateTimeOffset.UtcNow
             });
 
-            return JsonSerializer.Serialize(accounts.Where(a => a.SourceType == SourceType.Github), client.JsonSerializerOptions);
+            return JsonSerializer.Serialize(accounts.Where(a => a.SourceType == SourceType.Github), Client.JsonSerializerOptions);
         }
         catch (Exception ex)
         {
-            await client.SendTask(task.Id, new()
+            await Client.SendTask(task.Id, new()
             {
                 Style = ProgressStyle.Error,
                 EndedAt = DateTimeOffset.UtcNow
@@ -155,7 +168,7 @@ public class GithubPrompt(Client client)
     [Function.Description("get a list of the users Github repositories")]
     public async Task<string> GetRepositories()
     {
-        var task = await client.SendTask(new()
+        var task = await Client.SendTask(new()
         {
             Title = "Github",
             Message = "fetching repositories..."
@@ -163,27 +176,27 @@ public class GithubPrompt(Client client)
 
         try
         {
-            var records = await client.Services.Records.GetByTenantId(
-                client.Tenant.Id,
+            var records = await Client.Services.Records.GetByTenantId(
+                Client.Tenant.Id,
                 Page.Create()
                     .Where("source_type", "=", SourceType.Github.ToString())
                     .Where("type", "=", "repository")
                     .Build(),
-                client.CancellationToken
+                Client.CancellationToken
             );
 
-            await client.SendTask(task.Id, new()
+            await Client.SendTask(task.Id, new()
             {
                 Style = ProgressStyle.Success,
                 Message = $"found {records.Count} repositories",
                 EndedAt = DateTimeOffset.UtcNow
             });
 
-            return JsonSerializer.Serialize(records.List, client.JsonSerializerOptions);
+            return JsonSerializer.Serialize(records.List, Client.JsonSerializerOptions);
         }
         catch (Exception ex)
         {
-            await client.SendTask(task.Id, new()
+            await Client.SendTask(task.Id, new()
             {
                 Style = ProgressStyle.Error,
                 EndedAt = DateTimeOffset.UtcNow
@@ -197,7 +210,7 @@ public class GithubPrompt(Client client)
     [Function.Description("get a list of a Github repositories discussions")]
     public async Task<string> GetRepositoryDiscussions([Param] Guid accountId, [Param] string repositoryName)
     {
-        var task = await client.SendTask(new()
+        var task = await Client.SendTask(new()
         {
             Title = "Github",
             Message = $"fetching discussions in repository {repositoryName}..."
@@ -205,10 +218,10 @@ public class GithubPrompt(Client client)
 
         try
         {
-            var account = await client.Services.Accounts.GetById(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
-            var install = await client.Services.Installs.GetByAccountId(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account install not found");
-            var githubService = client.Provider.GetRequiredService<GithubService>();
-            var github = await githubService.GetGraphConnection(install, client.CancellationToken);
+            var account = await Client.Services.Accounts.GetById(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
+            var install = await Client.Services.Installs.GetByAccountId(accountId) ?? throw HttpException.UnAuthorized().AddMessage("account install not found");
+            var githubService = Client.Provider.GetRequiredService<GithubService>();
+            var github = await githubService.GetGraphConnection(install, Client.CancellationToken);
             var query = new Octokit.GraphQL.Query()
                 .RepositoryOwner(account.Name)
                 .Repository(repositoryName)
@@ -223,20 +236,20 @@ public class GithubPrompt(Client client)
                 })
                 .Compile();
 
-            var discussions = await github.Run(query, cancellationToken: client.CancellationToken);
+            var discussions = await github.Run(query, cancellationToken: Client.CancellationToken);
 
-            await client.SendTask(task.Id, new()
+            await Client.SendTask(task.Id, new()
             {
                 Style = ProgressStyle.Success,
                 Message = $"found {discussions.Count()} discussions in repository {repositoryName}",
                 EndedAt = DateTimeOffset.UtcNow
             });
 
-            return JsonSerializer.Serialize(discussions, client.JsonSerializerOptions);
+            return JsonSerializer.Serialize(discussions, Client.JsonSerializerOptions);
         }
         catch (Exception ex)
         {
-            await client.SendTask(task.Id, new()
+            await Client.SendTask(task.Id, new()
             {
                 Style = ProgressStyle.Error,
                 EndedAt = DateTimeOffset.UtcNow
@@ -244,5 +257,33 @@ public class GithubPrompt(Client client)
 
             throw new Exception(ex.Message, ex);
         }
+    }
+
+    [Function]
+    [Function.Description("search a repositories contents, returning matching documents")]
+    public async Task<string> SearchRepositoryContents([Param] Guid recordId, [Param] string text)
+    {
+        var record = await Client.Services.Records.GetById(recordId, Client.CancellationToken) ?? throw new Exception("record not found");
+        var client = OpenAI.GetEmbeddingClient("text-embedding-3-small");
+        var res = await client.GenerateEmbeddingAsync(text, new()
+        {
+            EndUserId = Client.User?.Id.ToString()
+        }, Client.CancellationToken);
+
+        var documents = await Client.Services.Documents.Search(
+            record.Id,
+            res.Value.ToFloats().ToArray(),
+            cancellationToken: Client.CancellationToken
+        );
+
+        return JsonSerializer.Serialize(documents.Select(document => new
+        {
+            id = document.Id,
+            name = document.Name,
+            path = document.Path,
+            url = document.Url,
+            size = document.Size,
+            content = document.Content
+        }), Client.JsonSerializerOptions);
     }
 }

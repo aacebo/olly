@@ -159,7 +159,7 @@ public partial class GithubWorker
                         Size = item.Size,
                         Encoding = item.Encoding,
                         Content = contentUtf8,
-                        Embedding = res.Value.ToFloats().ToArray()
+                        Embedding = new Pgvector.Vector(res.Value.ToFloats())
                     }, cancellationToken);
                 }
             }

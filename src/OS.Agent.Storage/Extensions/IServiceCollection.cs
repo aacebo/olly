@@ -13,6 +13,8 @@ using Npgsql;
 using OS.Agent.Storage.Models;
 using OS.Agent.Storage.Postgres;
 
+using Pgvector.Dapper;
+
 using SqlKata;
 using SqlKata.Compilers;
 using SqlKata.Execution;
@@ -28,6 +30,7 @@ public static class IServiceCollectionExtensions
         var jsonOptions = provider.GetRequiredService<JsonSerializerOptions>();
         var modelTypes = Assembly.GetExecutingAssembly().GetTypes().Where(type => type.GetCustomAttribute<ModelAttribute>() != null);
 
+        Dapper.SqlMapper.AddTypeHandler(new VectorTypeHandler());
         Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<SourceType>());
         Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<Models.LogLevel>());
         Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<LogType>());
@@ -67,12 +70,13 @@ public static class IServiceCollectionExtensions
         services.AddSingleton(provider =>
         {
             var config = provider.GetRequiredService<IConfiguration>();
-            var builder = new NpgsqlDataSourceBuilder(config.GetConnectionString("Postgres"))
-                    .EnableDynamicJson()
-                    .ConfigureJsonOptions(jsonOptions);
+            var builder = new NpgsqlDataSourceBuilder(config.GetConnectionString("Postgres"));
 
             builder.UseVector();
-            return builder.Build();
+            return builder
+                .EnableDynamicJson()
+                .ConfigureJsonOptions(jsonOptions)
+                .Build();
         });
 
         // add query factory
@@ -81,8 +85,11 @@ public static class IServiceCollectionExtensions
             var logger = provider.GetRequiredService<ILogger<QueryFactory>>();
             var dataSource = provider.GetRequiredService<NpgsqlDataSource>();
             var jsonSerializerOptions = provider.GetRequiredService<JsonSerializerOptions>();
+            var conn = dataSource.OpenConnection();
 
-            return new QueryFactory(dataSource.OpenConnection(), new PostgresCompiler())
+            conn.ReloadTypes();
+
+            return new QueryFactory(conn, new PostgresCompiler())
             {
                 Logger = q => logger.LogDebug("{}", q.RawSql)
             };

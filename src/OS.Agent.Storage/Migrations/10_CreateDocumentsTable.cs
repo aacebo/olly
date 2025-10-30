@@ -23,6 +23,8 @@ public class CreateDocumentsTable : Migration
         Create.UniqueConstraint()
             .OnTable("documents")
             .Columns("record_id", "path");
+
+        Execute.Sql("CREATE INDEX IF NOT EXISTS documents_embedding_idx ON documents USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);");
     }
 
     public override void Down()

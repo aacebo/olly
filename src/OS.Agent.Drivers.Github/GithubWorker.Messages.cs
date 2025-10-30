@@ -1,5 +1,3 @@
-using Json.Schema;
-
 using Microsoft.Extensions.DependencyInjection;
 
 using Microsoft.Teams.AI;
@@ -8,6 +6,7 @@ using Microsoft.Teams.AI.Models.OpenAI;
 
 using OS.Agent.Events;
 using OS.Agent.Prompts;
+using OS.Agent.Prompts.Extensions;
 using OS.Agent.Storage;
 
 namespace OS.Agent.Drivers.Github;
@@ -43,35 +42,25 @@ public partial class GithubWorker
     protected async Task OnMessageCreateEvent(MessageEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         var model = client.Provider.GetRequiredService<OpenAIChatModel>();
+        var logger = client.Provider.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>();
         var githubPrompt = OpenAIChatPrompt.From(model, new GithubPrompt(client), new()
         {
-            Logger = client.Provider.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>()
+            Logger = logger
         });
 
-        var prompt = OpenAIChatPrompt.From(model, new MainPrompt(client), new()
+        var recordsPrompt = OpenAIChatPrompt.From(model, new RecordsPrompt(client), new()
         {
-            Logger = client.Provider.GetRequiredService<Microsoft.Teams.Common.Logging.ILogger>()
+            Logger = logger
         });
 
-        prompt.Function(
-            "Github",
-            githubPrompt.Description,
-            new JsonSchemaBuilder().Type(SchemaValueType.Object).Properties(
-                ("message", new JsonSchemaBuilder().Type(SchemaValueType.String).Description("message to send"))
-            ).Required("message"),
-            async (string message) =>
-            {
-                var res = await githubPrompt.Send(message, new()
-                {
-                    Request = new()
-                    {
-                        Temperature = 0,
-                        EndUserId = client.User?.Id.ToString()
-                    }
-                }, null, cancellationToken);
-                return res.Content;
-            }
-        );
+        var prompt = OpenAIChatPrompt.From(model, new OllyPrompt(client), new()
+        {
+            Logger = logger
+        });
+
+        prompt = prompt
+            .AddPrompt(githubPrompt, client.CancellationToken)
+            .AddPrompt(recordsPrompt, client.CancellationToken);
 
         await client.Typing();
 
