@@ -120,7 +120,7 @@ public class ChatService(IServiceProvider provider) : IChatService
     {
         await Storage.AddRecord(id, recordId, cancellationToken: cancellationToken);
     }
-    
+
     public async Task DelRecord(Guid id, Guid recordId, CancellationToken cancellationToken = default)
     {
         await Storage.DelRecord(id, recordId, cancellationToken: cancellationToken);
