@@ -93,7 +93,6 @@ builder.Services.AddSingleton<NetMQQueue<JobEvent>>(); // jobs.(create | update)
 builder.Services.AddSingleton<NetMQQueue<DocumentEvent>>(); // documents.(create | update | delete)
 
 // Webhooks
-// builder.Services.AddSingleton<WebhookEventProcessor, GithubInstallWebhook>();
 builder.Services.AddSingleton<WebhookEventProcessor, GithubDiscussionWebhook>();
 
 // Workers
