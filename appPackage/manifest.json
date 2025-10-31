@@ -4,7 +4,7 @@
   "manifestVersion": "1.22",
   "id": "${{TEAMS_APP_ID}}",
   "name": {
-    "short": "olly-${{APP_NAME_SUFFIX}}",
+    "short": "Olly",
     "full": "Olly"
   },
   "developer": {
