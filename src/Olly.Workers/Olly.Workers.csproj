@@ -14,5 +14,6 @@
     <ProjectReference Include="..\Olly.Events\Olly.Events.csproj" />
     <ProjectReference Include="..\Olly.Storage\Olly.Storage.csproj" />
     <ProjectReference Include="..\Olly.Services\Olly.Services.csproj" />
+    <ProjectReference Include="..\Olly.Drivers\Olly.Drivers.csproj" />
   </ItemGroup>
 </Project>

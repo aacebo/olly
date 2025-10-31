@@ -19,6 +19,16 @@ public class CreateJobsTable : Migration
             .WithColumn("ended_at").AsDateTimeOffset().Nullable()
             .WithColumn("created_at").AsDateTimeOffset().NotNullable()
             .WithColumn("updated_at").AsDateTimeOffset().NotNullable();
+
+        Create.Table("chats_jobs")
+            .WithColumn("chat_id").AsGuid().ForeignKey("chats", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
+            .WithColumn("job_id").AsGuid().ForeignKey("jobs", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
+            .WithColumn("is_async").AsBoolean().NotNullable()
+            .WithColumn("created_at").AsDateTimeOffset().NotNullable();
+
+        Create.PrimaryKey()
+            .OnTable("chats_jobs")
+            .Columns("chat_id", "job_id");
     }
 
     public override void Down()

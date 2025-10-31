@@ -6,6 +6,9 @@ namespace Olly.Events;
 
 public class JobEvent(ActionType action) : Event(EntityType.Job, action)
 {
+    [JsonPropertyName("attempt")]
+    public int Attempt { get; set; } = 1;
+
     [JsonPropertyName("tenant")]
     public required Tenant Tenant { get; init; }
 
@@ -20,4 +23,7 @@ public class JobEvent(ActionType action) : Event(EntityType.Job, action)
 
     [JsonPropertyName("job")]
     public required Job Job { get; init; }
+
+    [JsonPropertyName("chat")]
+    public Chat? Chat { get; init; }
 }

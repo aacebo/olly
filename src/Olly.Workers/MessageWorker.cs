@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 
 using NetMQ;
 
+using Olly.Drivers;
 using Olly.Events;
 using Olly.Services;
 using Olly.Storage.Models;
@@ -61,7 +62,7 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
             try
             {
                 if (@event.Message.AccountId is null) continue;
-                await OnEvent(@event, cancellationToken);
+                await OnEvent(@event, provider, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -79,17 +80,28 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
         }
     }
 
-    protected Task OnEvent(MessageEvent @event, CancellationToken _ = default)
+    protected async Task OnEvent(MessageEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default)
     {
+        var factory = ClientRegistry.Get(@event.Chat.SourceType);
+        var client = factory(@event, provider, cancellationToken);
+        var jobs = await client.Services.Jobs.GetBlocking(@event.Chat.Id, cancellationToken);
+
+        if (jobs.Any())
+        {
+            await client.Send("Please wait while I finish the following tasks...");
+            Queue.Enqueue(@event);
+            return;
+        }
+
         if (@event.Message.SourceType.IsTeams)
         {
             TeamsQueue.Enqueue(@event);
-            return Task.CompletedTask;
+            return;
         }
         else if (@event.Message.SourceType.IsGithub)
         {
             GithubQueue.Enqueue(@event);
-            return Task.CompletedTask;
+            return;
         }
 
         throw new Exception($"event source '{@event.Message.SourceType}' not found");

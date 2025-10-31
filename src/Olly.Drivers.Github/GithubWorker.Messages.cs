@@ -39,7 +39,7 @@ public partial class GithubWorker
     protected async Task OnMessageCreateEvent(MessageEvent @event, Client client, CancellationToken cancellationToken = default)
     {
         var prompt = OllyPrompt.Create(client, provider, cancellationToken)
-            .AddPrompt(GithubPrompt.Create(client, provider), cancellationToken);
+            .AddPrompt(GithubPrompt.Create(client, provider, cancellationToken), cancellationToken);
 
         await client.Typing();
 

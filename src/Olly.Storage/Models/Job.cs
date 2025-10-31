@@ -59,7 +59,6 @@ public class Job : Model
     public Job Start()
     {
         Status = JobStatus.Running;
-        Message = null;
         StartedAt = DateTimeOffset.UtcNow;
         EndedAt = null;
         return this;

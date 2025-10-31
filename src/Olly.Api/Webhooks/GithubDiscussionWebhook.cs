@@ -37,7 +37,7 @@ public class GithubDiscussionWebhook(IServiceScopeFactory scopeFactory) : Webhoo
                 TenantId = tenant.Id,
                 SourceId = @event.Discussion.User.NodeId,
                 SourceType = SourceType.Github,
-                Url = @event.Discussion.User.Url,
+                Url = @event.Discussion.User.HtmlUrl,
                 Name = @event.Discussion.User.Login,
                 Entities = [
                     new GithubUserEntity()
@@ -50,7 +50,7 @@ public class GithubDiscussionWebhook(IServiceScopeFactory scopeFactory) : Webhoo
                             Login = @event.Discussion.User.Login,
                             Name = @event.Discussion.User.Name,
                             Email = @event.Discussion.User.Email,
-                            Url = @event.Discussion.User.Url,
+                            Url = @event.Discussion.User.HtmlUrl,
                             AvatarUrl = @event.Discussion.User.AvatarUrl
                         }
                     }
@@ -71,11 +71,11 @@ public class GithubDiscussionWebhook(IServiceScopeFactory scopeFactory) : Webhoo
                     Login = @event.Discussion.User.Login,
                     Name = @event.Discussion.User.Name,
                     Email = @event.Discussion.User.Email,
-                    Url = @event.Discussion.User.Url,
+                    Url = @event.Discussion.User.HtmlUrl,
                     AvatarUrl = @event.Discussion.User.AvatarUrl
                 };
 
-                account.Url = @event.Discussion.User.Url;
+                account.Url = @event.Discussion.User.HtmlUrl;
                 account = await accounts.Update(account, cancellationToken);
             }
         }

@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+using Olly.Cards.Progress;
 using Olly.Cards.Tasks;
 using Olly.Services;
 using Olly.Storage;
@@ -94,12 +95,22 @@ public abstract class Client
 
     public virtual Task<TaskItem> SendTask(TaskItem.Create create)
     {
-        throw new NotImplementedException();
+        return Task.FromResult<TaskItem>(new()
+        {
+            Title = create.Title,
+            Style = ProgressStyle.InProgress,
+            Message = create.Message
+        });
     }
 
     public virtual Task<TaskItem> SendTask(Guid id, TaskItem.Update update)
     {
-        throw new NotImplementedException();
+        return Task.FromResult<TaskItem>(new()
+        {
+            Title = update.Title,
+            Style = update.Style ?? ProgressStyle.Success,
+            Message = update.Message ?? string.Empty
+        });
     }
 
     public virtual Task Finish()

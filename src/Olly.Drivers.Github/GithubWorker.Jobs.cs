@@ -34,6 +34,12 @@ public partial class GithubWorker
     protected async Task OnJobCreateEvent(JobEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default)
     {
         var services = provider.GetRequiredService<IServices>();
+
+        if (@event.Attempt > 3)
+        {
+            return;
+        }
+
         var job = await services.Jobs.Update(@event.Job.Start(), cancellationToken);
 
         try
@@ -47,7 +53,6 @@ public partial class GithubWorker
                 Entities = job.Entities
             }, cancellationToken);
 
-            // job logic...
             if (job.Name == "github.repository.index")
             {
                 await OnIndexRepositoryJobEvent(@event, provider, cancellationToken);
@@ -67,6 +72,12 @@ public partial class GithubWorker
         catch (Exception ex)
         {
             await services.Jobs.Update(job.Error(ex), cancellationToken);
+
+            if (@event.Attempt < 3)
+            {
+                @event.Attempt++;
+                Queue.Enqueue(@event);
+            }
         }
     }
 

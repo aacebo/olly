@@ -34,7 +34,6 @@ public partial class GithubClient
         var response = new Message()
         {
             ChatId = Chat.Id,
-            // AccountId = Account.Id,
             ReplyToId = Message?.Id,
             SourceId = comment.Id.ToString(),
             SourceType = SourceType.Github,

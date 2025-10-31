@@ -17,8 +17,14 @@ public interface IJobStorage
     Task<Job?> GetById(Guid id, CancellationToken cancellationToken = default);
     Task<PaginationResult<Job>> GetByInstallId(Guid installId, Page? page = null, CancellationToken cancellationToken = default);
     Task<IEnumerable<Job>> GetByParentId(Guid parentId, CancellationToken cancellationToken = default);
+    Task<PaginationResult<Job>> GetByChatId(Guid chatId, Page? page = null, CancellationToken cancellationToken = default);
+    Task<IEnumerable<Job>> GetBlocking(Guid chatId, CancellationToken cancellationToken = default);
+
     Task<Job> Create(Job value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
     Task<Job> Update(Job value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
+
+    Task AddChat(Guid chatId, Guid jobId, bool async = false, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
+    Task DelChat(Guid chatId, Guid jobId, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
 }
 
 public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStorage
@@ -52,6 +58,34 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
             .Query("jobs")
             .Select("*")
             .Where("parent_id", "=", parentId)
+            .GetAsync<Job>(cancellationToken: cancellationToken);
+    }
+
+    public async Task<PaginationResult<Job>> GetByChatId(Guid chatId, Page? page = null, CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("GetByChatId");
+        page ??= new();
+        var query = db
+            .Query("chats_jobs")
+            .Select("jobs.*")
+            .LeftJoin("jobs", "jobs.id", "chats_jobs.job_id")
+            .Where("chats_jobs.chat_id", "=", chatId);
+
+        return await page.Invoke<Job>(query, cancellationToken);
+    }
+
+    public async Task<IEnumerable<Job>> GetBlocking(Guid chatId, CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("GetBlocking");
+        return await db
+            .Query("chats_jobs")
+            .Select("jobs.*")
+            .LeftJoin("jobs", join =>
+                join.On("jobs.id", "chats_jobs.job_id")
+                    .WhereNull("jobs.ended_at")
+            )
+            .Where("chats_jobs.chat_id", "=", chatId)
+            .Where("chats_jobs.is_async", "=", false)
             .GetAsync<Job>(cancellationToken: cancellationToken);
     }
 
@@ -124,5 +158,27 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
 
         await cmd.ExecuteNonQueryAsync(cancellationToken);
         return value;
+    }
+
+    public async Task AddChat(Guid chatId, Guid jobId, bool async = false, IDbTransaction? tx = null, CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("AddChat");
+        await db.Query("chats_jobs").InsertAsync(new
+        {
+            chat_id = chatId,
+            job_id = jobId,
+            is_async = async,
+            created_at = DateTimeOffset.UtcNow
+        }, tx, cancellationToken: cancellationToken);
+    }
+
+    public async Task DelChat(Guid chatId, Guid jobId, IDbTransaction? tx = null, CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("DelChat");
+        await db
+            .Query("chats_jobs")
+            .Where("chat_id", "=", chatId)
+            .Where("job_id", "=", jobId)
+            .DeleteAsync(tx, cancellationToken: cancellationToken);
     }
 }
