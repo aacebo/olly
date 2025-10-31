@@ -1,0 +1,44 @@
+using FluentMigrator;
+
+namespace Olly.Storage.Migrations;
+
+[Migration(4)]
+public class CreateMessagesTable : Migration
+{
+    public override void Up()
+    {
+        Create.Table("messages")
+            .WithColumn("id").AsGuid().PrimaryKey()
+            .WithColumn("chat_id").AsGuid().ForeignKey("chats", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
+            .WithColumn("account_id").AsGuid().ForeignKey("accounts", "id").OnDelete(System.Data.Rule.Cascade).Nullable()
+            .WithColumn("reply_to_id").AsGuid().ForeignKey("messages", "id").OnDelete(System.Data.Rule.Cascade).Nullable()
+            .WithColumn("source_id").AsString().NotNullable()
+            .WithColumn("source_type").AsString().NotNullable()
+            .WithColumn("url").AsString().Nullable()
+            .WithColumn("text").AsString().NotNullable()
+            .WithColumn("attachments").AsCustom("JSONB").NotNullable()
+            .WithColumn("entities").AsCustom("JSONB").NotNullable()
+            .WithColumn("created_at").AsDateTimeOffset().NotNullable()
+            .WithColumn("updated_at").AsDateTimeOffset().NotNullable();
+
+        Create.UniqueConstraint()
+            .OnTable("messages")
+            .Columns("chat_id", "source_id", "source_type");
+
+        Create.Index()
+            .OnTable("messages")
+            .OnColumn("chat_id").Ascending()
+            .OnColumn("reply_to_id").Ascending()
+            .OnColumn("source_type").Ascending();
+
+        Create.Index()
+            .OnTable("messages")
+            .OnColumn("chat_id").Ascending()
+            .OnColumn("created_at").Descending();
+    }
+
+    public override void Down()
+    {
+        Delete.Table("messages");
+    }
+}

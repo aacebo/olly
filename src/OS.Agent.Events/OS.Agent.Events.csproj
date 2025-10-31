@@ -1,9 +1,0 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-  <ItemGroup>
-    <PackageReference Include="NetMQ" Version="4.*" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\OS.Agent.Storage\OS.Agent.Storage.csproj" />
-  </ItemGroup>
-</Project>

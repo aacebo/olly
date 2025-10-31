@@ -6,7 +6,7 @@
       "value": "bot-${{RESOURCE_SUFFIX}}-${{TEAMSFX_ENV}}"
     },
     "botDisplayName": {
-      "value": "OsAgent-${{TEAMSFX_ENV}}"
+      "value": "Olly-${{TEAMSFX_ENV}}"
     },
     "botAppDomain": {
       "value": "${{BOT_DOMAIN}}"

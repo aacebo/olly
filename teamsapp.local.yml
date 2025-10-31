@@ -33,7 +33,7 @@ provision:
   # Generate runtime appsettings to JSON file
   - uses: file/createOrUpdateJsonFile
     with:
-      target: ../OS.Agent/appsettings.Development.json
+      target: ../Olly/appsettings.Development.json
       content:
         Teams:
           ClientId: ${{BOT_ID}}

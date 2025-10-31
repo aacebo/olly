@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Teams.Api" Version="2.*" />
+    <PackageReference Include="Microsoft.Teams.Apps" Version="2.*" />
+    <PackageReference Include="Microsoft.Teams.AI" Version="2.*" />
+    <PackageReference Include="Microsoft.Teams.AI.Models.OpenAI" Version="2.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NetMQ" Version="4.*" />
+    <PackageReference Include="Dapper" Version="2.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Olly.Storage\Olly.Storage.csproj" />
+    <ProjectReference Include="..\Olly.Services\Olly.Services.csproj" />
+    <ProjectReference Include="..\Olly.Drivers\Olly.Drivers.csproj" />
+    <ProjectReference Include="..\Olly.Cards\Olly.Cards.csproj" />
+    <ProjectReference Include="..\Olly.Events\Olly.Events.csproj" />
+    <ProjectReference Include="..\Olly.Prompts\Olly.Prompts.csproj" />
+    <ProjectReference Include="..\Olly.Drivers.Github\Olly.Drivers.Github.csproj" />
+  </ItemGroup>
+</Project>

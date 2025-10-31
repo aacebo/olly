@@ -1,4 +1,4 @@
-name: os.agent
+name: olly
 
 services:
   postgres:

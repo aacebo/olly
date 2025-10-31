@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Teams.AI" Version="2.*" />
+    <PackageReference Include="Microsoft.Teams.AI.Models.OpenAI" Version="2.*" />
+    <PackageReference Include="Microsoft.Teams.Extensions.Hosting" Version="2.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Olly.Drivers\Olly.Drivers.csproj" />
+    <ProjectReference Include="..\Olly.Storage\Olly.Storage.csproj" />
+    <ProjectReference Include="..\Olly.Services\Olly.Services.csproj" />
+  </ItemGroup>
+</Project>
