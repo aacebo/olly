@@ -17,9 +17,13 @@ public interface IChatService
     Task<PaginationResult<Chat>> GetByTenantId(Guid tenantId, Page? page = null, CancellationToken cancellationToken = default);
     Task<Chat?> GetBySourceId(Guid tenantId, SourceType type, string sourceId, CancellationToken cancellationToken = default);
     Task<IEnumerable<Chat>> GetByParentId(Guid parentId, CancellationToken cancellationToken = default);
+
     Task<Chat> Create(Chat value, CancellationToken cancellationToken = default);
     Task<Chat> Update(Chat value, CancellationToken cancellationToken = default);
     Task Delete(Guid id, CancellationToken cancellationToken = default);
+
+    Task AddRecord(Guid id, Guid recordId, CancellationToken cancellationToken = default);
+    Task DelRecord(Guid id, Guid recordId, CancellationToken cancellationToken = default);
 }
 
 public class ChatService(IServiceProvider provider) : IChatService
@@ -110,5 +114,15 @@ public class ChatService(IServiceProvider provider) : IChatService
             Tenant = tenant,
             Chat = chat
         });
+    }
+
+    public async Task AddRecord(Guid id, Guid recordId, CancellationToken cancellationToken = default)
+    {
+        await Storage.AddRecord(id, recordId, cancellationToken: cancellationToken);
+    }
+    
+    public async Task DelRecord(Guid id, Guid recordId, CancellationToken cancellationToken = default)
+    {
+        await Storage.DelRecord(id, recordId, cancellationToken: cancellationToken);
     }
 }

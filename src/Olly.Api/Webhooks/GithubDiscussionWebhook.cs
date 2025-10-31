@@ -25,9 +25,11 @@ public class GithubDiscussionWebhook(IServiceScopeFactory scopeFactory) : Webhoo
         var accounts = scope.ServiceProvider.GetRequiredService<IAccountService>();
         var chats = scope.ServiceProvider.GetRequiredService<IChatService>();
         var messages = scope.ServiceProvider.GetRequiredService<IMessageService>();
+        var records = scope.ServiceProvider.GetRequiredService<IRecordService>();
         var tenant = await tenants.GetBySourceId(SourceType.Github, installLite.Id.ToString(), cancellationToken)
             ?? throw HttpException.UnAuthorized().AddMessage("tenant not found");
 
+        var repository = await records.GetBySourceId(SourceType.Github, @event.Repository!.NodeId, cancellationToken) ?? throw new Exception("repository not found");
         var account = await accounts.GetBySourceId(tenant.Id, SourceType.Github, @event.Discussion.User.NodeId, cancellationToken);
 
         if (account is null)
@@ -95,7 +97,8 @@ public class GithubDiscussionWebhook(IServiceScopeFactory scopeFactory) : Webhoo
                 Entities = [
                     new GithubDiscussionEntity()
                     {
-                        Discussion = @event.Discussion
+                        Discussion = @event.Discussion,
+                        Repository = @event.Repository
                     }
                 ]
             }, cancellationToken);
@@ -107,10 +110,16 @@ public class GithubDiscussionWebhook(IServiceScopeFactory scopeFactory) : Webhoo
             chat.Url = @event.Discussion.HtmlUrl;
             chat.Entities.Put(new GithubDiscussionEntity()
             {
-                Discussion = @event.Discussion
+                Discussion = @event.Discussion,
+                Repository = @event.Repository
             });
 
             chat = await chats.Update(chat, cancellationToken);
+        }
+
+        if (action == DiscussionAction.Created)
+        {
+            await chats.AddRecord(chat.Id, repository.Id, cancellationToken);
         }
 
         var message = await messages.GetBySourceId(chat.Id, SourceType.Github, @event.Discussion.NodeId, cancellationToken);

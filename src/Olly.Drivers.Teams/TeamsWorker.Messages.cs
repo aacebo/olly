@@ -1,7 +1,7 @@
 using Microsoft.Teams.AI;
 using Microsoft.Teams.AI.Messages;
 
-using Olly.Drivers.Github;
+using Olly.Drivers.Github.Prompts;
 using Olly.Events;
 using Olly.Prompts;
 using Olly.Prompts.Extensions;

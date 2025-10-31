@@ -21,6 +21,7 @@ public interface IRecordStorage
     Task<PaginationResult<Record>> GetByMessageId(Guid messageId, Page? page = null, CancellationToken cancellationToken = default);
     Task<Record?> GetBySourceId(SourceType type, string sourceId, CancellationToken cancellationToken = default);
     Task<IEnumerable<Record>> GetByParentId(Guid parentId, CancellationToken cancellationToken = default);
+
     Task<Record> Create(Record value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
     Task<Record> Create(Tenant tenant, Record value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
     Task<Record> Create(Account account, Record value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);

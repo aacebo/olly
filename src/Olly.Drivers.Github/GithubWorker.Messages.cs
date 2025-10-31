@@ -1,10 +1,13 @@
 using Microsoft.Teams.AI;
 using Microsoft.Teams.AI.Messages;
 
+using Olly.Drivers.Github.Models;
+using Olly.Drivers.Github.Prompts;
 using Olly.Events;
 using Olly.Prompts;
 using Olly.Prompts.Extensions;
 using Olly.Storage;
+using Olly.Storage.Models;
 
 namespace Olly.Drivers.Github;
 
@@ -38,8 +41,18 @@ public partial class GithubWorker
 
     protected async Task OnMessageCreateEvent(MessageEvent @event, Client client, CancellationToken cancellationToken = default)
     {
-        var prompt = OllyPrompt.Create(client, provider, cancellationToken)
-            .AddPrompt(GithubPrompt.Create(client, provider, cancellationToken), cancellationToken);
+        var prompt = OllyPrompt.Create(client, provider, cancellationToken);
+
+        if (@event.Chat.SourceType == SourceType.Github && @event.Chat.Type == "discussion")
+        {
+            var entity = @event.Chat.Entities.GetRequired<GithubDiscussionEntity>();
+            var repository = await client.Services.Records.GetBySourceId(SourceType.Github, entity.Repository.NodeId, cancellationToken) ?? throw new Exception("discussion repository not found");
+            prompt = prompt.AddPrompt(GithubRepositoryPrompt.Create(client, repository, provider, cancellationToken), cancellationToken);
+        }
+        else
+        {
+            prompt = prompt.AddPrompt(GithubPrompt.Create(client, provider, cancellationToken), cancellationToken);
+        }
 
         await client.Typing();
 

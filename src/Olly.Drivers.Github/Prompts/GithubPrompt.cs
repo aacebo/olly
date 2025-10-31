@@ -15,7 +15,7 @@ using Olly.Prompts.Extensions;
 using Olly.Storage;
 using Olly.Storage.Models;
 
-namespace Olly.Drivers.Github;
+namespace Olly.Drivers.Github.Prompts;
 
 [Prompt("GithubAgent")]
 [Prompt.Description(

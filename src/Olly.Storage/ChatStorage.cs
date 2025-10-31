@@ -18,9 +18,13 @@ public interface IChatStorage
     Task<PaginationResult<Chat>> GetByTenantId(Guid tenantId, Page? page = null, CancellationToken cancellationToken = default);
     Task<Chat?> GetBySourceId(Guid tenantId, SourceType type, string sourceId, CancellationToken cancellationToken = default);
     Task<IEnumerable<Chat>> GetByParentId(Guid parentId, CancellationToken cancellationToken = default);
+
     Task<Chat> Create(Chat value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
     Task<Chat> Update(Chat value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
     Task Delete(Guid id, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
+
+    Task AddRecord(Guid id, Guid recordId, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
+    Task DelRecord(Guid id, Guid recordId, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
 }
 
 public class ChatStorage(ILogger<IChatStorage> logger, QueryFactory db) : IChatStorage
@@ -144,5 +148,26 @@ public class ChatStorage(ILogger<IChatStorage> logger, QueryFactory db) : IChatS
     {
         logger.LogDebug("Delete");
         await db.Query("chats").Where("id", "=", id).DeleteAsync(tx, cancellationToken: cancellationToken);
+    }
+
+    public async Task AddRecord(Guid id, Guid recordId, IDbTransaction? tx = null, CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("AddRecord");
+        await db.Query("chats_records").InsertAsync(new
+        {
+            chat_id = id,
+            record_id = recordId,
+            created_at = DateTimeOffset.UtcNow
+        }, tx, cancellationToken: cancellationToken);
+    }
+
+    public async Task DelRecord(Guid id, Guid recordId, IDbTransaction? tx = null, CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("DelRecord");
+        await db
+            .Query("chats_records")
+            .Where("chat_id", "=", id)
+            .Where("record_id", "=", recordId)
+            .DeleteAsync(tx, cancellationToken: cancellationToken);
     }
 }
