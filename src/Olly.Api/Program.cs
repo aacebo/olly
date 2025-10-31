@@ -72,6 +72,10 @@ builder.Services.AddGithubDriver();
 
 // AI
 builder.Services.AddSingleton(openAiModel);
+builder.Services
+    .AddMcpServer()
+    .WithHttpTransport()
+    .WithToolsFromAssembly();
 
 // Controllers
 builder.Services.AddScoped<ErrorMiddleware>();
@@ -146,5 +150,6 @@ app.MapEntityTypes();
 app.MapTeamsEntityTypes();
 app.MapGithubEntityTypes();
 app.MapGraphQL();
+app.MapMcp("mcp");
 app.UseTeams();
 app.Run();

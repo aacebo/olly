@@ -11,6 +11,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="ModelContextProtocol" Version="0.4.0-preview.3" />
+    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.4.0-preview.3" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Teams.AI" Version="2.*" />
     <PackageReference Include="Microsoft.Teams.AI.Models.OpenAI" Version="2.*" />
     <PackageReference Include="Microsoft.Teams.Api" Version="2.*" />
