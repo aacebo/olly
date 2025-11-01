@@ -171,7 +171,11 @@ public class TaskProgressCard : CardComponent
                         .WithHorizontalAlignment(HorizontalAlignment.Center)
                         .WithMaxHeight("300px")
                     ).WithStyle(style.ContainerStyle)
-                )
+                ),
+                new SubmitAction()
+                    .WithData(new Union<string, SubmitActionData>(
+                        new TaskFetchSubmitActionData()
+                    ))
             )
             .WithHorizontalAlignment(HorizontalAlignment.Right)
         );

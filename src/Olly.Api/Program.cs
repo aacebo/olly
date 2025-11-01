@@ -82,6 +82,7 @@ builder.Services.AddScoped<ErrorMiddleware>();
 builder.Services.AddScoped<ChatController>();
 builder.Services.AddScoped<InstallController>();
 builder.Services.AddScoped<MessageController>();
+builder.Services.AddScoped<DialogController>();
 
 // Queues
 builder.Services.AddSingleton<NetMQQueue<UserEvent>>(); // users.(create | update | delete)
