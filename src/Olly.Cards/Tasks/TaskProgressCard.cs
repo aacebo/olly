@@ -1,6 +1,7 @@
 using Microsoft.Teams.Cards;
 using Microsoft.Teams.Common;
 
+using Olly.Cards.Dialogs;
 using Olly.Cards.Progress;
 
 namespace Olly.Cards.Tasks;
@@ -172,10 +173,13 @@ public class TaskProgressCard : CardComponent
                         .WithMaxHeight("300px")
                     ).WithStyle(style.ContainerStyle)
                 ),
-                new SubmitAction()
-                    .WithData(new Union<string, SubmitActionData>(
-                        new TaskFetchSubmitActionData()
-                    ))
+                new TaskFetchAction(
+                    new OpenDialogRequest("tasks", "Tasks")
+                        .WithData(Tasks)
+                        .ToDictionary()
+                )
+                .WithTitle("Open")
+                .WithIconUrl("icon:ArrowExpand")
             )
             .WithHorizontalAlignment(HorizontalAlignment.Right)
         );
