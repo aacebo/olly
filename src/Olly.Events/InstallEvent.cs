@@ -16,7 +16,7 @@ public class InstallEvent(ActionType action) : Event(EntityType.Install, action)
     public required Install Install { get; init; }
 
     [JsonPropertyName("chat")]
-    public Chat? Chat { get; init; }
+    public required Chat Chat { get; init; }
 
     [JsonPropertyName("message")]
     public Message? Message { get; init; }

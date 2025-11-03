@@ -15,9 +15,9 @@ namespace Olly.Storage;
 public interface IInstallStorage
 {
     Task<Install?> GetById(Guid id, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Install>> GetByUserId(Guid userId, Query? query = null, CancellationToken cancellationToken = default);
     Task<Install?> GetByAccountId(Guid accountId, CancellationToken cancellationToken = default);
     Task<Install?> GetBySourceId(SourceType type, string sourceId, CancellationToken cancellationToken = default);
+    Task<IEnumerable<Install>> GetByUserId(Guid userId, Query? query = null, CancellationToken cancellationToken = default);
     Task<Install> Create(Install value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
     Task<Install> Update(Install value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
     Task Delete(Guid id, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
@@ -74,9 +74,9 @@ public class InstallStorage(ILogger<IInstallStorage> logger, QueryFactory db) : 
         using var cmd = new NpgsqlCommand(
         """
             INSERT INTO installs
-            (id, user_id, account_id, message_id, source_id, source_type, status, url, access_token, expires_at, entities, created_at, updated_at)
+            (id, user_id, account_id, chat_id, message_id, source_id, source_type, status, url, access_token, expires_at, entities, created_at, updated_at)
             VALUES
-            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
         """, (NpgsqlConnection)db.Connection)
         {
             Parameters =
@@ -84,6 +84,7 @@ public class InstallStorage(ILogger<IInstallStorage> logger, QueryFactory db) : 
                 new() { Value = value.Id, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.UserId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.AccountId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.ChatId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.MessageId is null ? DBNull.Value : value.MessageId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.SourceId, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
@@ -110,16 +111,17 @@ public class InstallStorage(ILogger<IInstallStorage> logger, QueryFactory db) : 
             UPDATE installs SET
                 user_id = $2,
                 account_id = $3,
-                message_id = $4,
-                source_id = $5,
-                source_type = $6,
-                status = $7,
-                url = $8,
-                access_token = $9,
-                expires_at = $10,
-                entities = $11,
-                created_at = $12,
-                updated_at = $13
+                chat_id = $4,
+                message_id = $5,
+                source_id = $6,
+                source_type = $7,
+                status = $8,
+                url = $9,
+                access_token = $10,
+                expires_at = $11,
+                entities = $12,
+                created_at = $13,
+                updated_at = $14
             WHERE id = $1
         """, (NpgsqlConnection)db.Connection)
         {
@@ -128,6 +130,7 @@ public class InstallStorage(ILogger<IInstallStorage> logger, QueryFactory db) : 
                 new() { Value = value.Id, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.UserId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.AccountId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.ChatId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.MessageId is null ? DBNull.Value : value.MessageId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.SourceId, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.SourceType.ToString(), NpgsqlDbType = NpgsqlDbType.Text },

@@ -11,6 +11,7 @@ public class CreateInstallsTable : Migration
             .WithColumn("id").AsGuid().PrimaryKey()
             .WithColumn("user_id").AsGuid().ForeignKey("users", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
             .WithColumn("account_id").AsGuid().ForeignKey("accounts", "id").OnDelete(System.Data.Rule.Cascade).NotNullable()
+            .WithColumn("chat_id").AsGuid().ForeignKey("chats", "id").NotNullable()
             .WithColumn("message_id").AsGuid().ForeignKey("messages", "id").Nullable()
             .WithColumn("source_type").AsString().NotNullable()
             .WithColumn("source_id").AsString().NotNullable()

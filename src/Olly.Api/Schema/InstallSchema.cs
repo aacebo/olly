@@ -52,6 +52,19 @@ public class InstallSchema(Storage.Models.Install install) : ModelSchema
         return new(user);
     }
 
+    [GraphQLName("chat")]
+    public async Task<ChatSchema?> GetChat([Service] IChatService chatService, CancellationToken cancellationToken = default)
+    {
+        var chat = await chatService.GetById(install.ChatId, cancellationToken);
+
+        if (chat is null)
+        {
+            throw new InvalidDataException();
+        }
+
+        return new(chat);
+    }
+
     [GraphQLName("message")]
     public async Task<MessageSchema?> GetMessage([Service] IMessageService messageService, CancellationToken cancellationToken = default)
     {

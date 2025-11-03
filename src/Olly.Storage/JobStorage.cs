@@ -18,13 +18,11 @@ public interface IJobStorage
     Task<PaginationResult<Job>> GetByInstallId(Guid installId, Page? page = null, CancellationToken cancellationToken = default);
     Task<IEnumerable<Job>> GetByParentId(Guid parentId, CancellationToken cancellationToken = default);
     Task<PaginationResult<Job>> GetByChatId(Guid chatId, Page? page = null, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Job>> GetBlocking(Guid chatId, CancellationToken cancellationToken = default);
+    Task<PaginationResult<Job>> GetByMessageId(Guid messageId, Page? page = null, CancellationToken cancellationToken = default);
+    Task<IEnumerable<Job>> GetBlockingByChatId(Guid chatId, CancellationToken cancellationToken = default);
 
     Task<Job> Create(Job value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
     Task<Job> Update(Job value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
-
-    Task AddChat(Guid chatId, Guid jobId, bool async = false, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
-    Task DelChat(Guid chatId, Guid jobId, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
 }
 
 public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStorage
@@ -66,26 +64,34 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
         logger.LogDebug("GetByChatId");
         page ??= new();
         var query = db
-            .Query("chats_jobs")
-            .Select("jobs.*")
-            .LeftJoin("jobs", "jobs.id", "chats_jobs.job_id")
-            .Where("chats_jobs.chat_id", "=", chatId);
+            .Query("jobs")
+            .Select("*")
+            .Where("chat_id", "=", chatId);
 
         return await page.Invoke<Job>(query, cancellationToken);
     }
 
-    public async Task<IEnumerable<Job>> GetBlocking(Guid chatId, CancellationToken cancellationToken = default)
+    public async Task<PaginationResult<Job>> GetByMessageId(Guid messageId, Page? page = null, CancellationToken cancellationToken = default)
     {
-        logger.LogDebug("GetBlocking");
+        logger.LogDebug("GetByMessageId");
+        page ??= new();
+        var query = db
+            .Query("jobs")
+            .Select("*")
+            .Where("message_id", "=", messageId);
+
+        return await page.Invoke<Job>(query, cancellationToken);
+    }
+
+    public async Task<IEnumerable<Job>> GetBlockingByChatId(Guid chatId, CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("GetBlockingByChatId");
         return await db
-            .Query("chats_jobs")
-            .Select("jobs.*")
-            .LeftJoin("jobs", join =>
-                join.On("jobs.id", "chats_jobs.job_id")
-                    .WhereNull("jobs.ended_at")
-            )
-            .Where("chats_jobs.chat_id", "=", chatId)
-            .Where("chats_jobs.is_async", "=", false)
+            .Query("jobs")
+            .Select("*")
+            .Where("chat_id", "=", chatId)
+            .Where("type", "=", JobType.Sync.ToString())
+            .WhereNull("ended_at")
             .GetAsync<Job>(cancellationToken: cancellationToken);
     }
 
@@ -95,9 +101,9 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
         using var cmd = new NpgsqlCommand(
         """
             INSERT INTO jobs
-            (id, install_id, parent_id, name, status, message, entities, started_at, ended_at, created_at, updated_at)
+            (id, install_id, parent_id, chat_id, message_id, type, name, status, message, entities, started_at, ended_at, created_at, updated_at)
             VALUES
-            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
         """, (NpgsqlConnection)db.Connection)
         {
             Parameters =
@@ -105,6 +111,9 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
                 new() { Value = value.Id, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.InstallId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.ParentId is null ? DBNull.Value : value.ParentId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.ChatId is null ? DBNull.Value : value.ChatId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.MessageId is null ? DBNull.Value : value.MessageId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.Type.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Name, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Status.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Message is null ? DBNull.Value : value.Message, NpgsqlDbType = NpgsqlDbType.Text },
@@ -129,14 +138,17 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
             UPDATE jobs SET
                 install_id = $2,
                 parent_id = $3,
-                name = $4,
-                status = $5,
-                message = $6,
-                entities = $7,
-                started_at = $8,
-                ended_at = $9,
-                created_at = $10,
-                updated_at = $11
+                chat_id = $4,
+                message_id = $5,
+                type = $6,
+                name = $7,
+                status = $8,
+                message = $9,
+                entities = $10,
+                started_at = $11,
+                ended_at = $12,
+                created_at = $13,
+                updated_at = $14
             WHERE id = $1
         """, (NpgsqlConnection)db.Connection)
         {
@@ -145,6 +157,9 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
                 new() { Value = value.Id, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.InstallId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.ParentId is null ? DBNull.Value : value.ParentId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.ChatId is null ? DBNull.Value : value.ChatId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.MessageId is null ? DBNull.Value : value.MessageId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.Type.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Name, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Status.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Message is null ? DBNull.Value : value.Message, NpgsqlDbType = NpgsqlDbType.Text },
@@ -158,27 +173,5 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
 
         await cmd.ExecuteNonQueryAsync(cancellationToken);
         return value;
-    }
-
-    public async Task AddChat(Guid chatId, Guid jobId, bool async = false, IDbTransaction? tx = null, CancellationToken cancellationToken = default)
-    {
-        logger.LogDebug("AddChat");
-        await db.Query("chats_jobs").InsertAsync(new
-        {
-            chat_id = chatId,
-            job_id = jobId,
-            is_async = async,
-            created_at = DateTimeOffset.UtcNow
-        }, tx, cancellationToken: cancellationToken);
-    }
-
-    public async Task DelChat(Guid chatId, Guid jobId, IDbTransaction? tx = null, CancellationToken cancellationToken = default)
-    {
-        logger.LogDebug("DelChat");
-        await db
-            .Query("chats_jobs")
-            .Where("chat_id", "=", chatId)
-            .Where("job_id", "=", jobId)
-            .DeleteAsync(tx, cancellationToken: cancellationToken);
     }
 }

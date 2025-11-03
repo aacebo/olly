@@ -84,7 +84,7 @@ public class MessageWorker(IServiceProvider provider, IServiceScopeFactory scope
     {
         var factory = ClientRegistry.Get(@event.Chat.SourceType);
         var client = factory(@event, provider, cancellationToken);
-        var jobs = await client.Services.Jobs.GetBlocking(@event.Chat.Id, cancellationToken);
+        var jobs = await client.Services.Jobs.GetBlockingByChatId(@event.Chat.Id, cancellationToken);
 
         if (jobs.Any())
         {

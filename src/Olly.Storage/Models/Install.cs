@@ -19,6 +19,10 @@ public class Install : Model
     [JsonPropertyName("account_id")]
     public required Guid AccountId { get; init; }
 
+    [Column("chat_id")]
+    [JsonPropertyName("chat_id")]
+    public required Guid ChatId { get; init; }
+
     [Column("message_id")]
     [JsonPropertyName("message_id")]
     public Guid? MessageId { get; init; }

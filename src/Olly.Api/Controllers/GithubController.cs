@@ -98,6 +98,7 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
             {
                 UserId = user.Id,
                 AccountId = account.Id,
+                ChatId = chat.Id,
                 MessageId = message.Id,
                 SourceType = SourceType.Github,
                 SourceId = installationId.ToString(),

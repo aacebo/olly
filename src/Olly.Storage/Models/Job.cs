@@ -19,6 +19,18 @@ public class Job : Model
     [JsonPropertyName("parent_id")]
     public Guid? ParentId { get; init; }
 
+    [Column("chat_id")]
+    [JsonPropertyName("chat_id")]
+    public Guid? ChatId { get; init; }
+
+    [Column("message_id")]
+    [JsonPropertyName("message_id")]
+    public Guid? MessageId { get; init; }
+
+    [Column("type")]
+    [JsonPropertyName("type")]
+    public JobType Type { get; set; } = JobType.Async;
+
     [Column("name")]
     [JsonPropertyName("name")]
     public required string Name { get; init; }
@@ -87,6 +99,16 @@ public class Job : Model
         EndedAt = DateTimeOffset.UtcNow;
         return this;
     }
+}
+
+[JsonConverter(typeof(Converter<JobType>))]
+public class JobType(string value) : StringEnum(value)
+{
+    public static readonly JobType Sync = new("sync");
+    public bool IsSync => Sync.Equals(Value);
+
+    public static readonly JobType Async = new("async");
+    public bool IsAsync => Async.Equals(Value);
 }
 
 [JsonConverter(typeof(Converter<JobStatus>))]

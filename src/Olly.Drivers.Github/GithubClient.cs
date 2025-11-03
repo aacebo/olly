@@ -24,7 +24,7 @@ public partial class GithubClient : Client
         Account = @event.Account;
         User = @event.CreatedBy;
         Install = @event.Install;
-        Chat = @event.Chat ?? throw new Exception("install event must have a chat");
+        Chat = @event.Chat;
         Message = @event.Message;
         Github = provider.GetRequiredService<GithubService>();
     }

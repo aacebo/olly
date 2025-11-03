@@ -145,6 +145,8 @@ public partial class GithubWorker
             await client.Services.Jobs.Create(new()
             {
                 InstallId = @event.Install.Id,
+                ChatId = @event.Chat?.Id,
+                MessageId = @event.Message?.Id,
                 Name = "github.repository.index",
                 Entities = [entity]
             }, client.CancellationToken);

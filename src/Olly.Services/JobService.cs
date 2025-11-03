@@ -17,13 +17,11 @@ public interface IJobService
     Task<PaginationResult<Job>> GetByInstallId(Guid installId, Page? page = null, CancellationToken cancellationToken = default);
     Task<IEnumerable<Job>> GetByParentId(Guid parentId, CancellationToken cancellationToken = default);
     Task<PaginationResult<Job>> GetByChatId(Guid chatId, Page? page = null, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Job>> GetBlocking(Guid chatId, CancellationToken cancellationToken = default);
+    Task<PaginationResult<Job>> GetByMessageId(Guid messageId, Page? page = null, CancellationToken cancellationToken = default);
+    Task<IEnumerable<Job>> GetBlockingByChatId(Guid chatId, CancellationToken cancellationToken = default);
 
     Task<Job> Create(Job value, CancellationToken cancellationToken = default);
     Task<Job> Update(Job value, CancellationToken cancellationToken = default);
-
-    Task AddChat(Guid chatId, Guid jobId, bool async = false, CancellationToken cancellationToken = default);
-    Task DelChat(Guid chatId, Guid jobId, CancellationToken cancellationToken = default);
 }
 
 public class JobService(IServiceProvider provider) : IJobService
@@ -71,9 +69,14 @@ public class JobService(IServiceProvider provider) : IJobService
         return await Storage.GetByChatId(chatId, page, cancellationToken);
     }
 
-    public async Task<IEnumerable<Job>> GetBlocking(Guid chatId, CancellationToken cancellationToken = default)
+    public async Task<PaginationResult<Job>> GetByMessageId(Guid messageId, Page? page = null, CancellationToken cancellationToken = default)
     {
-        return await Storage.GetBlocking(chatId, cancellationToken);
+        return await Storage.GetByMessageId(messageId, page, cancellationToken);
+    }
+
+    public async Task<IEnumerable<Job>> GetBlockingByChatId(Guid chatId, CancellationToken cancellationToken = default)
+    {
+        return await Storage.GetBlockingByChatId(chatId, cancellationToken);
     }
 
     public async Task<Job> Create(Job value, CancellationToken cancellationToken = default)
@@ -114,15 +117,5 @@ public class JobService(IServiceProvider provider) : IJobService
         });
 
         return job;
-    }
-
-    public async Task AddChat(Guid chatId, Guid jobId, bool async = false, CancellationToken cancellationToken = default)
-    {
-        await Storage.AddChat(chatId, jobId, async, cancellationToken: cancellationToken);
-    }
-
-    public async Task DelChat(Guid chatId, Guid jobId, CancellationToken cancellationToken = default)
-    {
-        await Storage.DelChat(chatId, jobId, cancellationToken: cancellationToken);
     }
 }

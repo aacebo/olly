@@ -121,10 +121,11 @@ public class InstallController(IHttpContextAccessor accessor)
             {
                 UserId = user.Id,
                 AccountId = account.Id,
+                ChatId = chat.Id,
                 SourceType = SourceType.Teams,
                 SourceId = account.SourceId,
                 Url = context.Activity.ServiceUrl
-            }, chat, context.CancellationToken);
+            }, context.CancellationToken);
         }
         else
         {
