@@ -1,5 +1,5 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.22/MicrosoftTeams.schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.20/MicrosoftTeams.schema.json",
   "version": "1.0.0",
   "manifestVersion": "1.22",
   "id": "${{TEAMS_APP_ID}}",
@@ -37,16 +37,14 @@
     {
       "botId": "${{BOT_ID}}",
       "scopes": ["personal", "team", "groupChat"],
-      "isNotificationOnly": true,
-      "supportsCalling": true,
-      "supportsVideo": true,
-      "supportsFiles": true,
+      "isNotificationOnly": false,
+      "supportsCalling": false,
+      "supportsVideo": false,
+      "supportsFiles": false,
       "commandLists": [
         {
           "scopes": [
-            "personal",
-            "team",
-            "groupChat"
+            "personal"
           ],
           "commands": [
             {
