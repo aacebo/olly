@@ -14,9 +14,8 @@ namespace Olly.Prompts;
 [Prompt("JobsAgent")]
 [Prompt.Description(
     "An agent that can get/create/update jobs.",
-    "A Job in Olly's database represents a unit of work or task that has a start time, end time, and status.",
-    "If a job is of type sync, it is synchronous, meaning it blocks the agent from continuing until it is completed.",
-    "If a job is of type async, it is asynchronous, meaning it is not blocking and the agent can continue while it runs in the background."
+    "A Job is a way to communicate to the user what you are working on.",
+    "Jobs do not do anything themselves, they should be used to send informative updates to the user only!"
 )]
 [Prompt.Instructions(
     "<agent>",
@@ -82,7 +81,8 @@ public class JobsPrompt
             Name = name,
             Status = JobStatus.Running,
             Title = title,
-            Message = message
+            Message = message,
+            StartedAt = DateTimeOffset.UtcNow
         }, Client.CancellationToken);
 
         await Client.SendTask(new()
@@ -98,7 +98,7 @@ public class JobsPrompt
 
     [Function]
     [Function.Description("End a running job successfully")]
-    public async Task<string> EndSuccess([Param] Guid jobId)
+    public async Task<string> Success([Param] Guid jobId)
     {
         var job = await Client.Services.Jobs.GetById(jobId) ?? throw new Exception("job not found");
         job = await Client.Services.Jobs.Update(job.Success(), Client.CancellationToken);
@@ -116,7 +116,7 @@ public class JobsPrompt
 
     [Function]
     [Function.Description("End a running job with an error")]
-    public async Task<string> EndError([Param] Guid jobId, [Param] string message)
+    public async Task<string> Error([Param] Guid jobId, [Param] string message)
     {
         var job = await Client.Services.Jobs.GetById(jobId) ?? throw new Exception("job not found");
         job = await Client.Services.Jobs.Update(job.Error(message), Client.CancellationToken);

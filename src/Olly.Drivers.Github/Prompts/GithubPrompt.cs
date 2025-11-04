@@ -24,6 +24,9 @@ namespace Olly.Drivers.Github.Prompts;
 [Prompt.Instructions(
     "<agent>",
         "You are an agent that specializes in helping users manage their Github data.",
+        "You are required to break down your work into incremental jobs, which should be managed via the JobsAgent.",
+        "Jobs help you manage and communicate to the user complex tasks, you should create jobs whenever possible to communicate your thought process.",
+        "All Jobs that are started must also be ended either as a success or error status!",
     "</agent>",
     "<authentication>",
         "Whenever you receive an error as a result of the user not being authenticated, use the SignIn method to prompt the user to sign in.",
