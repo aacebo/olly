@@ -1,4 +1,7 @@
-# Olly
+<h1 style="display:flex">
+    <img src="./assets/icons/square.png" width="40px" height="40px" style="margin-right:10px" />
+    Olly
+</h1>
 
 An agent built to be your personal assistant.
 
