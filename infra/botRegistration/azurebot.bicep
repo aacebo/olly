@@ -45,23 +45,24 @@ resource botServiceMsTeamsChannel 'Microsoft.BotService/botServices/channels@202
   }
 }
 
-resource botServicesGithubConnection 'Microsoft.BotService/botServices/connections@2022-09-15' = {
+resource botServicesMicrosoftGraphConnection 'Microsoft.BotService/botServices/connections@2022-09-15' = {
   parent: botService
-  name: 'Github'
+  name: 'Microsoft'
   location: 'global'
   properties: {
-    serviceProviderDisplayName: 'Github'
-    serviceProviderId: 'd05eaacf-1593-4603-9c6c-d4d8fffa46cb'
+    serviceProviderDisplayName: 'Azure Active Directory v2'
+    serviceProviderId: '30dd229c-58e3-4a48-bdfd-91ec48eb906c'
     clientId: botAadAppClientId
     clientSecret: botAadAppClientSecret
+    scopes: 'User.ReadBasic.All'
     parameters: [
       {
-        key: 'ClientId'
-        value: 'Iv23liSuSCDKZJKYlQpO'
+        key: 'tenantID'
+        value: 'common'
       }
       {
-        key: 'ClientSecret'
-        value: '69821d2a142a76e99ded917b9ab9a8d521776e46'
+        key: 'tokenExchangeUrl'
+        value: 'api://botid-${botAadAppClientId}'
       }
     ]
   }

@@ -149,7 +149,7 @@ public partial class GithubWorker
                 MessageId = @event.Message?.Id,
                 Name = "github.repository.index",
                 Title = $"Github Repository {repository.Name} Index",
-                Message = $"I need to index repository {repository.Name} to make it easier to search/understand.",
+                Description = $"I need to index repository {repository.Name} to make it easier to search/understand.",
                 Entities = [entity]
             }, client.CancellationToken);
         }

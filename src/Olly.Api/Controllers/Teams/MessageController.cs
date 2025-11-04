@@ -26,6 +26,17 @@ public class MessageController(IHttpContextAccessor accessor)
         var account = await accounts.GetBySourceId(tenant.Id, SourceType.Teams, context.Activity.From.Id, context.CancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
         var chat = await chats.GetBySourceId(tenant.Id, SourceType.Teams, context.Activity.Conversation.Id, context.CancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("chat not found");
 
+        if (account.Name != context.Activity.From.Name)
+        {
+            account.Name = context.Activity.From.Name;
+            account.Entities.Put(new TeamsAccountEntity()
+            {
+                User = context.Activity.From
+            });
+
+            account = await accounts.Update(account, context.CancellationToken);
+        }
+
         var message = new Storage.Models.Message()
         {
             AccountId = account.Id,

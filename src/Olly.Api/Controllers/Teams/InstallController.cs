@@ -124,12 +124,14 @@ public class InstallController(IHttpContextAccessor accessor)
                 ChatId = chat.Id,
                 SourceType = SourceType.Teams,
                 SourceId = account.SourceId,
-                Url = context.Activity.ServiceUrl
+                Url = context.Activity.ServiceUrl,
+                Entities = [Entity.From(context.Activity)]
             }, context.CancellationToken);
         }
         else
         {
             install.Url = context.Activity.ServiceUrl;
+            install.Entities = [Entity.From(context.Activity)];
             await installs.Update(install, context.CancellationToken);
         }
     }

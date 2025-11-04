@@ -31,6 +31,10 @@ public class Job : Model
     [JsonPropertyName("type")]
     public JobType Type { get; set; } = JobType.Async;
 
+    [Column("status")]
+    [JsonPropertyName("status")]
+    public JobStatus Status { get; set; } = JobStatus.Pending;
+
     [Column("name")]
     [JsonPropertyName("name")]
     public required string Name { get; init; }
@@ -39,13 +43,13 @@ public class Job : Model
     [JsonPropertyName("title")]
     public required string Title { get; init; }
 
-    [Column("status")]
-    [JsonPropertyName("status")]
-    public JobStatus Status { get; set; } = JobStatus.Pending;
+    [Column("description")]
+    [JsonPropertyName("description")]
+    public string? Description { get; set; }
 
-    [Column("message")]
-    [JsonPropertyName("message")]
-    public string? Message { get; set; }
+    [Column("status_message")]
+    [JsonPropertyName("status_message")]
+    public string? StatusMessage { get; set; }
 
     [Column("entities")]
     [JsonPropertyName("entities")]
@@ -83,7 +87,7 @@ public class Job : Model
     public Job Success()
     {
         Status = JobStatus.Success;
-        Message = null;
+        StatusMessage = null;
         EndedAt = DateTimeOffset.UtcNow;
         return this;
     }
@@ -91,7 +95,7 @@ public class Job : Model
     public Job Error(string message)
     {
         Status = JobStatus.Error;
-        Message = message;
+        StatusMessage = message;
         EndedAt = DateTimeOffset.UtcNow;
         return this;
     }
@@ -99,7 +103,7 @@ public class Job : Model
     public Job Error(Exception ex)
     {
         Status = JobStatus.Error;
-        Message = ex.ToString();
+        StatusMessage = ex.ToString();
         EndedAt = DateTimeOffset.UtcNow;
         return this;
     }
@@ -126,6 +130,9 @@ public class JobStatus(string value) : StringEnum(value)
 
     public static readonly JobStatus Success = new("success");
     public bool IsSuccess => Success.Equals(Value);
+
+    public static readonly JobStatus Warning = new("warning");
+    public bool IsWarning => Warning.Equals(Value);
 
     public static readonly JobStatus Error = new("error");
     public bool IsError => Error.Equals(Value);

@@ -125,74 +125,13 @@ public class TaskProgressCard : CardComponent<TaskProgressCardProps>
 
         card.Body?.Add(
             new ActionSet(
-                new ShowCardAction()
-                    .WithTitle($"Show {Tasks.Count}")
-                    .WithTooltip("Task Status Updates")
-                    .WithCard(new AdaptiveCard(
-                        new Container(
-                            Tasks.Select(task =>
-                            {
-                                List<Column> columns = [
-                                    new Column(
-                                        new Icon(task.Style.Icon)
-                                            .WithColor(task.Style.Color)
-                                            .WithSize(IconSize.XxSmall)
-                                            .WithIsVisible(!task.Style.IsInProgress),
-                                        new ProgressRing()
-                                            .WithSize(new("Tiny"))
-                                            .WithIsVisible(task.Style.IsInProgress)
-                                    )
-                                    .WithWidth(new Union<string, float>("auto"))
-                                    .WithVerticalContentAlignment(VerticalAlignment.Center),
-                                    new Column(
-                                        new TextBlock(task.Message)
-                                            .WithColor(task.Style.Color)
-                                            .WithSize(TextSize.Small)
-                                            .WithSpacing(Spacing.Small)
-                                            .WithIsSubtle(true)
-                                            .WithWrap(false)
-                                    )
-                                    .WithWidth(new Union<string, float>("stretch"))
-                                    .WithVerticalContentAlignment(VerticalAlignment.Center)
-                                ];
-
-                                if (task.EndedAt is not null)
-                                {
-                                    var elapse = task.EndedAt - task.StartedAt;
-
-                                    columns.Add(
-                                        new Column(
-                                            new TextBlock($"{elapse?.Seconds}s")
-                                                .WithColor(task.Style.Color)
-                                                .WithIsSubtle(true)
-                                                .WithHorizontalAlignment(HorizontalAlignment.Right)
-                                        )
-                                        .WithWidth(new Union<string, float>("auto"))
-                                        .WithVerticalContentAlignment(VerticalAlignment.Center)
-                                    );
-                                }
-
-                                return new ColumnSet()
-                                    .WithColumns(columns)
-                                    .WithShowBorder(true)
-                                    .WithRoundedCorners(true)
-                                    .WithStyle(task.Style.ContainerStyle);
-                            })
-                            .ToList<CardElement>()
-                        )
-                        .WithHeight(ElementHeight.Auto)
-                        .WithHorizontalAlignment(HorizontalAlignment.Center)
-                        .WithMaxHeight("300px")
-                    ).WithStyle(style.ContainerStyle)
-                ),
                 new TaskFetchAction(
                     new OpenDialogRequest(props.MessageId is null ? "chat.jobs" : "message.jobs", "Jobs")
                         .WithProperty("chat_id", props.ChatId)
                         .WithProperty("message_id", props.MessageId)
                         .ToDictionary()
                 )
-                .WithTitle("Open")
-                .WithIconUrl("icon:ArrowExpand")
+                .WithTitle($"View {Tasks.Count}")
             )
             .WithHorizontalAlignment(HorizontalAlignment.Right)
         );

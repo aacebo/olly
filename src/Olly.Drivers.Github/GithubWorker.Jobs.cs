@@ -93,7 +93,7 @@ public partial class GithubWorker
                 : Storage.Models.LogLevel.Info,
             Type = LogType.Job,
             TypeId = @event.Job.Id.ToString(),
-            Text = @event.Job.Message ?? @event.Job.Status,
+            Text = @event.Job.Description ?? @event.Job.Status,
             Entities = @event.Job.Entities
         }, cancellationToken);
     }

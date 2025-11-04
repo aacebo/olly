@@ -15,7 +15,9 @@ namespace Olly.Prompts;
 [Prompt.Description(
     "An agent that can get/create/update jobs.",
     "A Job is a way to communicate to the user what you are working on.",
-    "Jobs do not do anything themselves, they should be used to send informative updates to the user only!"
+    "Jobs do not do anything themselves, they should be used to send informative updates to the user only!",
+    "All jobs that are started must also be ended (success/warning/error) when you are done the job/task.",
+    "NEVER LEAVE A JOB RUNNING!"
 )]
 [Prompt.Instructions(
     "<agent>",
@@ -71,7 +73,7 @@ public class JobsPrompt
 
     [Function]
     [Function.Description("Create a new job and start it")]
-    public async Task<string> Start([Param] string name, [Param] string title, [Param] string message)
+    public async Task<string> CreateAndStart([Param] string name, [Param] string title, [Param] string description)
     {
         var job = await Client.Services.Jobs.Create(new()
         {
@@ -81,7 +83,7 @@ public class JobsPrompt
             Name = name,
             Status = JobStatus.Running,
             Title = title,
-            Message = message,
+            Description = description,
             StartedAt = DateTimeOffset.UtcNow
         }, Client.CancellationToken);
 
@@ -90,7 +92,7 @@ public class JobsPrompt
             Id = job.Id,
             Title = job.Title,
             Style = ProgressStyle.InProgress,
-            Message = message
+            Message = description
         });
 
         return JsonSerializer.Serialize(job, Client.JsonSerializerOptions);
@@ -98,7 +100,7 @@ public class JobsPrompt
 
     [Function]
     [Function.Description("End a running job successfully")]
-    public async Task<string> Success([Param] Guid jobId)
+    public async Task<string> UpdateAsSuccess([Param] Guid jobId)
     {
         var job = await Client.Services.Jobs.GetById(jobId) ?? throw new Exception("job not found");
         job = await Client.Services.Jobs.Update(job.Success(), Client.CancellationToken);
@@ -107,7 +109,7 @@ public class JobsPrompt
         {
             Title = job.Title,
             Style = ProgressStyle.Success,
-            Message = job.Message,
+            Message = job.StatusMessage,
             EndedAt = job.EndedAt
         });
 
@@ -116,7 +118,7 @@ public class JobsPrompt
 
     [Function]
     [Function.Description("End a running job with an error")]
-    public async Task<string> Error([Param] Guid jobId, [Param] string message)
+    public async Task<string> UpdateAsError([Param] Guid jobId, [Param] string message)
     {
         var job = await Client.Services.Jobs.GetById(jobId) ?? throw new Exception("job not found");
         job = await Client.Services.Jobs.Update(job.Error(message), Client.CancellationToken);
@@ -125,7 +127,7 @@ public class JobsPrompt
         {
             Title = job.Title,
             Style = ProgressStyle.Error,
-            Message = job.Message,
+            Message = job.StatusMessage,
             EndedAt = job.EndedAt
         });
 

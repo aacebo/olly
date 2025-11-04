@@ -1,7 +1,7 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.22/MicrosoftTeams.schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.20/MicrosoftTeams.schema.json",
   "version": "1.0.0",
-  "manifestVersion": "1.22",
+  "manifestVersion": "1.20",
   "id": "${{TEAMS_APP_ID}}",
   "name": {
     "short": "Olly",
@@ -133,6 +133,7 @@
     "${{BOT_DOMAIN}}",
     "*.botframework.com"
   ],
+  "permissions": ["identity", "messageTeamMembers"],
   "webApplicationInfo": {
     "id": "${{BOT_ID}}",
     "resource": "api://botid-${{BOT_ID}}"
