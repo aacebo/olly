@@ -49,6 +49,9 @@ public class TaskItem
 
     public class Create
     {
+        [JsonPropertyName("id")]
+        public Guid Id { get; set; } = Guid.NewGuid();
+
         [JsonPropertyName("style")]
         public ProgressStyle Style { get; set; } = ProgressStyle.InProgress;
 

@@ -83,14 +83,12 @@ public class JobWorker(IServiceProvider provider, IServiceScopeFactory scopeFact
         if (@event.Job.Name.StartsWith($"{SourceType.Teams}."))
         {
             TeamsQueue.Enqueue(@event);
-            return Task.CompletedTask;
         }
         else if (@event.Job.Name.StartsWith($"{SourceType.Github}."))
         {
             GithubQueue.Enqueue(@event);
-            return Task.CompletedTask;
         }
 
-        throw new Exception($"job '{@event.Job.Name}' not found");
+        return Task.CompletedTask;
     }
 }

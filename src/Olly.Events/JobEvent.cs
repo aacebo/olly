@@ -26,4 +26,7 @@ public class JobEvent(ActionType action) : Event(EntityType.Job, action)
 
     [JsonPropertyName("chat")]
     public Chat? Chat { get; init; }
+
+    [JsonPropertyName("message")]
+    public Message? Message { get; init; }
 }

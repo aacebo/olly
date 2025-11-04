@@ -16,6 +16,7 @@ public class TaskProgressCard : CardComponent
         create.Style.Validate();
         Current = new()
         {
+            Id = create.Id,
             Style = create.Style,
             Title = create.Title,
             Message = create.Message

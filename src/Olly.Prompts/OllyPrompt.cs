@@ -4,7 +4,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Teams.AI.Annotations;
 using Microsoft.Teams.AI.Models.OpenAI;
 
-using Olly.Cards.Progress;
 using Olly.Drivers;
 using Olly.Prompts.Extensions;
 
@@ -19,12 +18,7 @@ namespace Olly.Prompts;
         "Anytime you receive a message you **MUST** use another agent to fetch the information needed to respond!",
         "Any answers you get from another agent should be titled with that agents name.",
         "This is so the user knows where the information is coming from, giving better context.",
-    "</agent>",
-    "<tasks>",
-        "You should break complex jobs into a series of incremental, single responsibility tasks.",
-        "You are __REQUIRED__ to call StartTask whenever you start a new task.",
-        "You are __REQUIRED__ to call EndTask whenever you complete an in progress task.",
-    "</tasks>"
+    "</agent>"
 )]
 public class OllyPrompt(Client client)
 {
@@ -39,7 +33,8 @@ public class OllyPrompt(Client client)
         })
         .AddPrompt(AccountsPrompt.Create(client, provider), cancellationToken)
         .AddPrompt(ChatsPrompt.Create(client, provider), cancellationToken)
-        .AddPrompt(RecordsPrompt.Create(client, provider), cancellationToken);
+        .AddPrompt(RecordsPrompt.Create(client, provider), cancellationToken)
+        .AddPrompt(JobsPrompt.Create(client, provider), cancellationToken);
     }
 
     [Function]
@@ -68,45 +63,6 @@ public class OllyPrompt(Client client)
     public string GetCurrentChat()
     {
         return JsonSerializer.Serialize(client.Chat, client.JsonSerializerOptions);
-    }
-
-    [Function]
-    [Function.Description("Get the task list")]
-    public string GetTasks()
-    {
-        return JsonSerializer.Serialize(client.Tasks, client.JsonSerializerOptions);
-    }
-
-    [Function]
-    [Function.Description("This function sends an update to the user indicating that you have started a new task.")]
-    public async Task<string> StartTask([Param] string? title, [Param] string message)
-    {
-        var task = await client.SendTask(new()
-        {
-            Style = ProgressStyle.InProgress,
-            Title = title,
-            Message = message
-        });
-
-        return JsonSerializer.Serialize(task, client.JsonSerializerOptions);
-    }
-
-    [Function]
-    [Function.Description(
-        "This function sends an update to the user indicating that a specific task has completed.",
-        "Supported progress styles are 'in-progress', 'success', 'warning', 'error'"
-    )]
-    public async Task<string> EndTask([Param] Guid taskId, [Param] string? style, [Param] string? title, [Param] string? message)
-    {
-        var task = await client.SendTask(taskId, new()
-        {
-            Style = style is not null ? new(style) : null,
-            Title = title,
-            Message = message,
-            EndedAt = DateTimeOffset.UtcNow
-        });
-
-        return JsonSerializer.Serialize(task, client.JsonSerializerOptions);
     }
 
     [Function]

@@ -34,6 +34,7 @@ public class JobService(IServiceProvider provider) : IJobService
     private IUserService Users { get; init; } = provider.GetRequiredService<IUserService>();
     private IInstallService Installs { get; init; } = provider.GetRequiredService<IInstallService>();
     private IChatService Chats { get; init; } = provider.GetRequiredService<IChatService>();
+    private IMessageService Messages { get; init; } = provider.GetRequiredService<IMessageService>();
 
     public async Task<Job?> GetById(Guid id, CancellationToken cancellationToken = default)
     {
@@ -85,6 +86,8 @@ public class JobService(IServiceProvider provider) : IJobService
         var account = await Accounts.GetById(install.AccountId, cancellationToken) ?? throw new Exception("account not found");
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var user = await Users.GetById(install.UserId, cancellationToken) ?? throw new Exception("user not found");
+        var chat = value.ChatId is not null ? await Chats.GetById(value.ChatId.Value, cancellationToken) : null;
+        var message = value.MessageId is not null ? await Messages.GetById(value.MessageId.Value, cancellationToken) : null;
         var job = await Storage.Create(value, cancellationToken: cancellationToken);
 
         Events.Enqueue(new(ActionType.Create)
@@ -93,6 +96,8 @@ public class JobService(IServiceProvider provider) : IJobService
             Account = account,
             Install = install,
             User = user,
+            Chat = chat,
+            Message = message,
             Job = job
         });
 
@@ -105,6 +110,8 @@ public class JobService(IServiceProvider provider) : IJobService
         var account = await Accounts.GetById(install.AccountId, cancellationToken) ?? throw new Exception("account not found");
         var tenant = await Tenants.GetById(account.TenantId, cancellationToken) ?? throw new Exception("tenant not found");
         var user = await Users.GetById(install.UserId, cancellationToken) ?? throw new Exception("user not found");
+        var chat = value.ChatId is not null ? await Chats.GetById(value.ChatId.Value, cancellationToken) : null;
+        var message = value.MessageId is not null ? await Messages.GetById(value.MessageId.Value, cancellationToken) : null;
         var job = await Storage.Update(value, cancellationToken: cancellationToken);
 
         Events.Enqueue(new(ActionType.Update)
@@ -113,6 +120,8 @@ public class JobService(IServiceProvider provider) : IJobService
             Account = account,
             Install = install,
             User = user,
+            Chat = chat,
+            Message = message,
             Job = job
         });
 

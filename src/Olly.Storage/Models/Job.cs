@@ -35,6 +35,10 @@ public class Job : Model
     [JsonPropertyName("name")]
     public required string Name { get; init; }
 
+    [Column("title")]
+    [JsonPropertyName("title")]
+    public required string Title { get; init; }
+
     [Column("status")]
     [JsonPropertyName("status")]
     public JobStatus Status { get; set; } = JobStatus.Pending;

@@ -101,9 +101,9 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
         using var cmd = new NpgsqlCommand(
         """
             INSERT INTO jobs
-            (id, install_id, parent_id, chat_id, message_id, type, name, status, message, entities, started_at, ended_at, created_at, updated_at)
+            (id, install_id, parent_id, chat_id, message_id, type, name, title, status, message, entities, started_at, ended_at, created_at, updated_at)
             VALUES
-            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
         """, (NpgsqlConnection)db.Connection)
         {
             Parameters =
@@ -115,6 +115,7 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
                 new() { Value = value.MessageId is null ? DBNull.Value : value.MessageId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.Type.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Name, NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Title, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Status.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Message is null ? DBNull.Value : value.Message, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Entities, NpgsqlDbType = NpgsqlDbType.Jsonb },
@@ -142,13 +143,14 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
                 message_id = $5,
                 type = $6,
                 name = $7,
-                status = $8,
-                message = $9,
-                entities = $10,
-                started_at = $11,
-                ended_at = $12,
-                created_at = $13,
-                updated_at = $14
+                title = $8,
+                status = $9,
+                message = $10,
+                entities = $11,
+                started_at = $12,
+                ended_at = $13,
+                created_at = $14,
+                updated_at = $15
             WHERE id = $1
         """, (NpgsqlConnection)db.Connection)
         {
@@ -161,6 +163,7 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
                 new() { Value = value.MessageId is null ? DBNull.Value : value.MessageId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.Type.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Name, NpgsqlDbType = NpgsqlDbType.Text },
+                new() { Value = value.Title, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Status.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Message is null ? DBNull.Value : value.Message, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Entities, NpgsqlDbType = NpgsqlDbType.Jsonb },

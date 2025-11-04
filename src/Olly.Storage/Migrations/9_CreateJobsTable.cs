@@ -15,6 +15,7 @@ public class CreateJobsTable : Migration
             .WithColumn("message_id").AsGuid().ForeignKey("messages", "id").OnDelete(System.Data.Rule.Cascade).Nullable()
             .WithColumn("type").AsString().NotNullable()
             .WithColumn("name").AsString().NotNullable()
+            .WithColumn("title").AsString().NotNullable()
             .WithColumn("status").AsString().NotNullable()
             .WithColumn("message").AsString().Nullable()
             .WithColumn("entities").AsCustom("JSONB").NotNullable()
