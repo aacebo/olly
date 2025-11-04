@@ -12,7 +12,11 @@ public partial class TeamsClient
     public override async Task<TaskItem> SendTask(TaskItem.Create create)
     {
         var task = Response.TaskCard.Add(create);
-        var attachment = Response.TaskCard.Render().ToAttachment();
+        var attachment = Response.TaskCard.Render(new()
+        {
+            ChatId = Chat.Id,
+            MessageId = Message?.Id
+        }).ToAttachment();
 
         await SendProgress(new Attachment()
         {
@@ -27,7 +31,11 @@ public partial class TeamsClient
     public override async Task<TaskItem> SendTask(Guid id, TaskItem.Update update)
     {
         var task = Response.TaskCard.Update(id, update);
-        var attachment = Response.TaskCard.Render().ToAttachment();
+        var attachment = Response.TaskCard.Render(new()
+        {
+            ChatId = Chat.Id,
+            MessageId = Message?.Id
+        }).ToAttachment();
 
         await SendProgress(new Attachment()
         {
@@ -62,7 +70,11 @@ public partial class TeamsClient
             EndedAt = DateTimeOffset.UtcNow
         });
 
-        var attachment = Response.TaskCard.Render().ToAttachment();
+        var attachment = Response.TaskCard.Render(new()
+        {
+            ChatId = Chat.Id,
+            MessageId = Message?.Id
+        }).ToAttachment();
 
         await SendProgress(new Attachment()
         {

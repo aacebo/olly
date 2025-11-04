@@ -19,7 +19,7 @@
     "full": "An agent that helps you connect different external accounts and automate complex multi-platform workflows."
   },
   "icons": {
-    "outline": "dark-32x32.png",
+    "outline": "outline-32x32.png",
     "color": "light-192x192.png"
   },
   "accentColor": "#FFFFFF",
@@ -44,7 +44,9 @@
       "commandLists": [
         {
           "scopes": [
-            "personal"
+            "personal",
+            "groupChat",
+            "team"
           ],
           "commands": [
             {
@@ -62,6 +64,69 @@
           ]
         }
       ]
+    }
+  ],
+  "composeExtensions": [
+    {
+      "botId": "${{BOT_ID}}",
+      "composeExtensionType": "botBased",
+      "commands": [
+        {
+          "id": "commands.search",
+          "type": "action",
+          "title": "Search",
+          "description": "Search your accounts",
+          "context": [
+            "commandBox"
+          ],
+          "parameters": [
+            {
+              "name": "query",
+              "title": "Query",
+              "description": "Your search query",
+              "inputType": "text",
+              "isRequired": true
+            }
+          ]
+        },
+        {
+          "id": "commands.accounts.add",
+          "type": "action",
+          "title": "Add Account",
+          "description": "Add (Connect) an external account",
+          "context": [
+            "commandBox"
+          ],
+          "parameters": [
+            {
+              "name": "type",
+              "title": "Type",
+              "description": "The account type",
+              "inputType": "choiceset",
+              "isRequired": true,
+              "choices": [
+                {
+                  "title": "GitHub",
+                  "value": "github"
+                },
+                {
+                  "title": "Azure DevOps",
+                  "value": "azure-devops"
+                },
+                {
+                  "title": "Microsoft",
+                  "value": "microsoft"
+                }
+              ]
+            }
+          ],
+          "samplePrompts": [
+            {
+              "text": "Add Github account"
+            }
+          ]
+        }
+      ] 
     }
   ],
   "validDomains": [

@@ -17,6 +17,7 @@ using Octokit.Webhooks;
 using Octokit.Webhooks.AspNetCore;
 
 using Olly.Api.Controllers.Teams;
+using Olly.Api.Controllers.Teams.Dialogs;
 using Olly.Api.Middleware;
 using Olly.Api.Webhooks;
 using Olly.Drivers.Github.Extensions;

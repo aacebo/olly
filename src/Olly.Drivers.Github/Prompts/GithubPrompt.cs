@@ -36,7 +36,10 @@ namespace Olly.Drivers.Github.Prompts;
         "Github Discussions/Issues/PullRequests are represented as Chats in our system.",
         "Github Repositories are represented as Records in our system.",
         "Github Repository Contents (ie files/folders) are represented as Documents in our system",
-    "</search>"
+    "</search>",
+    "<accounts>",
+        "When a user asks to add/login/link/connect an account, prompt them to sign in **using the SignIn function**.",
+    "</accounts>"
 )]
 public class GithubPrompt
 {

@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 using Microsoft.Teams.Cards;
 using Microsoft.Teams.Common;
 
@@ -6,7 +8,16 @@ using Olly.Cards.Progress;
 
 namespace Olly.Cards.Tasks;
 
-public class TaskProgressCard : CardComponent
+public class TaskProgressCardProps
+{
+    [JsonPropertyName("chat_id")]
+    public required Guid ChatId { get; set; }
+
+    [JsonPropertyName("message_id")]
+    public Guid? MessageId { get; set; }
+}
+
+public class TaskProgressCard : CardComponent<TaskProgressCardProps>
 {
     public TaskItem? Current { get; set; }
     public IList<TaskItem> Tasks { get; set; } = [];
@@ -46,7 +57,7 @@ public class TaskProgressCard : CardComponent
         return Tasks[i];
     }
 
-    public override AdaptiveCard Render()
+    public override AdaptiveCard Render(TaskProgressCardProps props)
     {
         if (Current is null) throw new InvalidOperationException();
 
@@ -175,8 +186,9 @@ public class TaskProgressCard : CardComponent
                     ).WithStyle(style.ContainerStyle)
                 ),
                 new TaskFetchAction(
-                    new OpenDialogRequest("tasks", "Tasks")
-                        .WithData(Tasks)
+                    new OpenDialogRequest(props.MessageId is null ? "chat.jobs" : "message.jobs", "Jobs")
+                        .WithProperty("chat_id", props.ChatId)
+                        .WithProperty("message_id", props.MessageId)
                         .ToDictionary()
                 )
                 .WithTitle("Open")
