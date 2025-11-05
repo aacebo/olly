@@ -31,12 +31,6 @@ public partial class TeamsWorker
         var install = @event.Install.Copy();
         install.Status = InstallStatus.Success;
         await client.Storage.Installs.Update(install, cancellationToken: cancellationToken);
-
-        await client.Send(string.Join("<br>", [
-            "👋 Hello! My name is **Olly**, your personal assistant!",
-            "By connecting me to different accounts, I can help you perform ",
-            "a variety of different tasks involving your data."
-        ]));
     }
 
     protected async Task OnInstallUpdateEvent(InstallEvent @event, Client client, CancellationToken cancellationToken = default)
