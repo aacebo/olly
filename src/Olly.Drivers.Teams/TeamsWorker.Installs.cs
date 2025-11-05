@@ -32,12 +32,6 @@ public partial class TeamsWorker
         install.Status = InstallStatus.Success;
         await client.Storage.Installs.Update(install, cancellationToken: cancellationToken);
 
-        if (@event.Install.MessageId is not null)
-        {
-            await client.Services.Messages.Resume(@event.Install.MessageId.Value, cancellationToken);
-            return;
-        }
-
         await client.Send(string.Join("<br>", [
             "👋 Hello! My name is **Olly**, your personal assistant!",
             "By connecting me to different accounts, I can help you perform ",
@@ -45,9 +39,12 @@ public partial class TeamsWorker
         ]));
     }
 
-    protected Task OnInstallUpdateEvent(InstallEvent @event, Client client, CancellationToken cancellationToken = default)
+    protected async Task OnInstallUpdateEvent(InstallEvent @event, Client client, CancellationToken cancellationToken = default)
     {
-        return OnInstallCreateEvent(@event, client, cancellationToken);
+        if (@event.Install.MessageId is not null)
+        {
+            await client.Services.Messages.Resume(@event.Install.MessageId.Value, cancellationToken);
+        }
     }
 
     protected Task OnInstallDeleteEvent(InstallEvent @event, Client client, CancellationToken cancellationToken = default)
