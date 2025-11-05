@@ -46,11 +46,6 @@ public partial class DialogController
                 new Container(
                     new ColumnSet().WithColumns(
                         new Column(
-                            new ComUserMicrosoftGraphComponent()
-                                .WithProperties(
-                                    new PersonaProperties()
-                                        .WithDisplayName(account?.Name ?? "??")
-                                )
                         )
                         .WithWidth(new Union<string, float>("auto")),
                         new Column(
