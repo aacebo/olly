@@ -25,10 +25,9 @@ resource botService 'Microsoft.BotService/botServices@2021-03-01' = {
   properties: {
     displayName: botDisplayName
     endpoint: 'https://${botAppDomain}/api/messages'
-    msaAppId: identityClientId
-    msaAppMSIResourceId: identityResourceId
+    msaAppId: botAadAppClientId
     msaAppTenantId: identityTenantId
-    msaAppType: 'UserAssignedMSI'
+    msaAppType: 'SingleTenant'
   }
   sku: {
     name: botServiceSku
@@ -54,7 +53,7 @@ resource botServicesMicrosoftGraphConnection 'Microsoft.BotService/botServices/c
     serviceProviderId: '30dd229c-58e3-4a48-bdfd-91ec48eb906c'
     clientId: botAadAppClientId
     clientSecret: botAadAppClientSecret
-    scopes: 'User.ReadBasic.All'
+    scopes: 'openid email profile offline_access User.Read'
     parameters: [
       {
         key: 'tenantID'

@@ -92,7 +92,23 @@
       "resourceAppId": "Microsoft Graph",
       "resourceAccess": [
         {
-          "id": "User.ReadBasic.All",
+          "id": "openid",
+          "type": "Scope"
+        },
+        {
+          "id": "email",
+          "type": "Scope"
+        },
+        {
+          "id": "profile",
+          "type": "Scope"
+        },
+        {
+          "id": "offline_access",
+          "type": "Scope"
+        },
+        {
+          "id": "User.Read",
           "type": "Scope"
         }
       ]

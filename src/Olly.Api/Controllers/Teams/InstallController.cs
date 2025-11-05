@@ -117,7 +117,7 @@ public class InstallController(IHttpContextAccessor accessor)
                 Name = context.Activity.From.Name
             }, context.CancellationToken);
 
-            await installs.Create(new()
+            install = await installs.Create(new()
             {
                 UserId = user.Id,
                 AccountId = account.Id,
@@ -132,12 +132,18 @@ public class InstallController(IHttpContextAccessor accessor)
         {
             install.Url = context.Activity.ServiceUrl;
             install.Entities = [Entity.From(context.Activity)];
-            await installs.Update(install, context.CancellationToken);
+            install = await installs.Update(install, context.CancellationToken);
         }
 
-        await context.SignIn(new OAuthOptions()
+        var accessToken = await context.SignIn(new OAuthOptions()
         {
             ConnectionName = "graph"
         });
+
+        if (accessToken is not null)
+        {
+            install.AccessToken = accessToken;
+            await installs.Update(install, context.CancellationToken);
+        }
     }
 }
