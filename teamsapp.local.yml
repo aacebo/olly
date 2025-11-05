@@ -37,26 +37,16 @@ provision:
       # Relative path to this file. Environment variables in manifest will
       # be replaced before apply to Microsoft Entra app
       manifestPath: ./aad.manifest.json
-      outputFilePath: ./build/aad.manifest.${{TEAMSFX_ENV}}.json
+      outputFilePath: ./appPackage/build/aad.manifest.${{TEAMSFX_ENV}}.json
 
   # Generate runtime appsettings to JSON file
   - uses: file/createOrUpdateJsonFile
     with:
-      target: ../Olly/appsettings.Development.json
+      target: ./appsettings.Development.json
       content:
         Teams:
           ClientId: ${{BOT_ID}}
           ClientSecret: ${{SECRET_BOT_PASSWORD}}
-
-  # Create or update the bot registration on dev.botframework.com
-  - uses: botFramework/create
-    with:
-      botId: ${{BOT_ID}}
-      name: Olly
-      messagingEndpoint: ${{BOT_ENDPOINT}}/api/messages
-      description: ""
-      channels:
-        - name: msteams
 
   - uses: arm/deploy # Deploy given ARM templates parallelly.
     with:

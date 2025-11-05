@@ -47,7 +47,7 @@ resource botServiceMsTeamsChannel 'Microsoft.BotService/botServices/channels@202
 
 resource botServicesMicrosoftGraphConnection 'Microsoft.BotService/botServices/connections@2022-09-15' = {
   parent: botService
-  name: 'Microsoft'
+  name: 'graph'
   location: 'global'
   properties: {
     serviceProviderDisplayName: 'Azure Active Directory v2'

@@ -134,5 +134,10 @@ public class InstallController(IHttpContextAccessor accessor)
             install.Entities = [Entity.From(context.Activity)];
             await installs.Update(install, context.CancellationToken);
         }
+
+        await context.SignIn(new OAuthOptions()
+        {
+            ConnectionName = "graph"
+        });
     }
 }

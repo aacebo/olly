@@ -133,7 +133,7 @@
     "${{BOT_DOMAIN}}",
     "*.botframework.com"
   ],
-  "permissions": ["identity", "messageTeamMembers"],
+  "permissions": ["identity"],
   "webApplicationInfo": {
     "id": "${{BOT_ID}}",
     "resource": "api://botid-${{BOT_ID}}"
