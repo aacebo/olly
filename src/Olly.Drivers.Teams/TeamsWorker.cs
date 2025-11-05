@@ -73,6 +73,6 @@ public partial class TeamsWorker(IServiceProvider provider, IServiceScopeFactory
             return;
         }
 
-        throw new Exception($"event '{@event.Key}' not found");
+        Logger.LogWarning("unhandled event '{}'", @event.Key);
     }
 }

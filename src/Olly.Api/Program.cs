@@ -105,6 +105,7 @@ builder.Services.AddSingleton<WebhookEventProcessor, GithubDiscussionWebhook>();
 builder.Services.AddHostedService<MessageWorker>();
 builder.Services.AddHostedService<InstallWorker>();
 builder.Services.AddHostedService<JobWorker>();
+builder.Services.AddHostedService<AccountWorker>();
 
 // Storage
 builder.Services.AddScoped<IStorage, Storage>();

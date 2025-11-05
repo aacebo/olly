@@ -83,14 +83,12 @@ public class InstallWorker(IServiceProvider provider, IServiceScopeFactory scope
         if (@event.Install.SourceType.IsTeams)
         {
             TeamsQueue.Enqueue(@event);
-            return Task.CompletedTask;
         }
         else if (@event.Install.SourceType.IsGithub)
         {
             GithubQueue.Enqueue(@event);
-            return Task.CompletedTask;
         }
 
-        throw new Exception($"event source '{@event.Install.SourceType}' not found");
+        return Task.CompletedTask;
     }
 }

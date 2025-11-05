@@ -68,6 +68,9 @@ public class ChatController(IHttpContextAccessor accessor)
 
         foreach (var member in context.Activity.MembersAdded)
         {
+            // do not add Olly as an account
+            if (member.Id == context.Activity.Recipient.Id) continue;
+
             var account = await Services.Accounts.GetBySourceId(
                 tenant.Id,
                 SourceType.Teams,

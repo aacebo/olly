@@ -78,6 +78,6 @@ public partial class GithubWorker(IServiceProvider provider, IServiceScopeFactor
             return;
         }
 
-        throw new Exception($"event '{@event.Key}' not found");
+        Logger.LogWarning("unhandled event '{}'", @event.Key);
     }
 }
