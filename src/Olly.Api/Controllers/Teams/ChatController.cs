@@ -12,14 +12,13 @@ namespace Olly.Api.Controllers.Teams;
 [TeamsController]
 public class ChatController(IHttpContextAccessor accessor)
 {
+    private IServices Services => accessor.HttpContext!.RequestServices.GetRequiredService<IServices>();
+
     [Conversation.Update]
     public async Task OnUpdate(IContext<ConversationUpdateActivity> context)
     {
-        var tenants = accessor.HttpContext!.RequestServices.GetRequiredService<ITenantService>();
-        var accounts = accessor.HttpContext!.RequestServices.GetRequiredService<IAccountService>();
-        var chats = accessor.HttpContext!.RequestServices.GetRequiredService<IChatService>();
         var tenantId = context.Activity.Conversation.TenantId ?? context.TenantId;
-        var tenant = await tenants.GetBySourceId(
+        var tenant = await Services.Tenants.GetBySourceId(
             SourceType.Teams,
             tenantId,
             context.CancellationToken
@@ -27,7 +26,7 @@ public class ChatController(IHttpContextAccessor accessor)
 
         if (tenant is null) return;
 
-        var chat = await chats.GetBySourceId(
+        var chat = await Services.Chats.GetBySourceId(
             tenant.Id,
             SourceType.Teams,
             context.Activity.Conversation.Id,
@@ -36,7 +35,7 @@ public class ChatController(IHttpContextAccessor accessor)
 
         if (chat is null)
         {
-            await chats.Create(new()
+            await Services.Chats.Create(new()
             {
                 TenantId = tenant.Id,
                 SourceId = context.Activity.Conversation.Id,
@@ -64,12 +63,12 @@ public class ChatController(IHttpContextAccessor accessor)
                 ServiceUrl = context.Activity.ServiceUrl
             });
 
-            await chats.Update(chat, context.CancellationToken);
+            await Services.Chats.Update(chat, context.CancellationToken);
         }
 
         foreach (var member in context.Activity.MembersAdded)
         {
-            var account = await accounts.GetBySourceId(
+            var account = await Services.Accounts.GetBySourceId(
                 tenant.Id,
                 SourceType.Teams,
                 member.Id,
@@ -78,7 +77,7 @@ public class ChatController(IHttpContextAccessor accessor)
 
             if (account is null)
             {
-                await accounts.Create(new()
+                await Services.Accounts.Create(new()
                 {
                     TenantId = tenant.Id,
                     SourceId = member.Id,
@@ -100,7 +99,7 @@ public class ChatController(IHttpContextAccessor accessor)
                     User = member
                 });
 
-                await accounts.Update(account, context.CancellationToken);
+                await Services.Accounts.Update(account, context.CancellationToken);
             }
         }
     }

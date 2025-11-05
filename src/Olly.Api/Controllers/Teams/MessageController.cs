@@ -13,18 +13,15 @@ namespace Olly.Api.Controllers.Teams;
 [TeamsController]
 public class MessageController(IHttpContextAccessor accessor)
 {
+    private IServices Services => accessor.HttpContext!.RequestServices.GetRequiredService<IServices>();
+
     [Message]
     public async Task OnMessage(IContext<MessageActivity> context)
     {
-        var tenants = accessor.HttpContext!.RequestServices.GetRequiredService<ITenantService>();
-        var accounts = accessor.HttpContext!.RequestServices.GetRequiredService<IAccountService>();
-        var chats = accessor.HttpContext!.RequestServices.GetRequiredService<IChatService>();
-        var messages = accessor.HttpContext!.RequestServices.GetRequiredService<IMessageService>();
         var tenantId = context.Activity.Conversation.TenantId ?? context.TenantId;
-
-        var tenant = await tenants.GetBySourceId(SourceType.Teams, tenantId, context.CancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("tenant not found");
-        var account = await accounts.GetBySourceId(tenant.Id, SourceType.Teams, context.Activity.From.Id, context.CancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
-        var chat = await chats.GetBySourceId(tenant.Id, SourceType.Teams, context.Activity.Conversation.Id, context.CancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("chat not found");
+        var tenant = await Services.Tenants.GetBySourceId(SourceType.Teams, tenantId, context.CancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("tenant not found");
+        var account = await Services.Accounts.GetBySourceId(tenant.Id, SourceType.Teams, context.Activity.From.Id, context.CancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("account not found");
+        var chat = await Services.Chats.GetBySourceId(tenant.Id, SourceType.Teams, context.Activity.Conversation.Id, context.CancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("chat not found");
 
         if (account.Name != context.Activity.From.Name)
         {
@@ -34,7 +31,7 @@ public class MessageController(IHttpContextAccessor accessor)
                 User = context.Activity.From
             });
 
-            account = await accounts.Update(account, context.CancellationToken);
+            account = await Services.Accounts.Update(account, context.CancellationToken);
         }
 
         var message = new Storage.Models.Message()
@@ -55,10 +52,10 @@ public class MessageController(IHttpContextAccessor accessor)
 
         if (context.Activity.ReplyToId is not null)
         {
-            var replyTo = await messages.GetBySourceId(chat.Id, SourceType.Teams, context.Activity.ReplyToId, context.CancellationToken);
+            var replyTo = await Services.Messages.GetBySourceId(chat.Id, SourceType.Teams, context.Activity.ReplyToId, context.CancellationToken);
             message.ReplyToId = replyTo?.Id;
         }
 
-        await messages.Create(message, context.CancellationToken);
+        await Services.Messages.Create(message, context.CancellationToken);
     }
 }

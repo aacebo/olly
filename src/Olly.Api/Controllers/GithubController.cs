@@ -17,21 +17,15 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
 {
     private GitHubClient AppClient => accessor.HttpContext!.RequestServices.GetRequiredService<GitHubClient>();
     private GithubSettings Settings => accessor.HttpContext!.RequestServices.GetRequiredService<IOptions<GithubSettings>>().Value;
-    private ITenantService Tenants => accessor.HttpContext!.RequestServices.GetRequiredService<ITenantService>();
-    private IAccountService Accounts => accessor.HttpContext!.RequestServices.GetRequiredService<IAccountService>();
-    private IChatService Chats => accessor.HttpContext!.RequestServices.GetRequiredService<IChatService>();
-    private IMessageService Messages => accessor.HttpContext!.RequestServices.GetRequiredService<IMessageService>();
-    private IInstallService Installs => accessor.HttpContext!.RequestServices.GetRequiredService<IInstallService>();
-    private ITokenService Tokens => accessor.HttpContext!.RequestServices.GetRequiredService<ITokenService>();
-    private IUserService Users => accessor.HttpContext!.RequestServices.GetRequiredService<IUserService>();
+    private IServices Services => accessor.HttpContext!.RequestServices.GetRequiredService<IServices>();
 
     [HttpGet("redirect")]
     public async Task<IResult> OnRedirect([FromQuery] string code, [FromQuery] string state, [FromQuery(Name = "installation_id")] long installationId, CancellationToken cancellationToken)
     {
         var tokenState = Token.State.Decode(state);
-        var tenant = await Tenants.GetById(tokenState.TenantId, cancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("tenant not found");
-        var user = await Users.GetById(tokenState.UserId, cancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("user not found");
-        var message = await Messages.GetById(tokenState.MessageId, cancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("message not found");
+        var tenant = await Services.Tenants.GetById(tokenState.TenantId, cancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("tenant not found");
+        var user = await Services.Users.GetById(tokenState.UserId, cancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("user not found");
+        var message = await Services.Messages.GetById(tokenState.MessageId, cancellationToken) ?? throw HttpException.UnAuthorized().AddMessage("message not found");
         var res = await AppClient.Oauth.CreateAccessToken(new(Settings.ClientId, Settings.ClientSecret, code)
         {
             RedirectUri = new Uri(Settings.RedirectUrl)
@@ -51,20 +45,20 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
         };
 
         var githubUser = await client.User.Current();
-        var account = await Accounts.GetBySourceId(tenant.Id, SourceType.Github, githubUser.NodeId, cancellationToken);
-        var chat = await Chats.GetById(message.ChatId, cancellationToken) ?? throw HttpException.NotFound();
+        var account = await Services.Accounts.GetBySourceId(tenant.Id, SourceType.Github, githubUser.NodeId, cancellationToken);
+        var chat = await Services.Chats.GetById(message.ChatId, cancellationToken) ?? throw HttpException.NotFound();
         var githubInstall = await AppClient.GitHubApps.GetInstallationForCurrent(installationId);
         var githubAccessToken = await AppClient.GitHubApps.CreateInstallationToken(installationId);
 
         if (user.Name is null)
         {
             user.Name = githubUser.Login;
-            user = await Users.Update(user, cancellationToken);
+            user = await Services.Users.Update(user, cancellationToken);
         }
 
         if (account is null)
         {
-            account = await Accounts.Create(new()
+            account = await Services.Accounts.Create(new()
             {
                 TenantId = tenant.Id,
                 SourceType = SourceType.Github,
@@ -90,11 +84,11 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
             }, cancellationToken);
         }
 
-        var install = await Installs.GetBySourceId(SourceType.Github, installationId.ToString(), cancellationToken);
+        var install = await Services.Installs.GetBySourceId(SourceType.Github, installationId.ToString(), cancellationToken);
 
         if (install is null)
         {
-            install = await Installs.Create(new()
+            install = await Services.Installs.Create(new()
             {
                 UserId = user.Id,
                 AccountId = account.Id,
@@ -125,14 +119,14 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
                 AccessToken = githubAccessToken
             });
 
-            install = await Installs.Update(install, cancellationToken);
+            install = await Services.Installs.Update(install, cancellationToken);
         }
 
-        var token = await Tokens.GetByAccountId(account.Id, cancellationToken);
+        var token = await Services.Tokens.GetByAccountId(account.Id, cancellationToken);
 
         if (token is null)
         {
-            await Tokens.Create(new()
+            await Services.Tokens.Create(new()
             {
                 AccountId = account.Id,
                 Type = res.TokenType,
@@ -149,7 +143,7 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
             token.RefreshToken = res.RefreshToken;
             token.ExpiresAt = DateTimeOffset.UtcNow.AddSeconds(res.ExpiresIn);
             token.RefreshExpiresAt = DateTimeOffset.UtcNow.AddSeconds(res.RefreshTokenExpiresIn);
-            await Tokens.Update(token, cancellationToken);
+            await Services.Tokens.Update(token, cancellationToken);
         }
 
         if (!tenant.Sources.Any(s => s.Type == SourceType.Github && s.Id == installationId.ToString()))
@@ -161,7 +155,7 @@ public class GithubController(IHttpContextAccessor accessor) : ControllerBase
                 Url = githubInstall.HtmlUrl
             });
 
-            await Tenants.Update(tenant, cancellationToken);
+            await Services.Tenants.Update(tenant, cancellationToken);
         }
 
         return Results.Ok();
