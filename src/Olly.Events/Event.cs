@@ -5,6 +5,15 @@ using Olly.Storage.Models;
 
 namespace Olly.Events;
 
+public interface IEvent
+{
+    Guid Id { get; }
+    string TraceId { get; }
+    string Name { get; } // message.resume
+    EntityType Type { get; } // message
+    DateTimeOffset CreatedAt { get; }
+}
+
 public abstract class Event(EntityType type, ActionType action)
 {
     [JsonPropertyName("id")]
