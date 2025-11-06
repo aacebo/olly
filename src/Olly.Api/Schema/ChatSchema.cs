@@ -82,4 +82,11 @@ public class ChatSchema(Storage.Models.Chat chat) : ModelSchema
         var jobs = await jobService.GetByChatId(Id, cancellationToken: cancellationToken);
         return jobs.List.Select(job => new JobSchema(job));
     }
+
+    [GraphQLName("logs")]
+    public async Task<IEnumerable<LogSchema>> GetLogs([Service] IServices services, CancellationToken cancellationToken = default)
+    {
+        var res = await services.Logs.GetByTypeId(chat.TenantId, Storage.Models.LogType.Chat, chat.Id.ToString(), cancellationToken: cancellationToken);
+        return res.List.Select(log => new LogSchema(log));
+    }
 }

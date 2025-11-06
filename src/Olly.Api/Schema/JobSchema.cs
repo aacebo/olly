@@ -88,4 +88,13 @@ public class JobSchema(Job job) : ModelSchema
         var approvals = await approvalService.GetByJobId(job.Id, cancellationToken: cancellationToken);
         return approvals.Select(approval => new JobApprovalSchema(approval));
     }
+
+    [GraphQLName("logs")]
+    public async Task<IEnumerable<LogSchema>> GetLogs([Service] IServices services, CancellationToken cancellationToken = default)
+    {
+        var install = await services.Installs.GetById(job.InstallId, cancellationToken) ?? throw new Exception("install not found");
+        var account = await services.Accounts.GetById(install.AccountId, cancellationToken) ?? throw new Exception("account not found");
+        var res = await services.Logs.GetByTypeId(account.TenantId, Storage.Models.LogType.Job, job.Id.ToString(), cancellationToken: cancellationToken);
+        return res.List.Select(log => new LogSchema(log));
+    }
 }

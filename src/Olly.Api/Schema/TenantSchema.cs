@@ -47,7 +47,7 @@ public class TenantSchema(Storage.Models.Tenant tenant) : ModelSchema
     [GraphQLName("logs")]
     public async Task<IEnumerable<LogSchema>> GetLogs([Service] ILogService logService, CancellationToken cancellationToken = default)
     {
-        var logs = await logService.GetByTenantId(Id, cancellationToken);
-        return logs.Select(log => new LogSchema(log));
+        var res = await logService.GetByTenantId(Id, cancellationToken: cancellationToken);
+        return res.List.Select(log => new LogSchema(log));
     }
 }

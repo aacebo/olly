@@ -14,6 +14,9 @@ public class LogSchema(Storage.Models.Log log)
     [GraphQLName("type")]
     public string Type { get; set; } = log.Type;
 
+    [GraphQLName("text")]
+    public string Text { get; set; } = log.Text;
+
     [GraphQLName("entities")]
     public IEnumerable<EntitySchema> Entities { get; set; } = log.Entities.Select(entity => new EntitySchema(entity));
 
@@ -34,33 +37,43 @@ public class LogSchema(Storage.Models.Log log)
     }
 
     [GraphQLName("subject")]
-    public async Task<ModelSchema?> GetSubject([Service] ITenantService tenantService, [Service] IAccountService accountService, [Service] IChatService chatService, [Service] IMessageService messageService, [Service] IInstallService installService, CancellationToken cancellationToken = default)
+    public async Task<ModelSchema?> GetSubject([Service] IServices services, CancellationToken cancellationToken = default)
     {
         if (log.TypeId is null) return null;
         if (log.Type == Storage.Models.LogType.Tenant)
         {
-            var value = await tenantService.GetById(Guid.Parse(log.TypeId), cancellationToken);
+            var value = await services.Tenants.GetById(Guid.Parse(log.TypeId), cancellationToken);
             return value is null ? null : new TenantSchema(value);
         }
         else if (log.Type == Storage.Models.LogType.Account)
         {
-            var value = await accountService.GetById(Guid.Parse(log.TypeId), cancellationToken);
+            var value = await services.Accounts.GetById(Guid.Parse(log.TypeId), cancellationToken);
             return value is null ? null : new AccountSchema(value);
         }
         else if (log.Type == Storage.Models.LogType.Chat)
         {
-            var value = await chatService.GetById(Guid.Parse(log.TypeId), cancellationToken);
+            var value = await services.Chats.GetById(Guid.Parse(log.TypeId), cancellationToken);
             return value is null ? null : new ChatSchema(value);
         }
         else if (log.Type == Storage.Models.LogType.Message)
         {
-            var value = await messageService.GetById(Guid.Parse(log.TypeId), cancellationToken);
+            var value = await services.Messages.GetById(Guid.Parse(log.TypeId), cancellationToken);
             return value is null ? null : new MessageSchema(value);
         }
         else if (log.Type == Storage.Models.LogType.Install)
         {
-            var value = await installService.GetById(Guid.Parse(log.TypeId), cancellationToken);
+            var value = await services.Installs.GetById(Guid.Parse(log.TypeId), cancellationToken);
             return value is null ? null : new InstallSchema(value);
+        }
+        else if (log.Type == Storage.Models.LogType.Job || log.Type == Storage.Models.LogType.JobApproval)
+        {
+            var value = await services.Jobs.GetById(Guid.Parse(log.TypeId), cancellationToken);
+            return value is null ? null : new JobSchema(value);
+        }
+        else if (log.Type == Storage.Models.LogType.JobRun)
+        {
+            var value = await services.Runs.GetById(Guid.Parse(log.TypeId), cancellationToken);
+            return value is null ? null : new JobRunSchema(value);
         }
 
         return null;

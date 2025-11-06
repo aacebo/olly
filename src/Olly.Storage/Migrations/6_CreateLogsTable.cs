@@ -22,6 +22,7 @@ public class CreateLogsTable : Migration
             .OnColumn("tenant_id").Ascending()
             .OnColumn("level").Ascending()
             .OnColumn("type").Ascending()
+            .OnColumn("type_id").Ascending()
             .OnColumn("created_at").Descending();
     }
 

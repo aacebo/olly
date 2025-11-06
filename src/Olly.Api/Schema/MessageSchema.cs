@@ -68,4 +68,12 @@ public class MessageSchema(Storage.Models.Message message) : ModelSchema
         var jobs = await jobService.GetByMessageId(Id, cancellationToken: cancellationToken);
         return jobs.List.Select(job => new JobSchema(job));
     }
+
+    [GraphQLName("logs")]
+    public async Task<IEnumerable<LogSchema>> GetLogs([Service] IServices services, CancellationToken cancellationToken = default)
+    {
+        var chat = await services.Chats.GetById(message.ChatId, cancellationToken) ?? throw new Exception("chat not found");
+        var res = await services.Logs.GetByTypeId(chat.TenantId, Storage.Models.LogType.Message, message.Id.ToString(), cancellationToken: cancellationToken);
+        return res.List.Select(log => new LogSchema(log));
+    }
 }

@@ -15,8 +15,8 @@ namespace Olly.Storage;
 public interface ILogStorage
 {
     Task<Log?> GetById(Guid id, CancellationToken cancellationToken = default);
-    Task<Log?> GetByTypeId(Guid tenantId, LogType type, string typeId, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Log>> GetByTenantId(Guid tenantId, CancellationToken cancellationToken = default);
+    Task<PaginationResult<Log>> GetByTypeId(Guid tenantId, LogType type, string typeId, Page? page = null, CancellationToken cancellationToken = default);
+    Task<PaginationResult<Log>> GetByTenantId(Guid tenantId, Page? page = null, CancellationToken cancellationToken = default);
     Task<Log> Create(Log value, IDbTransaction? tx = null, CancellationToken cancellationToken = default);
 }
 
@@ -32,26 +32,36 @@ public class LogStorage(ILogger<ILogStorage> logger, QueryFactory db) : ILogStor
             .FirstOrDefaultAsync<Log?>(cancellationToken: cancellationToken);
     }
 
-    public async Task<Log?> GetByTypeId(Guid tenantId, LogType type, string typeId, CancellationToken cancellationToken = default)
+    public async Task<PaginationResult<Log>> GetByTypeId(Guid tenantId, LogType type, string typeId, Page? page = null, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("GetByTypeId");
-        return await db
+
+        page ??= new();
+        page.Sort ??= Sort.Create("created_at").Direction(SortDirection.Desc).Build();
+
+        var query = db
             .Query("logs")
             .Select("*")
             .Where("tenant_id", "=", tenantId)
             .Where("type", "=", type.ToString())
-            .Where("type_id", "=", typeId)
-            .FirstOrDefaultAsync<Log?>(cancellationToken: cancellationToken);
+            .Where("type_id", "=", typeId);
+
+        return await page.Invoke<Log>(query, cancellationToken);
     }
 
-    public async Task<IEnumerable<Log>> GetByTenantId(Guid tenantId, CancellationToken cancellationToken = default)
+    public async Task<PaginationResult<Log>> GetByTenantId(Guid tenantId, Page? page = null, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("GetByTenantId");
-        return await db
+
+        page ??= new();
+        page.Sort ??= Sort.Create("created_at").Direction(SortDirection.Desc).Build();
+
+        var query = db
             .Query("logs")
             .Select("*")
-            .Where("tenant_id", "=", tenantId)
-            .GetAsync<Log>(cancellationToken: cancellationToken);
+            .Where("tenant_id", "=", tenantId);
+
+        return await page.Invoke<Log>(query, cancellationToken);
     }
 
     public async Task<Log> Create(Log value, IDbTransaction? tx = null, CancellationToken cancellationToken = default)

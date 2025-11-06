@@ -49,4 +49,11 @@ public class AccountSchema(Storage.Models.Account account) : ModelSchema
         var records = await recordService.GetByAccountId(Id, cancellationToken: cancellationToken);
         return records.List.Select(record => new RecordSchema(record));
     }
+
+    [GraphQLName("logs")]
+    public async Task<IEnumerable<LogSchema>> GetLogs([Service] IServices services, CancellationToken cancellationToken = default)
+    {
+        var res = await services.Logs.GetByTypeId(account.TenantId, Storage.Models.LogType.Account, account.Id.ToString(), cancellationToken: cancellationToken);
+        return res.List.Select(log => new LogSchema(log));
+    }
 }

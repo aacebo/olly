@@ -7,13 +7,15 @@ using Olly.Events;
 using Olly.Storage;
 using Olly.Storage.Models;
 
+using SqlKata.Execution;
+
 namespace Olly.Services;
 
 public interface ILogService
 {
     Task<Log?> GetById(Guid id, CancellationToken cancellationToken = default);
-    Task<Log?> GetByTypeId(Guid tenantId, LogType type, string typeId, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Log>> GetByTenantId(Guid tenantId, CancellationToken cancellationToken = default);
+    Task<PaginationResult<Log>> GetByTypeId(Guid tenantId, LogType type, string typeId, Page? page = null, CancellationToken cancellationToken = default);
+    Task<PaginationResult<Log>> GetByTenantId(Guid tenantId, Page? page = null, CancellationToken cancellationToken = default);
     Task<Log> Create(Log value, CancellationToken cancellationToken = default);
 }
 
@@ -43,21 +45,14 @@ public class LogService(IServiceProvider provider) : ILogService
         return log;
     }
 
-    public async Task<Log?> GetByTypeId(Guid tenantId, LogType type, string typeId, CancellationToken cancellationToken = default)
+    public async Task<PaginationResult<Log>> GetByTypeId(Guid tenantId, LogType type, string typeId, Page? page = null, CancellationToken cancellationToken = default)
     {
-        var log = await Storage.GetByTypeId(tenantId, type, typeId, cancellationToken);
-
-        if (log is not null)
-        {
-            Cache.Set(log.Id, log);
-        }
-
-        return log;
+        return await Storage.GetByTypeId(tenantId, type, typeId, page, cancellationToken);
     }
 
-    public async Task<IEnumerable<Log>> GetByTenantId(Guid tenantId, CancellationToken cancellationToken = default)
+    public async Task<PaginationResult<Log>> GetByTenantId(Guid tenantId, Page? page = null, CancellationToken cancellationToken = default)
     {
-        return await Storage.GetByTenantId(tenantId, cancellationToken);
+        return await Storage.GetByTenantId(tenantId, page, cancellationToken);
     }
 
     public async Task<Log> Create(Log value, CancellationToken cancellationToken = default)
