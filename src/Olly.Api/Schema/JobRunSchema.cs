@@ -15,10 +15,10 @@ public class JobRunSchema(Run run) : ModelSchema
     public string? StatusMessage { get; set; } = run.StatusMessage;
 
     [GraphQLName("started_at")]
-    public DateTimeOffset? StartedAt { get; set; }
+    public DateTimeOffset? StartedAt { get; set; } = run.StartedAt;
 
     [GraphQLName("ended_at")]
-    public DateTimeOffset? EndedAt { get; set; }
+    public DateTimeOffset? EndedAt { get; set; } = run.EndedAt;
 
     [GraphQLName("created_at")]
     public DateTimeOffset CreatedAt { get; init; } = run.CreatedAt;
