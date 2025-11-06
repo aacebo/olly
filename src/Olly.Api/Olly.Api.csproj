@@ -38,6 +38,7 @@
     <ProjectReference Include="..\Olly.Drivers.Teams\Olly.Drivers.Teams.csproj" />
     <ProjectReference Include="..\Olly.Drivers.Github\Olly.Drivers.Github.csproj" />
     <ProjectReference Include="..\Olly.Errors\Olly.Errors.csproj" />
+    <ProjectReference Include="..\Olly.Contexts\Olly.Contexts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

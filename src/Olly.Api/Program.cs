@@ -20,6 +20,7 @@ using Olly.Api.Controllers.Teams;
 using Olly.Api.Controllers.Teams.Dialogs;
 using Olly.Api.Middleware;
 using Olly.Api.Webhooks;
+using Olly.Contexts.Extensions;
 using Olly.Drivers.Github.Extensions;
 using Olly.Drivers.Github.Settings;
 using Olly.Drivers.Teams.Extensions;
@@ -59,6 +60,7 @@ builder.Services.AddHttpLogging();
 builder.Services.AddPostgres();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddOllyContextAccessor();
 builder.Services.AddGraphQLServer()
     .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = !builder.Environment.IsProduction())
     .AddQueryType<Schema.Query>();
@@ -80,6 +82,7 @@ builder.Services
 
 // Controllers
 builder.Services.AddScoped<ErrorMiddleware>();
+builder.Services.AddScoped<ContextMiddleware>();
 builder.Services.AddScoped<ChatController>();
 builder.Services.AddScoped<InstallController>();
 builder.Services.AddScoped<MessageController>();
@@ -158,6 +161,7 @@ app.UseStaticFiles(new StaticFileOptions()
 
 app.Services.GetRequiredService<IMigrationRunner>().MigrateUp();
 app.UseMiddleware<ErrorMiddleware>();
+app.UseMiddleware<ContextMiddleware>();
 app.MapGitHubWebhooks();
 app.MapEntityTypes();
 app.MapTeamsEntityTypes();
