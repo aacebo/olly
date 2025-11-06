@@ -117,7 +117,7 @@ public class JobsPrompt
             EndedAt = run.EndedAt
         });
 
-        return JsonSerializer.Serialize(job, Client.JsonSerializerOptions);
+        return JsonSerializer.Serialize(run, Client.JsonSerializerOptions);
     }
 
     [Function]
@@ -136,6 +136,6 @@ public class JobsPrompt
             EndedAt = run.EndedAt
         });
 
-        return JsonSerializer.Serialize(job, Client.JsonSerializerOptions);
+        return JsonSerializer.Serialize(run, Client.JsonSerializerOptions);
     }
 }
