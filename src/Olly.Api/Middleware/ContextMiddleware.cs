@@ -7,6 +7,7 @@ public class ContextMiddleware(IHttpContextAccessor httpContextAccessor, IOllyCo
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         ollyContextAccessor.Context.TraceId = httpContextAccessor.HttpContext!.TraceIdentifier;
+        ollyContextAccessor.Context.Provider = httpContextAccessor.HttpContext!.RequestServices;
         await next(context);
     }
 }
