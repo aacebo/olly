@@ -59,11 +59,17 @@ public class EntityType(string value) : StringEnum(value)
     public static readonly EntityType Token = new("token");
     public bool IsToken => Token.Equals(Value);
 
+    public static readonly EntityType Document = new("document");
+    public bool IsDocument => Document.Equals(Value);
+
     public static readonly EntityType Job = new("job");
     public bool IsJob => Job.Equals(Value);
 
-    public static readonly EntityType Document = new("document");
-    public bool IsDocument => Document.Equals(Value);
+    public static readonly EntityType Run = new("job.run");
+    public bool IsRun => Run.Equals(Value);
+
+    public static readonly EntityType Approval = new("job.approval");
+    public bool IsApproval => Approval.Equals(Value);
 }
 
 [JsonConverter(typeof(Converter<ActionType>))]

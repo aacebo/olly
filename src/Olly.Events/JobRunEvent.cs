@@ -5,8 +5,11 @@ using Olly.Storage.Models.Jobs;
 
 namespace Olly.Events;
 
-public class JobEvent(ActionType action) : Event(EntityType.Job, action)
+public class JobRunEvent(ActionType action) : Event(EntityType.Run, action)
 {
+    [JsonPropertyName("attempt")]
+    public int Attempt { get; set; } = 1;
+
     [JsonPropertyName("tenant")]
     public required Tenant Tenant { get; init; }
 
@@ -27,4 +30,7 @@ public class JobEvent(ActionType action) : Event(EntityType.Job, action)
 
     [JsonPropertyName("message")]
     public Message? Message { get; init; }
+
+    [JsonPropertyName("run")]
+    public required Run Run { get; init; }
 }

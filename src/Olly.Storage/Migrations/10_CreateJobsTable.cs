@@ -2,7 +2,7 @@ using FluentMigrator;
 
 namespace Olly.Storage.Migrations;
 
-[Migration(9)]
+[Migration(10)]
 public class CreateJobsTable : Migration
 {
     public override void Up()
@@ -14,14 +14,10 @@ public class CreateJobsTable : Migration
             .WithColumn("chat_id").AsGuid().ForeignKey("chats", "id").OnDelete(System.Data.Rule.Cascade).Nullable()
             .WithColumn("message_id").AsGuid().ForeignKey("messages", "id").OnDelete(System.Data.Rule.Cascade).Nullable()
             .WithColumn("type").AsString().NotNullable()
-            .WithColumn("status").AsString().NotNullable()
             .WithColumn("name").AsString().NotNullable()
             .WithColumn("title").AsString().NotNullable()
             .WithColumn("description").AsString().Nullable()
-            .WithColumn("status_message").AsString().Nullable()
             .WithColumn("entities").AsCustom("JSONB").NotNullable()
-            .WithColumn("started_at").AsDateTimeOffset().Nullable()
-            .WithColumn("ended_at").AsDateTimeOffset().Nullable()
             .WithColumn("created_at").AsDateTimeOffset().NotNullable()
             .WithColumn("updated_at").AsDateTimeOffset().NotNullable();
     }

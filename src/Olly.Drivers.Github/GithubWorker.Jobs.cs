@@ -15,23 +15,23 @@ namespace Olly.Drivers.Github;
 
 public partial class GithubWorker
 {
-    protected async Task OnJobEvent(JobEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default)
+    protected async Task OnJobRunEvent(JobRunEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default)
     {
         if (@event.Action.IsCreate)
         {
-            await OnJobCreateEvent(@event, provider, cancellationToken);
+            await OnJobRunCreateEvent(@event, provider, cancellationToken);
             return;
         }
         else if (@event.Action.IsUpdate)
         {
-            await OnJobUpdateEvent(@event, provider, cancellationToken);
+            await OnJobRunUpdateEvent(@event, provider, cancellationToken);
             return;
         }
 
         throw new Exception($"event '{@event.Key}' not found");
     }
 
-    protected async Task OnJobCreateEvent(JobEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default)
+    protected async Task OnJobRunCreateEvent(JobRunEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default)
     {
         var services = provider.GetRequiredService<IServices>();
 
@@ -40,7 +40,7 @@ public partial class GithubWorker
             return;
         }
 
-        var job = await services.Jobs.Update(@event.Job.Start(), cancellationToken);
+        var run = await services.Runs.Update(@event.Run.Start(), cancellationToken);
 
         try
         {
@@ -48,12 +48,12 @@ public partial class GithubWorker
             {
                 TenantId = @event.Tenant.Id,
                 Type = LogType.Job,
-                TypeId = job.Id.ToString(),
+                TypeId = @event.Job.Id.ToString(),
                 Text = "starting",
-                Entities = job.Entities
+                Entities = @event.Job.Entities
             }, cancellationToken);
 
-            if (job.Name == "github.repository.index")
+            if (@event.Job.Name == "github.repository.index")
             {
                 await OnIndexRepositoryJobEvent(@event, provider, cancellationToken);
             }
@@ -62,16 +62,16 @@ public partial class GithubWorker
             {
                 TenantId = @event.Tenant.Id,
                 Type = LogType.Job,
-                TypeId = job.Id.ToString(),
+                TypeId = @event.Job.Id.ToString(),
                 Text = "stopping",
-                Entities = job.Entities
+                Entities = @event.Job.Entities
             }, cancellationToken);
 
-            await services.Jobs.Update(job.Success(), cancellationToken);
+            await services.Runs.Update(run.Success(), cancellationToken);
         }
         catch (Exception ex)
         {
-            await services.Jobs.Update(job.Error(ex), cancellationToken);
+            await services.Runs.Update(run.Error(ex), cancellationToken);
 
             if (@event.Attempt < 3)
             {
@@ -81,24 +81,24 @@ public partial class GithubWorker
         }
     }
 
-    protected async Task OnJobUpdateEvent(JobEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default)
+    protected async Task OnJobRunUpdateEvent(JobRunEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default)
     {
         var services = provider.GetRequiredService<IServices>();
 
         await services.Logs.Create(new()
         {
             TenantId = @event.Tenant.Id,
-            Level = @event.Job.Status.IsError
+            Level = @event.Run.Status.IsError
                 ? Storage.Models.LogLevel.Error
                 : Storage.Models.LogLevel.Info,
             Type = LogType.Job,
             TypeId = @event.Job.Id.ToString(),
-            Text = @event.Job.Description ?? @event.Job.Status,
+            Text = @event.Job.Description ?? @event.Run.Status,
             Entities = @event.Job.Entities
         }, cancellationToken);
     }
 
-    protected async Task OnIndexRepositoryJobEvent(JobEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default)
+    protected async Task OnIndexRepositoryJobEvent(JobRunEvent @event, IServiceProvider provider, CancellationToken cancellationToken = default)
     {
         var services = provider.GetRequiredService<IServices>();
         var entity = @event.Job.Entities.GetRequired<GithubEntity>();

@@ -2,7 +2,7 @@ using FluentMigrator;
 
 namespace Olly.Storage.Migrations;
 
-[Migration(10)]
+[Migration(9)]
 public class CreateDocumentsTable : Migration
 {
     public override void Up()

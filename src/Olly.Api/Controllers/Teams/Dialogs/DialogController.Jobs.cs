@@ -64,36 +64,41 @@ public partial class DialogController
                 .WithStyle(ContainerStyle.Emphasis),
                 ..jobs.List.Select(job =>
                 {
-                    var elapse = job.EndedAt is null
+                    var run = job.LastRunId is null
                         ? null
-                        : job.EndedAt - job.StartedAt;
+                        : Services.Runs.GetById(job.LastRunId.Value, cancellationToken: cancellationToken).GetAwaiter().GetResult();
+
+                    var status = run is null ? ProgressStyle.InProgress : run.Status.ToProgressStyle();
+                    var elapse = run?.EndedAt is null
+                        ? null
+                        : run.EndedAt - run.StartedAt;
 
                     return new ColumnSet().WithColumns(
                         new Column(
-                            new Icon(job.Status.ToProgressStyle().Icon)
-                                .WithColor(job.Status.ToProgressStyle().Color)
+                            new Icon(status.Icon)
+                                .WithColor(status.Color)
                                 .WithSize(IconSize.XSmall)
-                                .WithIsVisible(!job.Status.ToProgressStyle().IsInProgress),
+                                .WithIsVisible(!status.IsInProgress),
                             new ProgressRing()
                                 .WithSize(new("Tiny"))
-                                .WithIsVisible(job.Status.ToProgressStyle().IsInProgress)
+                                .WithIsVisible(status.IsInProgress)
                         )
                         .WithWidth(new Union<string, float>("auto"))
                         .WithVerticalContentAlignment(VerticalAlignment.Center),
                         new Column(
                             new Container(
-                                new TextBlock(job.Description ?? job.Status.ToProgressStyle().Message)
-                                    .WithColor(job.Status.ToProgressStyle().Color)
+                                new TextBlock(job.Description ?? status.Message)
+                                    .WithColor(status.Color)
                                     .WithSize(TextSize.Small)
                                     .WithSpacing(Spacing.Small)
                                     .WithIsVisible(job.Description is not null)
                                     .WithIsSubtle(true)
                                     .WithWrap(false),
-                                new TextBlock($"__{job.StatusMessage ?? job.Status.ToProgressStyle().Message}__")
-                                    .WithColor(job.Status.ToProgressStyle().Color)
+                                new TextBlock($"__{run?.StatusMessage ?? status.Message}__")
+                                    .WithColor(status.Color)
                                     .WithSize(TextSize.Small)
                                     .WithSpacing(Spacing.Small)
-                                    .WithIsVisible(job.StatusMessage is not null)
+                                    .WithIsVisible(run?.StatusMessage is not null)
                                     .WithIsSubtle(true)
                                     .WithWrap(false)
                                     .WithWeight(TextWeight.Bolder)
@@ -103,7 +108,7 @@ public partial class DialogController
                         .WithVerticalContentAlignment(VerticalAlignment.Center),
                         new Column(
                             new TextBlock($"{elapse?.Seconds}s")
-                                .WithColor(job.Status.ToProgressStyle().Color)
+                                .WithColor(status.Color)
                                 .WithIsSubtle(true)
                                 .WithHorizontalAlignment(HorizontalAlignment.Right)
                         )
@@ -113,7 +118,7 @@ public partial class DialogController
                     )
                     .WithRoundedCorners(true)
                     .WithShowBorder(true)
-                    .WithStyle(job.Status.ToProgressStyle().ContainerStyle);
+                    .WithStyle(status.ContainerStyle);
                 }).ToList<CardElement>()
             ])
         );

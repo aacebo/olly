@@ -5,7 +5,7 @@ using NetMQ;
 
 using Olly.Events;
 using Olly.Storage;
-using Olly.Storage.Models;
+using Olly.Storage.Models.Jobs;
 
 using SqlKata.Execution;
 

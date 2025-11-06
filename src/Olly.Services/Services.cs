@@ -13,8 +13,10 @@ public interface IServices
     ILogService Logs { get; }
     IRecordService Records { get; }
     IInstallService Installs { get; }
-    IJobService Jobs { get; }
     IDocumentService Documents { get; }
+    IJobService Jobs { get; }
+    IJobApprovalService Approvals { get; }
+    IJobRunService Runs { get; }
 }
 
 public class Services : IServices
@@ -28,8 +30,10 @@ public class Services : IServices
     public ILogService Logs { get; }
     public IRecordService Records { get; }
     public IInstallService Installs { get; }
-    public IJobService Jobs { get; }
     public IDocumentService Documents { get; }
+    public IJobService Jobs { get; }
+    public IJobApprovalService Approvals { get; }
+    public IJobRunService Runs { get; }
 
     public Services(IServiceScopeFactory factory) : this(factory.CreateScope())
     {
@@ -47,7 +51,9 @@ public class Services : IServices
         Logs = scope.ServiceProvider.GetRequiredService<ILogService>();
         Records = scope.ServiceProvider.GetRequiredService<IRecordService>();
         Installs = scope.ServiceProvider.GetRequiredService<IInstallService>();
-        Jobs = scope.ServiceProvider.GetRequiredService<IJobService>();
         Documents = scope.ServiceProvider.GetRequiredService<IDocumentService>();
+        Jobs = scope.ServiceProvider.GetRequiredService<IJobService>();
+        Approvals = scope.ServiceProvider.GetRequiredService<IJobApprovalService>();
+        Runs = scope.ServiceProvider.GetRequiredService<IJobRunService>();
     }
 }

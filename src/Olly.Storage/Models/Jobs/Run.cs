@@ -2,58 +2,26 @@ using System.Text.Json.Serialization;
 
 using SqlKata;
 
-namespace Olly.Storage.Models;
+namespace Olly.Storage.Models.Jobs;
 
 [Model]
-public class Job : Model
+public class Run : Model
 {
     [Column("id")]
     [JsonPropertyName("id")]
     public Guid Id { get; init; } = Guid.NewGuid();
 
-    [Column("install_id")]
-    [JsonPropertyName("install_id")]
-    public required Guid InstallId { get; init; }
-
-    [Column("parent_id")]
-    [JsonPropertyName("parent_id")]
-    public Guid? ParentId { get; init; }
-
-    [Column("chat_id")]
-    [JsonPropertyName("chat_id")]
-    public Guid? ChatId { get; init; }
-
-    [Column("message_id")]
-    [JsonPropertyName("message_id")]
-    public Guid? MessageId { get; init; }
-
-    [Column("type")]
-    [JsonPropertyName("type")]
-    public JobType Type { get; set; } = JobType.Async;
+    [Column("job_id")]
+    [JsonPropertyName("job_id")]
+    public required Guid JobId { get; init; }
 
     [Column("status")]
     [JsonPropertyName("status")]
-    public JobStatus Status { get; set; } = JobStatus.Pending;
-
-    [Column("name")]
-    [JsonPropertyName("name")]
-    public required string Name { get; init; }
-
-    [Column("title")]
-    [JsonPropertyName("title")]
-    public required string Title { get; init; }
-
-    [Column("description")]
-    [JsonPropertyName("description")]
-    public string? Description { get; set; }
+    public JobStatus Status { get; set; } = JobStatus.Running;
 
     [Column("status_message")]
     [JsonPropertyName("status_message")]
     public string? StatusMessage { get; set; }
-
-    [Column("entities")]
-    [JsonPropertyName("entities")]
-    public Entities Entities { get; set; } = [];
 
     [Column("started_at")]
     [JsonPropertyName("started_at")]
@@ -71,12 +39,12 @@ public class Job : Model
     [JsonPropertyName("updated_at")]
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 
-    public Job Copy()
+    public Run Copy()
     {
-        return (Job)MemberwiseClone();
+        return (Run)MemberwiseClone();
     }
 
-    public Job Start()
+    public Run Start()
     {
         Status = JobStatus.Running;
         StartedAt = DateTimeOffset.UtcNow;
@@ -84,7 +52,7 @@ public class Job : Model
         return this;
     }
 
-    public Job Success()
+    public Run Success()
     {
         Status = JobStatus.Success;
         StatusMessage = null;
@@ -92,7 +60,7 @@ public class Job : Model
         return this;
     }
 
-    public Job Error(string message)
+    public Run Error(string message)
     {
         Status = JobStatus.Error;
         StatusMessage = message;
@@ -100,7 +68,7 @@ public class Job : Model
         return this;
     }
 
-    public Job Error(Exception ex)
+    public Run Error(Exception ex)
     {
         Status = JobStatus.Error;
         StatusMessage = ex.ToString();
@@ -109,22 +77,9 @@ public class Job : Model
     }
 }
 
-[JsonConverter(typeof(Converter<JobType>))]
-public class JobType(string value) : StringEnum(value)
-{
-    public static readonly JobType Sync = new("sync");
-    public bool IsSync => Sync.Equals(Value);
-
-    public static readonly JobType Async = new("async");
-    public bool IsAsync => Async.Equals(Value);
-}
-
 [JsonConverter(typeof(Converter<JobStatus>))]
 public class JobStatus(string value) : StringEnum(value)
 {
-    public static readonly JobStatus Pending = new("pending");
-    public bool IsPending => Pending.Equals(Value);
-
     public static readonly JobStatus Running = new("running");
     public bool IsRunning => Running.Equals(Value);
 

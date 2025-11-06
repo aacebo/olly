@@ -93,4 +93,10 @@ public class LogType(string value) : StringEnum(value)
 
     public static readonly LogType Job = new("job");
     public bool IsJob => Job.Equals(Value);
+
+    public static readonly LogType JobRun = new("job_run");
+    public bool IsJobRun => JobRun.Equals(Value);
+
+    public static readonly LogType JobApproval = new("job_approval");
+    public bool IsJobApproval => JobApproval.Equals(Value);
 }

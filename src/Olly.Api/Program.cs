@@ -95,8 +95,10 @@ builder.Services.AddSingleton<NetMQQueue<TokenEvent>>(); // tokens.(create | upd
 builder.Services.AddSingleton<NetMQQueue<RecordEvent>>(); // records.(create | update | delete)
 builder.Services.AddSingleton<NetMQQueue<InstallEvent>>(); // installs.(create | update | delete)
 builder.Services.AddSingleton<NetMQQueue<LogEvent>>(); // logs.create
-builder.Services.AddSingleton<NetMQQueue<JobEvent>>(); // jobs.(create | update)
 builder.Services.AddSingleton<NetMQQueue<DocumentEvent>>(); // documents.(create | update | delete)
+builder.Services.AddSingleton<NetMQQueue<JobEvent>>(); // jobs.(create | update)
+builder.Services.AddSingleton<NetMQQueue<JobRunEvent>>(); // jobs.(create | update)
+builder.Services.AddSingleton<NetMQQueue<JobApprovalEvent>>(); // jobs.(create | update)
 
 // Webhooks
 builder.Services.AddSingleton<WebhookEventProcessor, GithubDiscussionWebhook>();
@@ -108,6 +110,8 @@ builder.Services.AddHostedService<JobWorker>();
 builder.Services.AddHostedService<AccountWorker>();
 builder.Services.AddHostedService<ChatWorker>();
 builder.Services.AddHostedService<TenantWorker>();
+builder.Services.AddHostedService<JobRunWorker>();
+builder.Services.AddHostedService<JobApprovalWorker>();
 
 // Storage
 builder.Services.AddScoped<IStorage, Storage>();
@@ -120,8 +124,10 @@ builder.Services.AddScoped<ITokenStorage, TokenStorage>();
 builder.Services.AddScoped<ILogStorage, LogStorage>();
 builder.Services.AddScoped<IRecordStorage, RecordStorage>();
 builder.Services.AddScoped<IInstallStorage, InstallStorage>();
-builder.Services.AddScoped<IJobStorage, JobStorage>();
 builder.Services.AddScoped<IDocumentStorage, DocumentStorage>();
+builder.Services.AddScoped<IJobStorage, JobStorage>();
+builder.Services.AddScoped<IJobRunStorage, JobRunStorage>();
+builder.Services.AddScoped<IJobApprovalStorage, JobApprovalStorage>();
 
 // Services
 builder.Services.AddScoped<IServices, Services>();
@@ -134,8 +140,10 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ILogService, LogService>();
 builder.Services.AddScoped<IRecordService, RecordService>();
 builder.Services.AddScoped<IInstallService, InstallService>();
-builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<IJobService, JobService>();
+builder.Services.AddScoped<IJobRunService, JobRunService>();
+builder.Services.AddScoped<IJobApprovalService, JobApprovalService>();
 
 var app = builder.Build();
 

@@ -7,7 +7,6 @@ using Microsoft.Teams.AI.Models.OpenAI;
 using Olly.Cards.Progress;
 using Olly.Drivers;
 using Olly.Storage;
-using Olly.Storage.Models;
 
 namespace Olly.Prompts;
 
@@ -81,36 +80,41 @@ public class JobsPrompt
             ChatId = Client.Chat.Id,
             MessageId = Client.Message?.Id,
             Name = name,
-            Status = JobStatus.Running,
             Title = title,
-            Description = description,
+            Description = description
+        }, Client.CancellationToken);
+
+        var run = await Client.Services.Runs.Create(new()
+        {
+            JobId = job.Id,
             StartedAt = DateTimeOffset.UtcNow
         }, Client.CancellationToken);
 
         await Client.SendTask(new()
         {
-            Id = job.Id,
+            Id = run.Id,
             Title = job.Title,
             Style = ProgressStyle.InProgress,
             Message = description
         });
 
-        return JsonSerializer.Serialize(job, Client.JsonSerializerOptions);
+        return JsonSerializer.Serialize(run, Client.JsonSerializerOptions);
     }
 
     [Function]
     [Function.Description("End a running job successfully")]
-    public async Task<string> UpdateAsSuccess([Param] Guid jobId)
+    public async Task<string> UpdateAsSuccess([Param] Guid id)
     {
-        var job = await Client.Services.Jobs.GetById(jobId) ?? throw new Exception("job not found");
-        job = await Client.Services.Jobs.Update(job.Success(), Client.CancellationToken);
+        var run = await Client.Services.Runs.GetById(id) ?? throw new Exception("job run not found");
+        var job = await Client.Services.Jobs.GetById(run.JobId) ?? throw new Exception("job not found");
+        run = await Client.Services.Runs.Update(run.Success(), Client.CancellationToken);
 
-        await Client.SendTask(job.Id, new()
+        await Client.SendTask(run.Id, new()
         {
             Title = job.Title,
             Style = ProgressStyle.Success,
-            Message = job.StatusMessage,
-            EndedAt = job.EndedAt
+            Message = run.StatusMessage,
+            EndedAt = run.EndedAt
         });
 
         return JsonSerializer.Serialize(job, Client.JsonSerializerOptions);
@@ -118,17 +122,18 @@ public class JobsPrompt
 
     [Function]
     [Function.Description("End a running job with an error")]
-    public async Task<string> UpdateAsError([Param] Guid jobId, [Param] string message)
+    public async Task<string> UpdateAsError([Param] Guid id, [Param] string message)
     {
-        var job = await Client.Services.Jobs.GetById(jobId) ?? throw new Exception("job not found");
-        job = await Client.Services.Jobs.Update(job.Error(message), Client.CancellationToken);
+        var run = await Client.Services.Runs.GetById(id) ?? throw new Exception("job run not found");
+        var job = await Client.Services.Jobs.GetById(run.JobId) ?? throw new Exception("job not found");
+        run = await Client.Services.Runs.Update(run.Error(message), Client.CancellationToken);
 
         await Client.SendTask(job.Id, new()
         {
             Title = job.Title,
             Style = ProgressStyle.Error,
-            Message = job.StatusMessage,
-            EndedAt = job.EndedAt
+            Message = run.StatusMessage,
+            EndedAt = run.EndedAt
         });
 
         return JsonSerializer.Serialize(job, Client.JsonSerializerOptions);

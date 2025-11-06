@@ -6,7 +6,7 @@ using Npgsql;
 
 using NpgsqlTypes;
 
-using Olly.Storage.Models;
+using Olly.Storage.Models.Jobs;
 
 using SqlKata.Execution;
 
@@ -88,10 +88,11 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
         logger.LogDebug("GetBlockingByChatId");
         return await db
             .Query("jobs")
-            .Select("*")
-            .Where("chat_id", "=", chatId)
-            .Where("type", "=", JobType.Sync.ToString())
-            .WhereNull("ended_at")
+            .Select("jobs.*")
+            .LeftJoin("job_runs", "job_runs.id", "jobs.last_run_id")
+            .Where("jobs.chat_id", "=", chatId)
+            .Where("jobs.type", "=", JobType.Sync.ToString())
+            .WhereNull("job_runs.ended_at")
             .GetAsync<Job>(cancellationToken: cancellationToken);
     }
 
@@ -101,9 +102,9 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
         using var cmd = new NpgsqlCommand(
         """
             INSERT INTO jobs
-            (id, install_id, parent_id, chat_id, message_id, type, status, name, title, description, status_message, entities, started_at, ended_at, created_at, updated_at)
+            (id, install_id, parent_id, chat_id, message_id, last_run_id, type, name, title, description, entities, created_at, updated_at)
             VALUES
-            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+            ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         """, (NpgsqlConnection)db.Connection)
         {
             Parameters =
@@ -113,15 +114,12 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
                 new() { Value = value.ParentId is null ? DBNull.Value : value.ParentId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.ChatId is null ? DBNull.Value : value.ChatId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.MessageId is null ? DBNull.Value : value.MessageId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.LastRunId is null ? DBNull.Value : value.LastRunId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.Type.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
-                new() { Value = value.Status.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Name, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Title, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Description is null ? DBNull.Value : value.Description, NpgsqlDbType = NpgsqlDbType.Text },
-                new() { Value = value.StatusMessage is null ? DBNull.Value : value.StatusMessage, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Entities, NpgsqlDbType = NpgsqlDbType.Jsonb },
-                new() { Value = value.StartedAt is null ? DBNull.Value : value.StartedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
-                new() { Value = value.EndedAt is null ? DBNull.Value : value.EndedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
                 new() { Value = value.CreatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
                 new() { Value = value.UpdatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz }
             }
@@ -142,17 +140,14 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
                 parent_id = $3,
                 chat_id = $4,
                 message_id = $5,
-                type = $6,
-                status = $7,
+                last_run_id = $6,
+                type = $7,
                 name = $8,
                 title = $9,
                 description = $10,
-                status_message = $11,
-                entities = $12,
-                started_at = $13,
-                ended_at = $14,
-                created_at = $15,
-                updated_at = $16
+                entities = $11,
+                created_at = $12,
+                updated_at = $13
             WHERE id = $1
         """, (NpgsqlConnection)db.Connection)
         {
@@ -163,15 +158,12 @@ public class JobStorage(ILogger<IJobStorage> logger, QueryFactory db) : IJobStor
                 new() { Value = value.ParentId is null ? DBNull.Value : value.ParentId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.ChatId is null ? DBNull.Value : value.ChatId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.MessageId is null ? DBNull.Value : value.MessageId, NpgsqlDbType = NpgsqlDbType.Uuid },
+                new() { Value = value.LastRunId is null ? DBNull.Value : value.LastRunId, NpgsqlDbType = NpgsqlDbType.Uuid },
                 new() { Value = value.Type.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
-                new() { Value = value.Status.ToString(), NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Name, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Title, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Description is null ? DBNull.Value : value.Description, NpgsqlDbType = NpgsqlDbType.Text },
-                new() { Value = value.StatusMessage is null ? DBNull.Value : value.StatusMessage, NpgsqlDbType = NpgsqlDbType.Text },
                 new() { Value = value.Entities, NpgsqlDbType = NpgsqlDbType.Jsonb },
-                new() { Value = value.StartedAt is null ? DBNull.Value : value.StartedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
-                new() { Value = value.EndedAt is null ? DBNull.Value : value.EndedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
                 new() { Value = value.CreatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz },
                 new() { Value = value.UpdatedAt, NpgsqlDbType = NpgsqlDbType.TimestampTz }
             }

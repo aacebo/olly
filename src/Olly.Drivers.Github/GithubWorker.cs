@@ -72,9 +72,9 @@ public partial class GithubWorker(IServiceProvider provider, IServiceScopeFactor
             await OnMessageEvent(message, client, cancellationToken);
             return;
         }
-        else if (@event is JobEvent job)
+        else if (@event is JobRunEvent job)
         {
-            await OnJobEvent(job, provider, cancellationToken);
+            await OnJobRunEvent(job, provider, cancellationToken);
             return;
         }
 

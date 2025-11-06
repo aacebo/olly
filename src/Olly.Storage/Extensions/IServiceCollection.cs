@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 
 using Olly.Storage.Models;
+using Olly.Storage.Models.Jobs;
 using Olly.Storage.Postgres;
 
 using Pgvector.Dapper;
@@ -37,6 +38,7 @@ public static class IServiceCollectionExtensions
         Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<InstallStatus>());
         Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<JobType>());
         Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<JobStatus>());
+        Dapper.SqlMapper.AddTypeHandler(new StringEnumTypeHandler<ApprovalStatus>());
         Dapper.SqlMapper.AddTypeHandler(typeof(List<Source>), new JsonArrayTypeHandler(jsonOptions));
         Dapper.SqlMapper.AddTypeHandler(typeof(Entities), new JsonArrayTypeHandler(jsonOptions));
         Dapper.SqlMapper.AddTypeHandler(typeof(List<Attachment>), new JsonArrayTypeHandler(jsonOptions));
