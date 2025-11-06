@@ -61,4 +61,11 @@ public class MessageSchema(Storage.Models.Message message) : ModelSchema
         var records = await recordService.GetByMessageId(Id, cancellationToken: cancellationToken);
         return records.List.Select(record => new RecordSchema(record));
     }
+
+    [GraphQLName("jobs")]
+    public async Task<IEnumerable<JobSchema>> GetJobs([Service] IJobService jobService, CancellationToken cancellationToken = default)
+    {
+        var jobs = await jobService.GetByMessageId(Id, cancellationToken: cancellationToken);
+        return jobs.List.Select(job => new JobSchema(job));
+    }
 }

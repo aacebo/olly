@@ -54,8 +54,11 @@ public class JobsPrompt
             Client.Chat.Id,
             Page.Create()
                 .Size(25)
-                .Sort(SortDirection.Desc, "created_at")
-                .Factory(q => q.WhereNull("ended_at"))
+                .Sort(SortDirection.Desc, "jobs.created_at")
+                .Factory(q => q
+                    .LeftJoin("job_runs", "jobs.last_run_id", "job_runs.id")
+                    .WhereNull("job_runs.ended_at")
+                )
                 .Build(),
             Client.CancellationToken
         );
